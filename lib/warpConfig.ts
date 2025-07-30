@@ -1,6 +1,7 @@
 import nacl from "tweetnacl"
 import { Buffer } from "buffer"
 import QRCode from "qrcode"
+import pako from "pako";
 
 // Import IP ranges
 import {
@@ -151,7 +152,10 @@ function removeMtuLine(config: string) {
 
 async function generateQrCode(config: string) {
   const cleanedConfig = removeMtuLine(config)
-  return QRCode.toDataURL(cleanedConfig)
+  const compressed = pako.deflate(cleanedConfig, { to: 'string' })
+  const encoded = Buffer.from(compressed).toString('base64')
+
+  return QRCode.toDataURL(encoded)
 }
 
 export async function getWarpConfigLink(
