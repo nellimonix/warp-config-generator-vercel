@@ -1,7 +1,7 @@
 import nacl from "tweetnacl"
 import { Buffer } from "buffer"
 import QRCode from "qrcode"
-import pako from "pako";
+import pako from "pako"
 
 // Import IP ranges
 import {
