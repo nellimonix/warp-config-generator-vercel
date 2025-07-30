@@ -11,6 +11,15 @@ const config: Config = {
   theme: {
   	extend: {
   		colors: {
+  			'telegram-bg': '#f5f5f5',
+  			'telegram-blue': '#0088cc',
+  			'telegram-blue-dark': '#006699',
+  			'telegram-green': '#00c896',
+  			'telegram-text': '#000000',
+  			'telegram-secondary': '#8e8e93',
+  			'telegram-border': '#c8c7cc',
+  			'telegram-bubble': '#ffffff',
+  			'telegram-bubble-out': '#dcf8c6',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -66,6 +75,10 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		boxShadow: {
+  			'telegram': '0 1px 2px 0 rgba(0, 0, 0, 0.15)',
+  			'telegram-hover': '0 2px 8px 0 rgba(0, 0, 0, 0.15)'
   		},
   		keyframes: {
   			'accordion-down': {
