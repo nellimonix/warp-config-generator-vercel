@@ -143,12 +143,12 @@ DNS = 1.1.1.1, 2606:4700:4700::1111, 1.0.0.1, 2606:4700:4700::1001
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowed_ips}
-Endpoint = 188.114.99.224:1002`
+Endpoint = ${peer_endpoint}`
 
   return conf
 }
 
-// ${peer_endpoint}
+// 188.114.99.224:1002
 
 function removeMtuLine(config: string) {
   return config.replace(/^MTU = 1280\n?/gm, "")
