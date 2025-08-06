@@ -2,6 +2,7 @@ import Image from "next/image"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { WarpGenerator } from "@/components/warp-generator"
+import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   return (
