@@ -143,12 +143,12 @@ DNS = 1.1.1.1, 2606:4700:4700::1111, 1.0.0.1, 2606:4700:4700::1001
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowed_ips}
-Endpoint = ${peer_endpoint}`
+Endpoint = engage.cloudflareclient.com:500`
 
   return conf
 }
 
-// 188.114.99.224:1002
+// 188.114.99.224:1002 engage.cloudflareclient.com:500 ${peer_endpoint}
 
 function removeMtuLine(config: string) {
   return config.replace(/^MTU = 1280\n?/gm, "")
