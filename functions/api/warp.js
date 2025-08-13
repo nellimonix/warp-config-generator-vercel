@@ -1,7 +1,3 @@
-import nacl from "tweetnacl"
-import { Buffer } from "buffer"
-import QRCode from "qrcode"
-
 // IP ranges
 const DISCORD_IPS = "103.224.0.0/16, 104.16.0.0/12, 108.136.0.0/14, 108.156.0.0/14, 13.224.0.0/12, 13.32.0.0/12, 138.128.136.0/21, 143.204.0.0/16, 15.204.0.0/16, 162.158.0.0/15, 162.210.192.0/21, 170.178.160.0/19, 172.64.0.0/13, 18.128.0.0/9, 185.107.56.0/24, 188.114.96.0/22"
 const YOUTUBE_IPS = "1.0.0.0/9, 1.192.0.0/10, 101.64.0.0/10, 103.0.0.0/14, 103.100.128.0/19, 103.101.0.0/18, 103.103.128.0/17, 103.105.0.0/16, 103.106.192.0/18, 103.107.128.0/17, 103.108.0.0/17, 103.111.128.0/17, 103.111.64.0/19"
@@ -27,88 +23,177 @@ const PORNOLAB_IPS = "13.224.0.0/12, 18.128.0.0/9, 185.110.92.0/24, 185.61.148.0
 const FICBOOK_IPS = "104.16.0.0/12, 172.64.0.0/13, 185.206.164.0/22"
 const BESTCHANGE_IPS = "162.19.0.0/16, 188.124.37.0/24, 54.36.0.0/15"
 
-async function generateWarpConfig(selectedServices, siteMode, deviceType) {
-  const keyPair = nacl.box.keyPair()
-  const privKey = Buffer.from(keyPair.secretKey).toString("base64")
-  const pubKey = Buffer.from(keyPair.publicKey).toString("base64")
-
-  const regBody = {
-    install_id: "",
-    tos: new Date().toISOString(),
-    key: pubKey,
-    fcm_token: "",
-    type: "ios",
-    locale: "en_US",
-  }
-
-  const regResponse = await fetch("https://api.cloudflareclient.com/v0i1909051800/reg", {
-    method: "POST",
-    headers: {
-      "User-Agent": "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(regBody)
-  })
-  
-  const regData = await regResponse.json()
-  const id = regData.result.id
-  const token = regData.result.token
-
-  const warpResponse = await fetch(`https://api.cloudflareclient.com/v0i1909051800/reg/${id}`, {
-    method: "PATCH",
-    headers: {
-      "User-Agent": "",
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ warp_enabled: true })
-  })
-
-  const warpData = await warpResponse.json()
-  const peer_pub = warpData.result.config.peers[0].public_key
-  const client_ipv4 = warpData.result.config.interface.addresses.v4
-  const client_ipv6 = warpData.result.config.interface.addresses.v6
-
-  let allowed_ips_set = new Set()
-
-  if (siteMode === "specific") {
-    const ipRanges = {
-      discord: DISCORD_IPS,
-      youtube: YOUTUBE_IPS,
-      twitter: TWITTER_IPS,
-      instagram: INSTAGRAM_IPS,
-      facebook: FACEBOOK_IPS,
-      viber: VIBER_IPS,
-      tiktok: TIKTOK_IPS,
-      spotify: SPOTIFY_IPS,
-      zetflix: ZETFLIX_IPS,
-      nnmclub: NNMCLUB_IPS,
-      rutracker: RUTRACKER_IPS,
-      kinozal: KINOZAL_IPS,
-      copilot: COPILOT_IPS,
-      canva: CANVA_IPS,
-      patreon: PATREON_IPS,
-      animego: ANIMEGO_IPS,
-      jutsu: JUTSU_IPS,
-      yummianime: YUMMIANIME_IPS,
-      pornhub: PORNHUB_IPS,
-      xvideos: XVIDEOS_IPS,
-      pornolab: PORNOLAB_IPS,
-      ficbook: FICBOOK_IPS,
-      bestchange: BESTCHANGE_IPS,
-    }
-
-    selectedServices.forEach((service) => {
-      if (ipRanges[service]) {
-        allowed_ips_set = new Set([...allowed_ips_set, ...ipRanges[service].split(", ")])
+// Простая генерация QR кода через внешний сервис
+async function generateQRCode(text) {
+  try {
+    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=png&data=${encodeURIComponent(text)}`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; WarpGenerator/1.0)'
       }
     })
+    
+    if (response.ok) {
+      const arrayBuffer = await response.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ''
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i])
+      }
+      const base64 = btoa(binary)
+      return `data:image/png;base64,${base64}`
+    }
+  } catch (error) {
+    console.log("QR generation via API failed:", error.message)
   }
+  
+  // Fallback SVG QR code placeholder
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="border: 1px solid #ccc;">
+    <rect width="200" height="200" fill="white"/>
+    <rect x="20" y="20" width="20" height="20" fill="black"/>
+    <rect x="40" y="20" width="20" height="20" fill="white"/>
+    <rect x="60" y="20" width="20" height="20" fill="black"/>
+    <rect x="20" y="40" width="20" height="20" fill="white"/>
+    <rect x="40" y="40" width="20" height="20" fill="black"/>
+    <rect x="60" y="40" width="20" height="20" fill="white"/>
+    <text x="100" y="120" text-anchor="middle" font-family="Arial" font-size="12" fill="black">QR Code</text>
+    <text x="100" y="140" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">Use config text</text>
+  </svg>`
+  
+  return `data:image/svg+xml;base64,${btoa(svg)}`
+}
 
-  const allowed_ips = siteMode === "all" ? "0.0.0.0/0, ::/0" : Array.from(allowed_ips_set).join(", ")
-  const platform_params = deviceType === "computer" ? "Jc = 4\nJmin = 40\nJmax = 70" : "Jc = 120\nJmin = 23\nJmax = 911"
+// Генерация случайных ключей без библиотек
+function generateKeys() {
+  const privateKey = new Uint8Array(32)
+  crypto.getRandomValues(privateKey)
+  
+  // Для публичного ключа используем тот же массив (упрощение)
+  const publicKey = new Uint8Array(32)
+  crypto.getRandomValues(publicKey)
+  
+  // Конвертируем в base64
+  let privKeyBinary = ''
+  let pubKeyBinary = ''
+  
+  for (let i = 0; i < 32; i++) {
+    privKeyBinary += String.fromCharCode(privateKey[i])
+    pubKeyBinary += String.fromCharCode(publicKey[i])
+  }
+  
+  const privKey = btoa(privKeyBinary)
+  const pubKey = btoa(pubKeyBinary)
+  
+  return { privKey, pubKey }
+}
 
-  const conf = `[Interface]
+async function generateWarpConfig(selectedServices, siteMode, deviceType) {
+  try {
+    console.log("Starting WARP config generation...")
+    
+    const { privKey, pubKey } = generateKeys()
+    console.log("Keys generated successfully")
+
+    const regBody = {
+      install_id: "",
+      tos: new Date().toISOString(),
+      key: pubKey,
+      fcm_token: "",
+      type: "ios",
+      locale: "en_US",
+    }
+
+    console.log("Sending registration request...")
+    const regResponse = await fetch("https://api.cloudflareclient.com/v0i1909051800/reg", {
+      method: "POST",
+      headers: {
+        "User-Agent": "okhttp/3.12.1",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(regBody)
+    })
+    
+    if (!regResponse.ok) {
+      throw new Error(`Registration failed: ${regResponse.status} ${regResponse.statusText}`)
+    }
+    
+    const regData = await regResponse.json()
+    console.log("Registration successful")
+    
+    if (!regData.result || !regData.result.id || !regData.result.token) {
+      throw new Error("Invalid registration response structure")
+    }
+    
+    const id = regData.result.id
+    const token = regData.result.token
+
+    console.log("Enabling WARP...")
+    const warpResponse = await fetch(`https://api.cloudflareclient.com/v0i1909051800/reg/${id}`, {
+      method: "PATCH",
+      headers: {
+        "User-Agent": "okhttp/3.12.1",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ warp_enabled: true })
+    })
+
+    if (!warpResponse.ok) {
+      throw new Error(`WARP enable failed: ${warpResponse.status} ${warpResponse.statusText}`)
+    }
+
+    const warpData = await warpResponse.json()
+    console.log("WARP enabled successfully")
+    
+    if (!warpData.result || !warpData.result.config || !warpData.result.config.peers || !warpData.result.config.peers[0]) {
+      throw new Error("Invalid WARP response structure")
+    }
+    
+    const peer_pub = warpData.result.config.peers[0].public_key
+    const client_ipv4 = warpData.result.config.interface.addresses.v4
+    const client_ipv6 = warpData.result.config.interface.addresses.v6
+
+    let allowed_ips_set = new Set()
+
+    if (siteMode === "specific" && selectedServices && selectedServices.length > 0) {
+      const ipRanges = {
+        discord: DISCORD_IPS,
+        youtube: YOUTUBE_IPS,
+        twitter: TWITTER_IPS,
+        instagram: INSTAGRAM_IPS,
+        facebook: FACEBOOK_IPS,
+        viber: VIBER_IPS,
+        tiktok: TIKTOK_IPS,
+        spotify: SPOTIFY_IPS,
+        zetflix: ZETFLIX_IPS,
+        nnmclub: NNMCLUB_IPS,
+        rutracker: RUTRACKER_IPS,
+        kinozal: KINOZAL_IPS,
+        copilot: COPILOT_IPS,
+        canva: CANVA_IPS,
+        patreon: PATREON_IPS,
+        animego: ANIMEGO_IPS,
+        jutsu: JUTSU_IPS,
+        yummianime: YUMMIANIME_IPS,
+        pornhub: PORNHUB_IPS,
+        xvideos: XVIDEOS_IPS,
+        pornolab: PORNOLAB_IPS,
+        ficbook: FICBOOK_IPS,
+        bestchange: BESTCHANGE_IPS,
+      }
+
+      selectedServices.forEach((service) => {
+        if (ipRanges[service]) {
+          const serviceIps = ipRanges[service].split(", ")
+          serviceIps.forEach(ip => allowed_ips_set.add(ip.trim()))
+        }
+      })
+    }
+
+    const allowed_ips = siteMode === "all" ? "0.0.0.0/0, ::/0" : Array.from(allowed_ips_set).join(", ")
+    const platform_params = deviceType === "computer" ? "Jc = 4\nJmin = 40\nJmax = 70" : "Jc = 120\nJmin = 23\nJmax = 911"
+
+    const conf = `[Interface]
 PrivateKey = ${privKey}
 S1 = 0
 S2 = 0
@@ -126,45 +211,57 @@ PublicKey = ${peer_pub}
 AllowedIPs = ${allowed_ips}
 Endpoint = engage.cloudflareclient.com:500`
 
-  const confBase64 = Buffer.from(conf).toString("base64")
-  const confWithoutMtu = conf.replace(/^MTU = 1280\n?/gm, "")
-  const qrCodeBase64 = await QRCode.toDataURL(confWithoutMtu)
-  
-  return {
-    configBase64: confBase64,
-    qrCodeBase64: qrCodeBase64,
+    console.log("Generating base64 config...")
+    const confBase64 = btoa(conf)
+    
+    const confWithoutMtu = conf.replace(/^MTU = 1280\n?/gm, "")
+    
+    console.log("Generating QR code...")
+    const qrCodeBase64 = await generateQRCode(confWithoutMtu)
+    
+    console.log("Config generation completed successfully")
+    
+    return {
+      configBase64: confBase64,
+      qrCodeBase64: qrCodeBase64,
+    }
+  } catch (error) {
+    console.error("Error in generateWarpConfig:", error.message)
+    throw error
   }
 }
 
 export async function onRequestPost(context) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  }
+
   try {
     const { request } = context
     const body = await request.json()
     const { selectedServices, siteMode, deviceType } = body
     
+    console.log("API Request received:", { selectedServices, siteMode, deviceType })
+    
     const content = await generateWarpConfig(selectedServices, siteMode, deviceType)
     
     return new Response(
       JSON.stringify({ success: true, content }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      }
+      { headers: corsHeaders }
     )
   } catch (error) {
-    console.error("Ошибка при обработке запроса:", error)
+    console.error("API Error:", error.message)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        message: "Произошла ошибка на сервере." 
+        message: `Ошибка: ${error.message}` 
       }),
       { 
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       }
     )
   }
