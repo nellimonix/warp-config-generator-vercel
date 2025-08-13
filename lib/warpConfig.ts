@@ -6,12 +6,9 @@ import QRCode from "qrcode"
 import {
   DISCORD_IPS,
   YOUTUBE_IPS,
-  TWITTER_IPS,
-  INSTAGRAM_IPS,
-  FACEBOOK_IPS,
+  X_TWITTER_IPS,
+  FACEBOOK_INSTAGRAM_IPS,
   VIBER_IPS,
-  TIKTOK_IPS,
-  SPOTIFY_IPS,
   ZETFLIX_IPS,
   NNMCLUB_IPS,
   RUTRACKER_IPS,
@@ -21,12 +18,12 @@ import {
   PATREON_IPS,
   ANIMEGO_IPS,
   JUTSU_IPS,
-  YUMMIANIME_IPS,
+  YUMMYANIME_IPS,
   PORNHUB_IPS,
   XVIDEOS_IPS,
   PORNOLAB_IPS,
   FICBOOK_IPS,
-  BESTCHANGE_IPS,
+  PROTON_IPS
 } from "./ipRanges"
 
 function generateKeys() {
@@ -93,12 +90,10 @@ async function generateWarpConfig(
     const ipRanges: { [key: string]: string } = {
       discord: DISCORD_IPS,
       youtube: YOUTUBE_IPS,
-      twitter: TWITTER_IPS,
-      instagram: INSTAGRAM_IPS,
-      facebook: FACEBOOK_IPS,
+      twitter: X_TWITTER_IPS,
+      instagram: FACEBOOK_INSTAGRAM_IPS,
+      facebook: FACEBOOK_INSTAGRAM_IPS,
       viber: VIBER_IPS,
-      tiktok: TIKTOK_IPS,
-      spotify: SPOTIFY_IPS,
       zetflix: ZETFLIX_IPS,
       nnmclub: NNMCLUB_IPS,
       rutracker: RUTRACKER_IPS,
@@ -108,12 +103,12 @@ async function generateWarpConfig(
       patreon: PATREON_IPS,
       animego: ANIMEGO_IPS,
       jutsu: JUTSU_IPS,
-      yummianime: YUMMIANIME_IPS,
+      yummyanime: YUMMYANIME_IPS,
       pornhub: PORNHUB_IPS,
       xvideos: XVIDEOS_IPS,
       pornolab: PORNOLAB_IPS,
       ficbook: FICBOOK_IPS,
-      bestchange: BESTCHANGE_IPS,
+      proton: PROTON_IPS,
     }
 
     selectedServices.forEach((service) => {
