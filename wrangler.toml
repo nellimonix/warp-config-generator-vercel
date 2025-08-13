@@ -1,4 +1,4 @@
-name = "WarpGenerator"
+name = "warp-generator"
 compatibility_date = "2025-08-13"
 compatibility_flags = ["nodejs_compat"]
 
