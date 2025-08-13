@@ -1,0 +1,9 @@
+name = "WarpGenerator"
+compatibility_date = "2025-08-13"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "npm run build"
+
+[observability.logs]
+enabled = true
