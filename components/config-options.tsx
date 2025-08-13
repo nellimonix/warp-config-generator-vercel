@@ -8,8 +8,6 @@ const services = [
   { name: "Instagram", key: "instagram" },
   { name: "Facebook", key: "facebook" },
   { name: "Viber", key: "viber" },
-  { name: "TikTok", key: "tiktok" },
-  { name: "Spotify", key: "spotify" },
   { name: "Zetflix", key: "zetflix" },
   { name: "NNM-Club", key: "nnmclub" },
   { name: "RuTracker", key: "rutracker" },
@@ -19,12 +17,12 @@ const services = [
   { name: "Patreon", key: "patreon" },
   { name: "AnimeGo", key: "animego" },
   { name: "Jutsu", key: "jutsu" },
-  { name: "YummyAnime", key: "yummianime" },
+  { name: "YummyAnime", key: "yummyanime" },
   { name: "PornHub", key: "pornhub" },
   { name: "XVideos", key: "xvideos" },
   { name: "Pornolab", key: "pornolab" },
   { name: "Ficbook", key: "ficbook" },
-  { name: "BestChange", key: "bestchange" },
+  { name: "Proton", key: "proton" },
 ]
 
 interface ConfigOptionsProps {
