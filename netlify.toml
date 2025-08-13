@@ -6,11 +6,7 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  NODE_ENV = "development"
 
 [context.production]
   environment = { NODE_ENV = "production" }
