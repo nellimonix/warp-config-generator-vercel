@@ -28,6 +28,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "functions/api/warp.js"  ],
+  ],
   "exclude": ["node_modules"]
 }
