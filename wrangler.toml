@@ -2,11 +2,13 @@ name = "warp-generator"
 compatibility_date = "2025-08-13"
 compatibility_flags = ["nodejs_compat"]
 
-[build]
-command = "npm install --legacy-peer-deps && npm run build"
+main = "worker.js"
 
-[observability.logs]
-enabled = true
+[site]
+bucket = "./out"
 
 [vars]
 NODE_ENV = "production"
+
+[observability.logs]
+enabled = true
