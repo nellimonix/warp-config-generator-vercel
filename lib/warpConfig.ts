@@ -1,6 +1,5 @@
 import nacl from "tweetnacl"
 import { Buffer } from "buffer"
-import QRCode from "qrcode"
 
 // Import IP ranges
 import {
@@ -25,6 +24,48 @@ import {
   FICBOOK_IPS,
   PROTON_IPS
 } from "./ipRanges"
+
+// Простая генерация QR кода через внешний сервис
+async function generateQRCode(text: string) {
+  try {
+    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=png&data=${encodeURIComponent(text)}`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; WarpGenerator/1.0)'
+      }
+    })
+    
+    if (response.ok) {
+      const arrayBuffer = await response.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ''
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i])
+      }
+      const base64 = btoa(binary)
+      return `data:image/png;base64,${base64}`
+    }
+  } catch (error) {
+    console.log("QR generation via API failed:", error.message)
+  }
+  
+  // Fallback SVG QR code placeholder
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="border: 1px solid #ccc;">
+    <rect width="200" height="200" fill="white"/>
+    <!-- Sad face outline -->
+    <circle cx="100" cy="100" r="70" fill="none" stroke="black" stroke-width="2"/>
+    <!-- Left eye -->
+    <circle cx="80" cy="85" r="5" fill="none" stroke="black" stroke-width="2"/>
+    <!-- Right eye -->
+    <circle cx="120" cy="85" r="5" fill="none" stroke="black" stroke-width="2"/>
+    <!-- Sad mouth -->
+    <path d="M 75 125 Q 100 110 125 125" fill="none" stroke="black" stroke-width="2"/>
+    <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">QR код недоступен</text>
+  </svg>`
+  
+  return `data:image/svg+xml;base64,${btoa(svg)}`
+}
+
 
 function generateKeys() {
   const keyPair = nacl.box.keyPair()
@@ -149,11 +190,6 @@ function removeMtuLine(config: string) {
   return config.replace(/^MTU = 1280\n?/gm, "")
 }
 
-async function generateQrCode(config: string) {
-  const cleanedConfig = removeMtuLine(config)
-  return QRCode.toDataURL(cleanedConfig)
-}
-
 export async function getWarpConfigLink(
   selectedServices: string[],
   siteMode: "all" | "specific",
@@ -163,7 +199,7 @@ export async function getWarpConfigLink(
     const conf = await generateWarpConfig(selectedServices, siteMode, deviceType)
     const confBase64 = Buffer.from(conf).toString("base64")
     const confWithoutMtu = removeMtuLine(conf)
-    const qrCodeBase64 = await generateQrCode(confWithoutMtu)
+    const qrCodeBase64 = await generateQRCode(confWithoutMtu)
     return {
       configBase64: confBase64,
       qrCodeBase64: qrCodeBase64,
