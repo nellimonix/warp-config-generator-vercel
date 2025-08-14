@@ -46,14 +46,15 @@ async function generateQRCode(text) {
   // Fallback SVG QR code placeholder
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="border: 1px solid #ccc;">
     <rect width="200" height="200" fill="white"/>
-    <rect x="20" y="20" width="20" height="20" fill="black"/>
-    <rect x="40" y="20" width="20" height="20" fill="white"/>
-    <rect x="60" y="20" width="20" height="20" fill="black"/>
-    <rect x="20" y="40" width="20" height="20" fill="white"/>
-    <rect x="40" y="40" width="20" height="20" fill="black"/>
-    <rect x="60" y="40" width="20" height="20" fill="white"/>
-    <text x="100" y="120" text-anchor="middle" font-family="Arial" font-size="12" fill="black">QR Code</text>
-    <text x="100" y="140" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">Use config text</text>
+    <!-- Sad face outline -->
+    <circle cx="100" cy="100" r="70" fill="none" stroke="black" stroke-width="2"/>
+    <!-- Left eye -->
+    <circle cx="80" cy="85" r="5" fill="none" stroke="black" stroke-width="2"/>
+    <!-- Right eye -->
+    <circle cx="120" cy="85" r="5" fill="none" stroke="black" stroke-width="2"/>
+    <!-- Sad mouth -->
+    <path d="M 75 125 Q 100 110 125 125" fill="none" stroke="black" stroke-width="2"/>
+    <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">QR код недоступен</text>
   </svg>`
   
   return `data:image/svg+xml;base64,${btoa(svg)}`
