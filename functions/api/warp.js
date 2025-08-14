@@ -195,7 +195,7 @@ DNS = 1.1.1.1, 2606:4700:4700::1111, 1.0.0.1, 2606:4700:4700::1001
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowed_ips}
-Endpoint = engage.cloudflareclient.com:500`
+Endpoint = engage.cloudflareclient.com:2408`
 
     console.log("Generating base64 config...")
     const confBase64 = btoa(conf)
