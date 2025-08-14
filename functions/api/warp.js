@@ -57,7 +57,7 @@ async function generateQRCode(text) {
     <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">QR код недоступен</text>
   </svg>`;
 
-  const dataUri = svgToDataUrl(svg);
+  return svgToDataUrl(svg);
 }
 
 function svgToDataUrl(svg) {
