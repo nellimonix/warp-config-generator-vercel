@@ -61,11 +61,14 @@ async function generateQRCode(text: string) {
     <!-- Sad mouth -->
     <path d="M 75 125 Q 100 110 125 125" fill="none" stroke="black" stroke-width="2"/>
     <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">QR код недоступен</text>
-  </svg>`
-  
-  return `data:image/svg+xml;base64,${btoa(svg)}`
+  </svg>`;
+
+  const dataUri = svgToDataUrl(svg);
 }
 
+function svgToDataUrl(svg: string) {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
 
 function generateKeys() {
   const keyPair = nacl.box.keyPair()
