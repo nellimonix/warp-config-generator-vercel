@@ -9,12 +9,12 @@ export default function Home() {
     <>
       <Analytics/>
       <main className="flex min-h-screen flex-col items-center justify-center p-4 w-full">
-        <Alert className="alert mb-6 break-words" style={{display: "none"}}>
-          <AlertTitle>Telegram Bot для генерации конфигов WARP</AlertTitle>
+        <Alert className="alert mb-6 break-words">
+          <AlertTitle>Mirrors</AlertTitle>
           <AlertDescription className="break-words">
-            Создал бота для генерации конфигов, если сайт вдруг перестанет работать:{" "}
-            <a href="https://t.me/warp_generator_bot" className="font-medium">
-              Warp Generator Bot
+            Сделал сайт с зеркалами этого сайта на случай, если он перестанет работать:{" "}
+            <a href="https://warp-mirrors.vercel.app" className="font-medium">
+              warp-mirrors.vercel.app
             </a>
           </AlertDescription>
         </Alert>
@@ -25,10 +25,7 @@ export default function Home() {
             <a href="https://t.me/warp_generator_bot">Warp Generator Bot</a>
           </Button>
           <Button asChild className="w-full">
-            <a href="https://t.me/findllimonix">Telegram канал</a>
-          </Button>
-          <Button asChild className="w-full">
-            <a href="https://t.me/vuchaev2015">ToporWarp Telegram</a>
+            <a href="https://t.me/+fDYczngHDFplZDli">Telegram канал</a>
           </Button>
           <Button asChild className="w-full">
             <a href="https://github.com/nellimonix/warp-config-generator-vercel">GitHub репозиторий</a>
