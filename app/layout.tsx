@@ -8,8 +8,20 @@ import Script from "next/script"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Генерация конфигурации WARP",
-  description: "Генератор конфигураций для WARP"
+  title: "WARP конфигуратор - Генератор конфигураций WARP для обхода блокировок",
+  description: "Бесплатный генератор конфигураций WARP для Cloudflare. Создавайте конфиги для обхода блокировок сайтов, настройки VPN и доступа к заблокированным ресурсам. Поддержка всех устройств.",
+  keywords: "WARP, конфигуратор, генератор, VPN, обход блокировок, Cloudflare, конфиг, настройка, доступ к сайтам",
+  authors: [{ name: "WARP Generator" }],
+  openGraph: {
+    title: "WARP Конфигуратор - Генератор конфигураций WARP",
+    description: "Создавайте конфигурации WARP для обхода блокировок и доступа к заблокированным сайтам",
+    type: "website",
+    locale: "ru_RU",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
