@@ -1,0 +1,263 @@
+name: Generate WARP Config
+
+on:
+  repository_dispatch:
+    types: [generate-warp-config]
+  workflow_dispatch:
+    inputs:
+      selectedServices:
+        description: 'Selected services (comma-separated)'
+        required: false
+        default: ''
+      siteMode:
+        description: 'Site mode (all or specific)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - specific
+      deviceType:
+        description: 'Device type (computer or phone)'
+        required: true
+        default: 'computer'
+        type: choice
+        options:
+          - computer
+          - phone
+      callbackId:
+        description: 'Callback ID for result'
+        required: false
+        default: ''
+
+jobs:
+  generate-config:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Parse input parameters
+        id: params
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "selectedServices=${{ github.event.client_payload.selectedServices }}" >> $GITHUB_OUTPUT
+            echo "siteMode=${{ github.event.client_payload.siteMode }}" >> $GITHUB_OUTPUT
+            echo "deviceType=${{ github.event.client_payload.deviceType }}" >> $GITHUB_OUTPUT
+            echo "callbackId=${{ github.event.client_payload.callbackId }}" >> $GITHUB_OUTPUT
+          else
+            echo "selectedServices=${{ github.event.inputs.selectedServices }}" >> $GITHUB_OUTPUT
+            echo "siteMode=${{ github.event.inputs.siteMode }}" >> $GITHUB_OUTPUT
+            echo "deviceType=${{ github.event.inputs.deviceType }}" >> $GITHUB_OUTPUT
+            echo "callbackId=${{ github.event.inputs.callbackId }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate WARP config
+        id: generate
+        run: |
+          # Создаем Node.js скрипт для генерации конфига
+          cat > generate-config.js << 'EOF'
+          const { generateWarpConfigUniversal } = require('./lib/warpConfigNode.js');
+          const fs = require('fs');
+          
+          async function main() {
+            try {
+              const selectedServicesStr = process.env.SELECTED_SERVICES || '';
+              const selectedServices = selectedServicesStr ? 
+                selectedServicesStr.split(',').map(s => s.trim()).filter(s => s) : [];
+              const siteMode = process.env.SITE_MODE || 'all';
+              const deviceType = process.env.DEVICE_TYPE || 'computer';
+              
+              console.log('Generating config with params:', {
+                selectedServices,
+                siteMode,
+                deviceType
+              });
+              
+              const result = await generateWarpConfigUniversal(selectedServices, siteMode, deviceType);
+              
+              // Сохраняем результат в файл
+              const resultData = {
+                success: true,
+                content: result,
+                timestamp: new Date().toISOString(),
+                params: {
+                  selectedServices,
+                  siteMode,
+                  deviceType
+                }
+              };
+              
+              fs.writeFileSync('config-result.json', JSON.stringify(resultData, null, 2));
+              
+              // Также создаем текстовый файл конфига
+              const configText = Buffer.from(result.configBase64, 'base64').toString('utf8');
+              fs.writeFileSync('warp-config.conf', configText);
+              
+              console.log('Config generated successfully');
+              console.log('Config preview:', configText.substring(0, 200) + '...');
+              
+            } catch (error) {
+              console.error('Error generating config:', error.message);
+              console.error('Stack trace:', error.stack);
+              
+              const errorData = {
+                success: false,
+                error: error.message,
+                timestamp: new Date().toISOString(),
+                params: {
+                  selectedServices: process.env.SELECTED_SERVICES,
+                  siteMode: process.env.SITE_MODE,
+                  deviceType: process.env.DEVICE_TYPE
+                }
+              };
+              
+              fs.writeFileSync('config-result.json', JSON.stringify(errorData, null, 2));
+              process.exit(1);
+            }
+          }
+          
+          main();
+          EOF
+          
+          # Запускаем генерацию
+          export SELECTED_SERVICES="${{ steps.params.outputs.selectedServices }}"
+          export SITE_MODE="${{ steps.params.outputs.siteMode }}"
+          export DEVICE_TYPE="${{ steps.params.outputs.deviceType }}"
+          
+          node generate-config.js
+
+      - name: Create result gist
+        if: always()
+        id: gist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let resultContent;
+            let configContent = '';
+            
+            try {
+              resultContent = fs.readFileSync('config-result.json', 'utf8');
+              if (fs.existsSync('warp-config.conf')) {
+                configContent = fs.readFileSync('warp-config.conf', 'utf8');
+              }
+            } catch (error) {
+              resultContent = JSON.stringify({
+                success: false,
+                error: 'Failed to read result file: ' + error.message,
+                timestamp: new Date().toISOString()
+              });
+            }
+            
+            const callbackId = '${{ steps.params.outputs.callbackId }}' || Date.now().toString();
+            
+            const files = {
+              [`result-${callbackId}.json`]: {
+                content: resultContent
+              }
+            };
+            
+            if (configContent) {
+              files[`warp-config-${callbackId}.conf`] = {
+                content: configContent
+              };
+            }
+            
+            const gist = await github.rest.gists.create({
+              description: `WARP Config Result - ${callbackId} - ${new Date().toLocaleString()}`,
+              public: false,
+              files: files
+            });
+            
+            console.log('Gist created:', gist.data.html_url);
+            core.setOutput('gist_id', gist.data.id);
+            core.setOutput('gist_url', gist.data.html_url);
+            
+            return gist.data.id;
+
+      - name: Update Pages result
+        if: always()
+        run: |
+          # Создаем результат для GitHub Pages
+          mkdir -p docs/api-results
+          
+          cat > docs/api-results/latest.json << EOF
+          {
+            "runId": "${{ github.run_id }}",
+            "status": "${{ job.status }}",
+            "gistId": "${{ steps.gist.outputs.gist_id }}",
+            "gistUrl": "${{ steps.gist.outputs.gist_url }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "callbackId": "${{ steps.params.outputs.callbackId }}",
+            "params": {
+              "selectedServices": "${{ steps.params.outputs.selectedServices }}",
+              "siteMode": "${{ steps.params.outputs.siteMode }}",
+              "deviceType": "${{ steps.params.outputs.deviceType }}"
+            }
+          }
+          EOF
+          
+          # Создаем файл с уникальным callback ID
+          cp docs/api-results/latest.json "docs/api-results/result-${{ steps.params.outputs.callbackId }}.json"
+
+      - name: Deploy updated results to Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          keep_files: true
+          commit_message: "Update API results: ${{ steps.params.outputs.callbackId }}"
+
+      - name: Comment on trigger (if from issue)
+        if: github.event.client_payload.issueNumber
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gistUrl = '${{ steps.gist.outputs.gist_url }}';
+            const issueNumber = ${{ github.event.client_payload.issueNumber }};
+            
+            let message = '';
+            if ('${{ job.status }}' === 'success') {
+              message = `✅ **WARP конфигурация успешно сгенерирована!**
+              
+              📁 **Результат:** ${gistUrl}
+              🔧 **Параметры:**
+              - Режим: ${{ steps.params.outputs.siteMode }}
+              - Устройство: ${{ steps.params.outputs.deviceType }}
+              - Сервисы: ${{ steps.params.outputs.selectedServices || 'все' }}
+              
+              ⏰ **Время:** ${new Date().toLocaleString()}`;
+            } else {
+              message = `❌ **Ошибка при генерации WARP конфигурации**
+              
+              📋 **Детали:** ${gistUrl}
+              ⏰ **Время:** ${new Date().toLocaleString()}
+              
+              Проверьте логи GitHub Actions для получения подробной информации.`;
+            }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: message
+            });
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: warp-config-${{ steps.params.outputs.callbackId }}
+          path: |
+            config-result.json
+            warp-config.conf
+          retention-days: 30

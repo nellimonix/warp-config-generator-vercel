@@ -1,0 +1,94 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Create docs directory structure
+        run: |
+          # Ensure docs directory exists
+          mkdir -p docs
+          
+          # Copy static files if they don't exist
+          if [ ! -f docs/index.html ]; then
+            echo "Creating default index.html..."
+            cat > docs/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="ru">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>WARP Config Generator - GitHub Pages</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+          </head>
+          <body class="bg-gray-50 min-h-screen flex items-center justify-center">
+              <div class="text-center">
+                  <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                      <i class="fas fa-shield-alt text-blue-600"></i>
+                      WARP Config Generator
+                  </h1>
+                  <p class="text-gray-600 mb-6">Powered by GitHub Pages + GitHub Actions</p>
+                  <div class="space-y-4">
+                      <p class="text-sm text-gray-500">
+                          Для начала работы поместите файлы в папку <code class="bg-gray-200 px-2 py-1 rounded">docs/</code>
+                      </p>
+                      <a href="https://github.com/{{ github.repository }}" 
+                         class="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">
+                          <i class="fab fa-github mr-2"></i>
+                          Перейти к репозиторию
+                      </a>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+          fi
+          
+          # Create API results directory
+          mkdir -p docs/api-results
+          
+          # Create initial results file
+          cat > docs/api-results/latest.json << EOF
+          {
+            "status": "initialized",
+            "message": "No configs generated yet",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WARP Config Generator - GitHub Pages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-shield-alt text-blue-600"></i>
+                WARP Config Generator
+            </h1>
+            <p class="text-gray-600">Powered by GitHub Pages + GitHub Actions</p>
+            <div class="mt-4 flex justify-center space-x-4 text-sm">
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                    <i class="fab fa-github"></i> GitHub Pages
+                </span>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                    <i class="fas fa-cog"></i> GitHub Actions
+                </span>
+                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                    <i class="fas fa-cloud"></i> Serverless
+                </span>
+            </div>
+        </div>
+
+        <!-- Alert for first-time users -->
+        <div id="authAlert" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <strong>Первое использование:</strong> Для работы требуется GitHub токен с правами на repository dispatch.
+                        <a href="#" id="showTokenHelp" class="underline">Как получить токен?</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token Setup -->
+        <div id="tokenHelp" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">Как получить GitHub токен:</h3>
+            <ol class="list-decimal list-inside space-y-2 text-blue-800">
+                <li>Перейдите в <a href="https://github.com/settings/tokens" target="_blank" class="underline">GitHub Settings → Personal Access Tokens</a></li>
+                <li>Нажмите "Generate new token (classic)"</li>
+                <li>Выберите scope: <code class="bg-blue-200 px-1 rounded">repo</code></li>
+                <li>Скопируйте токен и вставьте ниже</li>
+            </ol>
+        </div>
+
+        <!-- Configuration Form -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-6">Конфигурация WARP</h2>
+            
+            <!-- GitHub Settings -->
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        GitHub Token
+                    </label>
+                    <input 
+                        type="password" 
+                        id="githubToken" 
+                        placeholder="ghp_xxxxxxxxxxxx"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Repository (owner/repo)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="repository" 
+                        placeholder="username/warp-config-generator"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+            </div>
+
+            <!-- WARP Settings -->
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Режим работы</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="siteMode" value="all" checked class="mr-2">
+                            <span>Все сайты</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="siteMode" value="specific" class="mr-2">
+                            <span>Конкретные сайты</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="servicesSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Выберите сервисы</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-4">
+                        <!-- Services will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Тип устройства</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="deviceType" value="computer" checked class="mr-2">
+                            <span>Компьютер</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="deviceType" value="phone" class="mr-2">
+                            <span>Телефон</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button 
+                id="generateBtn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 mt-6"
+            >
+                <i class="fas fa-magic mr-2"></i>
+                Сгенерировать конфигурацию
+            </button>
+        </div>
+
+        <!-- Status Section -->
+        <div id="statusSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Статус генерации</h3>
+            <div id="statusContent">
+                <!-- Status will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Результат</h3>
+            <div id="resultContent">
+                <!-- Result will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-500">
+            <p>Made with ❤️ using GitHub Pages + GitHub Actions</p>
+            <div class="mt-2 space-x-4">
+                <a href="https://github.com/nellimonix/warp-config-generator-vercel" class="text-blue-600 hover:underline">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="https://t.me/warp_generator_bot" class="text-blue-600 hover:underline">
+                    <i class="fab fa-telegram"></i> Telegram Bot
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="warp-generator.js"></script>
+</body>
+</html>
