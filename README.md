@@ -108,3 +108,12 @@ MIT License
 2. Создайте ветку для новой функции
 3. Внесите изменения
 4. Создайте Pull Request
+
+## Зеркала / Альтернативные ссылки
+
+- Telegram Bot: [t.me/warp_generator_bot](https://t.me/warp_generator_bot)  
+- Основной сайт: [warp.llimonix.pw](https://warp.llimonix.pw)  
+- Vercel Mirror: [warply.vercel.app](https://warply.vercel.app)  
+- Netlify Mirror: [getwarp.netlify.app](https://getwarp.netlify.app)  
+- Cloudflare Pages Mirror: [getwarp.pages.dev](https://getwarp.pages.dev)
+- Telegram канал: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
