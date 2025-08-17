@@ -9,9 +9,9 @@ export default function Home() {
     <>
       <Analytics/>
       <main className="flex min-h-screen flex-col items-center justify-center p-4 w-full">
-        <Alert className="alert mb-6 break-words">
+        <Alert className="alert mb-6 break-words" style={{ display: "none" }}>
           <AlertTitle>Mirrors</AlertTitle>
-          <AlertDescription className="break-words" style={{ display: "none" }}>
+          <AlertDescription className="break-words">
             Сделал сайт с зеркалами этого сайта на случай, если он перестанет работать:{" "}
             <a href="https://warp-mirrors.vercel.app" className="font-medium">
               warp-mirrors.vercel.app
@@ -19,7 +19,7 @@ export default function Home() {
           </AlertDescription>
         </Alert>
         <Alert className="alert mb-6 break-words">
-          <AlertTitle>Mirrors</AlertTitle>
+          <AlertTitle>Новый способ починить WARP на мобильном интернете с помощью AWG 1.5!</AlertTitle>
           <AlertDescription className="break-words">
             Добавлен новый параметр AmneziaWG 1.5, который работает только в приложении и работает на мобильных устройствах:{" "}
             <a href="https://t.me/findllimonix/55" className="font-medium">
