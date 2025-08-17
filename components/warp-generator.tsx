@@ -22,7 +22,7 @@ export function WarpGenerator() {
   const [configData, setConfigData] = useState<{ configBase64: string; qrCodeBase64: string } | null>(null)
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [siteMode, setSiteMode] = useState<"all" | "specific">("all")
-  const [deviceType, setDeviceType] = useState<"computer" | "phone">("computer")
+  const [deviceType, setDeviceType] = useState<"computer" | "phone" | "awg15">("computer")
   const [isGenerated, setIsGenerated] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
 
