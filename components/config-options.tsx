@@ -30,8 +30,8 @@ interface ConfigOptionsProps {
   onServiceToggle: (service: string) => void
   siteMode: "all" | "specific"
   onSiteModeChange: (mode: "all" | "specific") => void
-  deviceType: "computer" | "phone"
-  onDeviceTypeChange: (type: "computer" | "phone") => void
+  deviceType: "computer" | "phone" | "awg15"
+  onDeviceTypeChange: (type: "computer" | "phone" | "awg15") => void
 }
 
 export function ConfigOptions({
@@ -72,11 +72,12 @@ export function ConfigOptions({
 
         <Select value={deviceType} onValueChange={onDeviceTypeChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Выберите устройство" />
+            <SelectValue placeholder="Настройки соединения" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="computer">Компьютер</SelectItem>
-            <SelectItem value="phone">Телефон</SelectItem>
+            <SelectItem value="computer">Оптимальный</SelectItem>
+            <SelectItem value="phone">Альтернативный</SelectItem>
+            <SelectItem value="awg15">AmneziaWG 1.5</SelectItem>
           </SelectContent>
         </Select>
       </div>
