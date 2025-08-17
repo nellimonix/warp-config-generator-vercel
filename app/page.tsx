@@ -21,7 +21,7 @@ export default function Home() {
         <Alert className="alert mb-6 break-words">
           <AlertTitle>Новый способ починить WARP на мобильном интернете с помощью AWG 1.5!</AlertTitle>
           <AlertDescription className="break-words">
-            Добавлен новый параметр AmneziaWG 1.5, который работает только в приложении и работает на мобильных устройствах:{" "}
+            Добавлен новый параметр AmneziaWG 1.5, который работает только в приложении AmneziaVPN и работает на мобильных устройствах:{" "}
             <a href="https://t.me/findllimonix/55" className="font-medium">
               инструкция по настройке
             </a>
