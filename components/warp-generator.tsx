@@ -10,7 +10,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Settings, RefreshCw, X } from "lucide-react"
+import {
+  Check,
+  Copy,
+  Download,
+  QrCode,
+  Settings,
+  RefreshCw,
+  X,
+  Sparkles,
+  LoaderCircle
+} from "lucide-react"
 import Image from "next/image"
 import { ym } from "@/utils/ym"
 import { ConfigOptions } from "./config-options"
@@ -25,6 +35,7 @@ export function WarpGenerator() {
   const [deviceType, setDeviceType] = useState<"computer" | "phone" | "awg15">("computer")
   const [isGenerated, setIsGenerated] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [isConfigCopied, setIsConfigCopied] = useState(false)
 
   const generateConfig = async () => {
     setIsLoading(true)
@@ -58,6 +69,14 @@ export function WarpGenerator() {
     }
   }
 
+  const copyConfig = () => {
+    if (configData) {
+      navigator.clipboard.writeText(atob(configData.configBase64))
+      setIsConfigCopied(true)
+      setTimeout(() => { setIsConfigCopied(false) }, 3000)
+    }
+  }
+
   const downloadConfig = () => {
     if (configData) {
       const link = document.createElement("a")
@@ -77,6 +96,7 @@ export function WarpGenerator() {
     <div className="w-full space-y-4">
       <div className="flex items-center gap-2">
         <Button onClick={generateConfig} disabled={isLoading || isGenerated} className="flex-grow">
+          {isLoading ? <LoaderCircle className="animate-spin" /> : <Sparkles />}
           {isLoading ? "Генерация..." : "Сгенерировать"}
         </Button>
 
@@ -125,27 +145,40 @@ export function WarpGenerator() {
 
       {status && <p className="text-sm text-muted-foreground">{status}</p>}
       {configData && isGenerated && (
-        <div className="flex gap-2">
-          <Button onClick={downloadConfig} className="flex-[0.7]">
-            Скачать конфиг
+        <>
+          <div className="flex gap-2">
+            <Button onClick={downloadConfig} className="flex-[0.7]">
+              <Download /> Скачать конфиг
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex-[0.3]">
+                  <QrCode /> QR код
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="config-dialog sm:max-w-[425px]">
+                <DialogHeader className="dialog-header">
+                  <DialogTitle>QR код конфигурации</DialogTitle>
+                  <DialogDescription>
+                    Отсканируйте этот QR код для импорта конфигурации
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center justify-center">
+                  <Image
+                    src={configData.qrCodeBase64 || "/placeholder.svg"}
+                    alt="QR Code"
+                    width={425}
+                    height={425}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Button onClick={copyConfig} className="w-full">
+            {!isConfigCopied ? <Copy /> : <Check />}
+            {!isConfigCopied ? "Скопировать конфиг" : "Скопировано"}
           </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex-[0.3]">
-                QR код
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="config-dialog sm:max-w-[425px]">
-              <DialogHeader className="dialog-header">
-                <DialogTitle>QR код конфигурации</DialogTitle>
-                <DialogDescription>Отсканируйте этот QR код для импорта конфигурации</DialogDescription>
-              </DialogHeader>
-              <div className="flex items-center justify-center">
-                <Image src={configData.qrCodeBase64 || "/placeholder.svg"} alt="QR Code" width={425} height={425} />
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+        </>
       )}
     </div>
   )
