@@ -22,7 +22,9 @@ import {
   XVIDEOS_IPS,
   PORNOLAB_IPS,
   FICBOOK_IPS,
-  PROTON_IPS
+  PROTON_IPS,
+  TELEGRAM_IPS,
+  WHATSAPP_IPS,
 } from "./ipRanges"
 
 // Простая генерация QR кода через внешний сервис
@@ -153,6 +155,8 @@ async function generateWarpConfig(
       pornolab: PORNOLAB_IPS,
       ficbook: FICBOOK_IPS,
       proton: PROTON_IPS,
+      telegram: TELEGRAM_IPS,
+      whatsapp: WHATSAPP_IPS,
     }
 
     selectedServices.forEach((service) => {
