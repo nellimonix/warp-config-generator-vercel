@@ -33,6 +33,7 @@ export function WarpGenerator() {
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [siteMode, setSiteMode] = useState<"all" | "specific">("all")
   const [deviceType, setDeviceType] = useState<"computer" | "phone" | "awg15">("computer")
+  const [endPoint, setEndPoint] = useState<"default" | "default2" | "input">("default")
   const [isGenerated, setIsGenerated] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [isConfigCopied, setIsConfigCopied] = useState(false)
@@ -132,6 +133,8 @@ export function WarpGenerator() {
                   onSiteModeChange={setSiteMode}
                   deviceType={deviceType}
                   onDeviceTypeChange={setDeviceType}
+                  endPoint={endPoint}
+                  onEndPointChange={setEndPoint}
                 />
               </DialogContent>
             </Dialog>
