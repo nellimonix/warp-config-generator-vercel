@@ -185,6 +185,7 @@ H2 = 2
 H3 = 3
 H4 = 4
 ${awg_detect}
+
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowed_ips}
