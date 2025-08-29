@@ -4,8 +4,8 @@ import { getWarpConfigLink } from "@/lib/warpConfig"
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { selectedServices, siteMode, deviceType } = body
-    const content = await getWarpConfigLink(selectedServices, siteMode, deviceType)
+    const { selectedServices, siteMode, deviceType, endpoint } = body
+    const content = await getWarpConfigLink(selectedServices, siteMode, deviceType, endpoint)
     if (content) {
       return NextResponse.json({ success: true, content })
     } else {
