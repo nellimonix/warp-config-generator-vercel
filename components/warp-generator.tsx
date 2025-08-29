@@ -33,14 +33,41 @@ export function WarpGenerator() {
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [siteMode, setSiteMode] = useState<"all" | "specific">("all")
   const [deviceType, setDeviceType] = useState<"computer" | "phone" | "awg15">("computer")
-  const [endPoint, setEndPoint] = useState<"default" | "default2" | "input">("default")
+  const [endPoint, setEndPoint] = useState<"default" | "default2" | "input">("default");
+  const [customEndpoint, setCustomEndpoint] = useState("");
   const [isGenerated, setIsGenerated] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [isConfigCopied, setIsConfigCopied] = useState(false)
 
+  const handleEndPointChange = (value: "default" | "default2" | "input") => {
+    setEndPoint(value);
+    if (value === "input") {
+      setCustomEndpoint("");
+    }
+  };
+
+  const handleCustomEndpointChange = (endpoint: string) => {
+    setCustomEndpoint(endpoint);
+  };
+
   const generateConfig = async () => {
     setIsLoading(true)
     setStatus("")
+
+    let finalEndpoint = "162.159.195.1:500"; // по умолчанию
+
+    switch (endPoint) {
+      case "default":
+        finalEndpoint = "162.159.195.1:500";
+        break;
+      case "default2":
+        finalEndpoint = "engage.cloudflareclient.com:2408";
+        break;
+      case "input":
+        finalEndpoint = customEndpoint || "162.159.195.1:500"; // fallback если пусто
+        break;
+    }
+
     try {
       const response = await fetch("/api/warp", {
         method: "POST",
@@ -51,6 +78,7 @@ export function WarpGenerator() {
           selectedServices: siteMode === "specific" && selectedServices.length === 0 ? ["all"] : selectedServices,
           siteMode: siteMode === "specific" && selectedServices.length === 0 ? "all" : siteMode,
           deviceType,
+          endpoint: finalEndpoint,
         }),
       })
       const data = await response.json()
@@ -134,7 +162,9 @@ export function WarpGenerator() {
                   deviceType={deviceType}
                   onDeviceTypeChange={setDeviceType}
                   endPoint={endPoint}
-                  onEndPointChange={setEndPoint}
+                  onEndPointChange={handleEndPointChange}
+                  customEndpoint={customEndpoint}
+                  onCustomEndpointChange={handleCustomEndpointChange}
                 />
               </DialogContent>
             </Dialog>
