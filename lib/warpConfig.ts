@@ -48,7 +48,7 @@ async function generateQRCode(text: string) {
       return `data:image/png;base64,${base64}`
     }
   } catch (error) {
-    console.log("QR generation via API failed:", error.message)
+    console.log("QR generation via API failed:", error)
   }
   
   // Fallback SVG QR code placeholder
@@ -107,6 +107,7 @@ async function generateWarpConfig(
   selectedServices: string[],
   siteMode: "all" | "specific",
   deviceType: "computer" | "phone" | "awg15",
+  endpoint: string,
 ) {
   const { privKey, pubKey } = generateKeys()
 
@@ -187,12 +188,10 @@ ${awg_detect}
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowed_ips}
-Endpoint = 162.159.195.1:500`
+Endpoint = ${endpoint}`
 
   return conf
 }
-
-// 188.114.99.224:1002 engage.cloudflareclient.com:500 ${peer_endpoint}
 
 function removeMtuLine(config: string) {
   return config.replace(/^MTU = 1280\n?/gm, "")
@@ -202,9 +201,10 @@ export async function getWarpConfigLink(
   selectedServices: string[],
   siteMode: "all" | "specific",
   deviceType: "computer" | "phone" | "awg15",
+  endpoint: string,
 ) {
   try {
-    const conf = await generateWarpConfig(selectedServices, siteMode, deviceType)
+    const conf = await generateWarpConfig(selectedServices, siteMode, deviceType, endpoint)
     const confBase64 = Buffer.from(conf).toString("base64")
     const confWithoutMtu = removeMtuLine(conf)
     const qrCodeBase64 = await generateQRCode(confWithoutMtu)
