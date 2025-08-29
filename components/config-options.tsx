@@ -51,7 +51,22 @@ interface ConfigOptionsProps {
   onDeviceTypeChange: (type: "computer" | "phone" | "awg15") => void
   endPoint: "default" | "default2" | "input"
   onEndPointChange: (point: "default" | "default2" | "input") => void
+  customEndpoint: string
+  onCustomEndpointChange: (endpoint: string) => void
 }
+
+const getEndpointDisplayValue = (endPointValue: string) => {
+  switch (endPointValue) {
+    case "default":
+      return "162.159.195.1:500";
+    case "default2":
+      return "engage.cloudflareclient.com:2408";
+    case "input":
+      return "";
+    default:
+      return "";
+  }
+};
 
 export function ConfigOptions({
   selectedServices,
@@ -62,8 +77,21 @@ export function ConfigOptions({
   onDeviceTypeChange,
   endPoint,
   onEndPointChange,
+  customEndpoint,
+  onCustomEndpointChange,
 }: ConfigOptionsProps) {
-  const [customEndpoint, setCustomEndpoint] = useState("");
+  const handleEndPointChange = (value: "default" | "default2" | "input") => {
+    onEndPointChange(value);
+    if (value === "input") {
+      onCustomEndpointChange("");
+    }
+  };
+
+  const handleCustomEndpointChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (endPoint === "input") {
+      onCustomEndpointChange(e.target.value);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -128,26 +156,26 @@ export function ConfigOptions({
         {/* Endpoint */}
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium pb-[5px]">Конечная точка</span>
-          <Select value={endPoint} onValueChange={onEndPointChange}>
-            <SelectTrigger className="text-left [&>span]:text-left">
+          <Select value={endPoint} onValueChange={handleEndPointChange}>
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">По умолчанию (162.159.195.1:500)</SelectItem>
-              <SelectItem value="default2">Альтернативный (engage.cloudflareclient.com:2408)</SelectItem>
+              <SelectItem value="default">По умолчанию</SelectItem>
+              <SelectItem value="default2">Альтернативный</SelectItem>
               <SelectItem value="input">Указать свой адрес</SelectItem>
             </SelectContent>
           </Select>
 
-          {/* Поле ввода кастомного адреса */}
-          {endPoint === "input" && (
-            <Input
-              value={customEndpoint}
-              onChange={(e) => setCustomEndpoint(e.target.value)}
-              placeholder="Введите адрес сервера"
-              className="mt-2"
-            />
-          )}
+          {/* Поле ввода - всегда видимое, но с разными состояниями */}
+          <Input
+            value={endPoint === "input" ? customEndpoint : getEndpointDisplayValue(endPoint)}
+            onChange={handleCustomEndpointChange}
+            placeholder={endPoint === "input" ? "Введите адрес сервера" : ""}
+            className="mt-2"
+            disabled={endPoint !== "input"}
+            readOnly={endPoint !== "input"}
+          />
         </div>
 
       </div>
