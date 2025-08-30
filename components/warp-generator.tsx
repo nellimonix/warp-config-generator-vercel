@@ -104,6 +104,8 @@ export function WarpGenerator() {
       navigator.clipboard.writeText(atob(configData.configBase64))
       setIsConfigCopied(true)
       setTimeout(() => { setIsConfigCopied(false) }, 3000)
+      yandexEvent(98811523, "reachGoal", "WARP_COPY")
+      rybbitEvent("WARP_COPY")
     }
   }
 
