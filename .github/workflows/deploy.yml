@@ -39,6 +39,7 @@ jobs:
         with:
           project: "warpdev"
 <<<<<<< HEAD
+<<<<<<< HEAD
           entrypoint: "jsr:@deno/nextjs-start/v15"
           root: "."
           
@@ -49,3 +50,9 @@ jobs:
           
           
 >>>>>>> 993bf17 (feat: Deploy workflow improvements)
+=======
+          entrypoint: ".next/standalone/server.js"
+          root: "."
+          
+          
+>>>>>>> 993bf17287b13b5f523374a48be4ca35cef3287f
