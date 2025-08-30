@@ -7,6 +7,7 @@ try {
 
 // Определяем платформу по переменным окружения
 const isCloudflarePages = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH
+const isDenoDeploy = process.env.DENO_DEPLOYMENT_ID !== undefined;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -26,8 +27,11 @@ if (isCloudflarePages) {
   nextConfig.output = 'export'
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
+} else if (isDenoDeploy) {
+  // Конфигурация для Deno Deploy
+  nextConfig.output = 'standalone';
 } else {
-  // Конфигурация для Vercel и Netlify
+  // Конфигурация для Vercel, Netlify
   nextConfig.experimental = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
