@@ -9,12 +9,10 @@ import {
 } from "lucide-react"
 import { RiTelegram2Line, RiGithubLine, RiRobot2Line } from "react-icons/ri";
 import { WarpGenerator } from "@/components/warp-generator"
-import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   return (
     <>
-      <Analytics/>
       <main className="flex min-h-screen flex-col items-center justify-center p-4 w-full">
         <Alert className="alert mb-6 break-words">
           <AlertTitle className="flex items-center gap-2">
