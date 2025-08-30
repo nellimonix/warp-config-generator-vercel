@@ -27,8 +27,7 @@ if (isCloudflarePages) {
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
 } else {
-  // Конфигурация для Vercel, Netlify и Deno Deploy
-  nextConfig.output = 'standalone'; // Deno Deploy
+  // Конфигурация для Vercel, Netlify
   nextConfig.experimental = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
