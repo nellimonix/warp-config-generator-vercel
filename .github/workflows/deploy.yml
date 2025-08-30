@@ -2,33 +2,43 @@ name: Deploy
 on:
   push:
     branches: dev
+  pull_request:
+    branches: dev
 
 jobs:
   deploy:
+    name: Deploy
     runs-on: ubuntu-latest
+
     permissions:
-      id-token: write
-      contents: read
+      id-token: write # Needed for auth with Deno Deploy
+      contents: read # Needed to clone the repository
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone repository
+        uses: actions/checkout@v4
 
-      - uses: denoland/setup-deno@v2
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
-      - uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: lts/*
 
-      - run: npm install --legacy-peer-deps
-      - run: npm run build
+      - name: Install step
+        run: "npm install"
 
-      - uses: denoland/deployctl@v1
+      - name: Build step
+        run: "npm run build"
+
+      - name: Upload to Deno Deploy
+        uses: denoland/deployctl@v1
         with:
-          project: getwarp
-          entrypoint: jsr:@deno/nextjs-start/v15
-          root: .
-          include: |
-            .next
-            public
+          project: "warpdev"
+          entrypoint: "jsr:@deno/nextjs-start/v15"
+          root: "."
+          include: .next, public
+          
