@@ -29,7 +29,7 @@ jobs:
           node-version: lts/*
 
       - name: Install step
-        run: "npm install"
+        run: "npm install --legacy-peer-deps"
 
       - name: Build step
         run: "npm run build"
@@ -40,5 +40,5 @@ jobs:
           project: "warpdev"
           entrypoint: "jsr:@deno/nextjs-start/v15"
           root: "."
-          include: .next, public
+          
           
