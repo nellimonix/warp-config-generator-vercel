@@ -38,7 +38,14 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: "warpdev"
+<<<<<<< HEAD
           entrypoint: "jsr:@deno/nextjs-start/v15"
           root: "."
           
           
+=======
+          entrypoint: ".next/standalone/server.js"
+          root: "."
+          
+          
+>>>>>>> 993bf17 (feat: Deploy workflow improvements)
