@@ -3,10 +3,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import type React from "react"
-import Script from "next/script"
-import { Analytics } from "@vercel/analytics/next"
-import AnalyticsLoader from "@/components/rybbit-analytics"
-import YandexMetrikaLoader from "@/components/yandex-metrika"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -31,9 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru">
       <head>
-        <Analytics/>
-        <AnalyticsLoader/>
-        <YandexMetrikaLoader/>
         <link rel="icon" href="/cloud.ico" type="image/x-icon" />
       </head>
       <body className={inter.className}>

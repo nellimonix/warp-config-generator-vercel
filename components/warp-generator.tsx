@@ -22,7 +22,6 @@ import {
   LoaderCircle
 } from "lucide-react"
 import Image from "next/image"
-import { yandexEvent, rybbitEvent } from "@/utils/analyticsEvent"
 import { ConfigOptions } from "./config-options"
 import { Badge } from "@/components/ui/badge"
 
@@ -87,8 +86,6 @@ export function WarpGenerator() {
         setConfigData(data.content)
         setStatus("")
         setIsGenerated(true)
-        yandexEvent(98811523, "reachGoal", "WARP_GEN")
-        rybbitEvent("WARP_GEN")
       } else {
         setStatus("Ошибка: " + data.message)
       }
@@ -104,8 +101,6 @@ export function WarpGenerator() {
       navigator.clipboard.writeText(atob(configData.configBase64))
       setIsConfigCopied(true)
       setTimeout(() => { setIsConfigCopied(false) }, 3000)
-      yandexEvent(98811523, "reachGoal", "WARP_COPY")
-      rybbitEvent("WARP_COPY")
     }
   }
 
@@ -115,8 +110,6 @@ export function WarpGenerator() {
       link.href = "data:application/octet-stream;base64," + configData.configBase64
       link.download = `WARP${Math.floor(Math.random() * (9999999 - 1000000 + 1)) + 1000000}.conf`
       link.click()
-      yandexEvent(98811523, "reachGoal", "WARP_DOWNLOAD")
-      rybbitEvent("WARP_DOWNLOAD")
     }
   }
 
