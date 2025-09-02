@@ -25,6 +25,7 @@ import {
   PROTON_IPS,
   TELEGRAM_IPS,
   WHATSAPP_IPS,
+  SIGNAL_IPS
 } from "./ipRanges"
 
 // Простая генерация QR кода через внешний сервис
@@ -158,6 +159,7 @@ async function generateWarpConfig(
       proton: PROTON_IPS,
       telegram: TELEGRAM_IPS,
       whatsapp: WHATSAPP_IPS,
+      signal: SIGNAL_IPS
     }
 
     selectedServices.forEach((service) => {
