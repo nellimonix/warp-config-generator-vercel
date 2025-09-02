@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // допустим у тебя есть компонент Input
 import { FaDiscord, FaYoutube, FaTwitter, FaFacebook } from "react-icons/fa";
-import { FaTelegram } from "react-icons/fa6";
+import { FaTelegram, FaSignalMessenger } from "react-icons/fa6";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { RiInstagramFill } from "react-icons/ri";
 import { SiPatreon, SiCanva, SiProtonvpn } from "react-icons/si";
@@ -25,6 +25,7 @@ const services = [
   { name: "Instagram", key: "instagram", icon: RiInstagramFill },
   { name: "Facebook", key: "facebook", icon: FaFacebook },
   { name: "Viber", key: "viber", icon: ViberIcon },
+  { name: "Signal", key: "signal", icon: FaSignalMessenger, type: "new" },
   { name: "Zetflix", key: "zetflix", icon: RiNetflixFill },
   { name: "Canva", key: "canva", icon: SiCanva },
   { name: "Patreon", key: "patreon", icon: SiPatreon },
