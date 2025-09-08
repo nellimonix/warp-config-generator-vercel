@@ -131,7 +131,7 @@ export function WarpGenerator() {
             {siteMode === "specific" && (
               <Badge
                 variant="secondary"
-                className="absolute -top-2 -right-2 bg-white text-black rounded-[5px] w-5 h-5 flex items-center justify-center text-xs"
+                className="absolute -top-2 -right-2 bg-white text-black rounded-[5px] w-5 h-5 flex items-center justify-center text-xs pointer-events-none"
               >
                 {selectedServices.length}
               </Badge>
