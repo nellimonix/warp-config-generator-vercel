@@ -22,7 +22,7 @@ export default function AnalyticsLoader() {
 
   return (
     <Script
-      src="https://anltcs.llimonix.pw/api/script.js"
+      src="https://anltcs.llimonix.dev/api/script.js"
       data-site-id={siteId}
       strategy="afterInteractive"
     />
