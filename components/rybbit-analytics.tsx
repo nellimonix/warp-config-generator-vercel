@@ -10,7 +10,7 @@ export default function AnalyticsLoader() {
     if (typeof window === "undefined") return
 
     const hostname = window.location.hostname
-    if (hostname === "warp.llimonix.pw") setSiteId("1")
+    if (hostname === "warp.llimonix.dev") setSiteId("1")
     else if (hostname === "getwarp.netlify.app") setSiteId("2")
     else if (hostname === "getwarp.pages.dev") setSiteId("3")
     else if (hostname === "warply.vercel.app") setSiteId("4")
