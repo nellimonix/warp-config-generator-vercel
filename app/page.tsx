@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <>
       <main className="flex min-h-screen flex-col items-center justify-center p-4 w-full">
-        <Alert className="alert mb-6 break-words">
+        <Alert className="alert mb-6 break-words hidden">
           <AlertTitle className="flex items-center gap-2">
             <Info className="w-5 h-5 text-gray-400" />
             WARP на мобильном интернете
