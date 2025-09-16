@@ -1,32 +1,6 @@
 import nacl from "tweetnacl"
 import { Buffer } from "buffer"
-
-// Import IP ranges
-import {
-  DISCORD_IPS,
-  YOUTUBE_IPS,
-  X_TWITTER_IPS,
-  FACEBOOK_INSTAGRAM_IPS,
-  VIBER_IPS,
-  ZETFLIX_IPS,
-  NNMCLUB_IPS,
-  RUTRACKER_IPS,
-  KINOZAL_IPS,
-  COPILOT_IPS,
-  CANVA_IPS,
-  PATREON_IPS,
-  ANIMEGO_IPS,
-  JUTSU_IPS,
-  YUMMYANIME_IPS,
-  PORNHUB_IPS,
-  XVIDEOS_IPS,
-  PORNOLAB_IPS,
-  FICBOOK_IPS,
-  PROTON_IPS,
-  TELEGRAM_IPS,
-  WHATSAPP_IPS,
-  SIGNAL_IPS
-} from "./ipRanges"
+import ipRanges from "@/data/ip-ranges.json"
 
 // Простая генерация QR кода через внешний сервис
 async function generateQRCode(text: string) {
@@ -135,36 +109,10 @@ async function generateWarpConfig(
   let allowed_ips_set = new Set<string>()
 
   if (siteMode === "specific") {
-    const ipRanges: { [key: string]: string } = {
-      discord: DISCORD_IPS,
-      youtube: YOUTUBE_IPS,
-      twitter: X_TWITTER_IPS,
-      instagram: FACEBOOK_INSTAGRAM_IPS,
-      facebook: FACEBOOK_INSTAGRAM_IPS,
-      viber: VIBER_IPS,
-      zetflix: ZETFLIX_IPS,
-      nnmclub: NNMCLUB_IPS,
-      rutracker: RUTRACKER_IPS,
-      kinozal: KINOZAL_IPS,
-      copilot: COPILOT_IPS,
-      canva: CANVA_IPS,
-      patreon: PATREON_IPS,
-      animego: ANIMEGO_IPS,
-      jutsu: JUTSU_IPS,
-      yummyanime: YUMMYANIME_IPS,
-      pornhub: PORNHUB_IPS,
-      xvideos: XVIDEOS_IPS,
-      pornolab: PORNOLAB_IPS,
-      ficbook: FICBOOK_IPS,
-      proton: PROTON_IPS,
-      telegram: TELEGRAM_IPS,
-      whatsapp: WHATSAPP_IPS,
-      signal: SIGNAL_IPS
-    }
-
     selectedServices.forEach((service) => {
-      if (ipRanges[service]) {
-        allowed_ips_set = new Set([...allowed_ips_set, ...ipRanges[service].split(", ")])
+      if (ipRanges[service as keyof typeof ipRanges]) {
+        const serviceIps = ipRanges[service as keyof typeof ipRanges].split(", ")
+        serviceIps.forEach(ip => allowed_ips_set.add(ip.trim()))
       }
     })
   }

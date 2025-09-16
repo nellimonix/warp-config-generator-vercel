@@ -1,0 +1,150 @@
+{
+  "services": [
+    {
+      "name": "Discord",
+      "key": "discord",
+      "icon": "FaDiscord",
+      "iconLibrary": "react-icons/fa"
+    },
+    {
+      "name": "YouTube",
+      "key": "youtube",
+      "icon": "FaYoutube",
+      "iconLibrary": "react-icons/fa"
+    },
+    {
+      "name": "Telegram",
+      "key": "telegram",
+      "icon": "FaTelegram",
+      "iconLibrary": "react-icons/fa6",
+      "type": "new"
+    },
+    {
+      "name": "WhatsApp",
+      "key": "whatsapp",
+      "icon": "IoLogoWhatsapp",
+      "iconLibrary": "react-icons/io"
+    },
+    {
+      "name": "Twitter",
+      "key": "twitter",
+      "icon": "FaTwitter",
+      "iconLibrary": "react-icons/fa"
+    },
+    {
+      "name": "Instagram",
+      "key": "instagram",
+      "icon": "RiInstagramFill",
+      "iconLibrary": "react-icons/ri"
+    },
+    {
+      "name": "Facebook",
+      "key": "facebook",
+      "icon": "FaFacebook",
+      "iconLibrary": "react-icons/fa"
+    },
+    {
+      "name": "Viber",
+      "key": "viber",
+      "icon": "ViberIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "Signal",
+      "key": "signal",
+      "icon": "FaSignalMessenger",
+      "iconLibrary": "react-icons/fa6",
+      "type": "new"
+    },
+    {
+      "name": "Zetflix",
+      "key": "zetflix",
+      "icon": "RiNetflixFill",
+      "iconLibrary": "react-icons/ri"
+    },
+    {
+      "name": "Canva",
+      "key": "canva",
+      "icon": "SiCanva",
+      "iconLibrary": "react-icons/si"
+    },
+    {
+      "name": "Patreon",
+      "key": "patreon",
+      "icon": "SiPatreon",
+      "iconLibrary": "react-icons/si"
+    },
+    {
+      "name": "Proton",
+      "key": "proton",
+      "icon": "SiProtonvpn",
+      "iconLibrary": "react-icons/si"
+    },
+    {
+      "name": "NNM-Club",
+      "key": "nnmclub",
+      "icon": "NNMClubIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "RuTracker",
+      "key": "rutracker",
+      "icon": "RuTrackerIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "Kinozal",
+      "key": "kinozal",
+      "icon": "KinozalIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "Copilot",
+      "key": "copilot",
+      "icon": "CopilotIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "AnimeGo",
+      "key": "animego",
+      "icon": "AnimeGoIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "Jutsu",
+      "key": "jutsu",
+      "icon": "JutsuIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "YummyAnime",
+      "key": "yummyanime",
+      "icon": "YummyAnimeIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "PornHub",
+      "key": "pornhub",
+      "icon": "PornhubIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "XVideos",
+      "key": "xvideos",
+      "icon": "XVideosIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "Pornolab",
+      "key": "pornolab",
+      "icon": "PornoLabIcon",
+      "iconLibrary": "custom"
+    },
+    {
+      "name": "Ficbook",
+      "key": "ficbook",
+      "icon": "FicBookIcon",
+      "iconLibrary": "custom"
+    }
+  ]
+}
