@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // допустим у тебя есть компонент Input
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { FaDiscord, FaYoutube, FaTwitter, FaFacebook } from "react-icons/fa";
 import { FaTelegram, FaSignalMessenger } from "react-icons/fa6";
 import { IoLogoWhatsapp } from "react-icons/io";
@@ -16,6 +17,7 @@ import {
   PornoLabIcon, FicBookIcon, RuTrackerIcon
 } from "@/components/icons/custom-icons";
 import servicesConfig from "@/data/services-config.json";
+import { CONFIG_FORMATS, type ConfigFormat, type DeviceType, type SiteMode, type EndPointType } from "@/lib/types";
 
 // Icon mapping для динамического импорта
 const iconMap = {
@@ -53,18 +55,19 @@ const iconMap = {
   "TbBoxMultipleFilled": TbBoxMultipleFilled
 };
 
-
-interface ConfigOptionsProps {
+interface EnhancedConfigOptionsProps {
   selectedServices: string[]
   onServiceToggle: (service: string) => void
-  siteMode: "all" | "specific"
-  onSiteModeChange: (mode: "all" | "specific") => void
-  deviceType: "computer" | "phone" | "awg15"
-  onDeviceTypeChange: (type: "computer" | "phone" | "awg15") => void
-  endPoint: "default" | "default2" | "input"
-  onEndPointChange: (point: "default" | "default2" | "input") => void
+  siteMode: SiteMode
+  onSiteModeChange: (mode: SiteMode) => void
+  deviceType: DeviceType
+  onDeviceTypeChange: (type: DeviceType) => void
+  endPoint: EndPointType
+  onEndPointChange: (point: EndPointType) => void
   customEndpoint: string
   onCustomEndpointChange: (endpoint: string) => void
+  configFormat: ConfigFormat
+  onConfigFormatChange: (format: ConfigFormat) => void
 }
 
 const getEndpointDisplayValue = (endPointValue: string) => {
@@ -80,7 +83,7 @@ const getEndpointDisplayValue = (endPointValue: string) => {
   }
 };
 
-export function ConfigOptions({
+export function EnhancedConfigOptions({
   selectedServices,
   onServiceToggle,
   siteMode,
@@ -91,8 +94,10 @@ export function ConfigOptions({
   onEndPointChange,
   customEndpoint,
   onCustomEndpointChange,
-}: ConfigOptionsProps) {
-  const handleEndPointChange = (value: "default" | "default2" | "input") => {
+  configFormat,
+  onConfigFormatChange,
+}: EnhancedConfigOptionsProps) {
+  const handleEndPointChange = (value: EndPointType) => {
     onEndPointChange(value);
     if (value === "input") {
       onCustomEndpointChange("");
@@ -105,9 +110,48 @@ export function ConfigOptions({
     }
   };
 
+  const selectedFormatInfo = CONFIG_FORMATS.find(f => f.id === configFormat);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
+
+        {/* Формат конфигурации */}
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium pb-[5px]">Формат конфигурации</span>
+          <Select value={configFormat} onValueChange={onConfigFormatChange}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CONFIG_FORMATS.map((format) => (
+                <SelectItem key={format.id} value={format.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{format.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedFormatInfo && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {selectedFormatInfo.description}
+            </p>
+          )}
+        </div>
+
+        {/* Предупреждения для специфических форматов */}
+        {configFormat === "throne" && (
+          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+            <div className="flex items-start gap-2">
+              <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">ℹ️</span>
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">Throne - специальный URL формат</p>
+                <p>Конфигурация будет в виде wg:// ссылки для импорта в Throne клиент</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Режим сайта */}
         <div className="flex flex-col gap-1">

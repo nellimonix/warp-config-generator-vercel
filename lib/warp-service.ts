@@ -1,21 +1,24 @@
 /**
- * Главный сервис для генерации WARP конфигураций
+ * Расширенный сервис WARP с поддержкой множественных форматов конфигураций
  */
 
 import { CloudflareWarpClient } from './cloudflare-api';
 import { QRCodeGenerator } from './qr-generator';
 import { CryptoUtils } from './crypto-utils';
 import { ipRangesManager } from './ip-ranges';
-import { WarpConfigBuilder } from './builder/warp-config-builder';
+import { EnhancedWarpConfigBuilder } from './builder/warp-config-builder';
 import type { 
   WarpGenerationRequest, 
   WarpGenerationResult, 
-  WarpConfigParams 
+  ExtendedWarpConfigParams,
+  ConfigFormat,
+  WarpConfigResponse
 } from './types';
+import { getFileName, getConfigFormatInfo, getFormatsWithQRSupport } from './types';
 
 export type { WarpGenerationRequest, WarpGenerationResult } from './types';
 
-export class WarpService {
+export class EnhancedWarpService {
   private cloudflareClient: CloudflareWarpClient;
 
   constructor() {
@@ -23,12 +26,17 @@ export class WarpService {
   }
 
   /**
-   * Генерация WARP конфигурации
+   * Генерация WARP конфигурации с поддержкой различных форматов
    */
   public async generateConfig(request: WarpGenerationRequest): Promise<WarpGenerationResult> {
     try {
       // Валидация входных данных
       this.validateRequest(request);
+
+      const configFormat = request.configFormat || 'wireguard';
+      const formatInfo = getConfigFormatInfo(configFormat);
+
+      console.log(`Generating ${formatInfo?.name || configFormat} configuration...`);
 
       // Генерация ключей
       console.log('Generating cryptographic keys...');
@@ -46,19 +54,31 @@ export class WarpService {
       const configParams = this.extractConfigParams(warpConfig, keyPair, request);
 
       // Построение конфигурации
-      console.log('Building WireGuard configuration...');
-      const config = WarpConfigBuilder.build(configParams);
-      const configForQR = WarpConfigBuilder.buildForQR(configParams);
+      console.log(`Building ${configFormat} configuration...`);
+      const config = EnhancedWarpConfigBuilder.build(configParams);
+      
+      // Генерация QR кода только для поддерживаемых форматов
+      let qrCodeBase64 = '';
+      const supportsQR = getFormatsWithQRSupport().includes(configFormat);
+      
+      if (supportsQR) {
+        console.log('Generating QR code...');
+        const configForQR = EnhancedWarpConfigBuilder.buildForQR(configParams);
+        qrCodeBase64 = await QRCodeGenerator.generate(configForQR);
+      } else {
+        // Генерируем заглушку для форматов без поддержки QR
+        qrCodeBase64 = await this.generateUnsupportedQR(configFormat);
+      }
 
-      // Генерация QR кода
-      console.log('Generating QR code...');
-      const qrCodeBase64 = await QRCodeGenerator.generate(configForQR);
+      const fileName = getFileName(configFormat);
 
-      console.log('WARP configuration generated successfully');
+      console.log(`${formatInfo?.name || configFormat} configuration generated successfully`);
       
       return {
         configBase64: CryptoUtils.stringToBase64(config),
         qrCodeBase64,
+        configFormat,
+        fileName
       };
     } catch (error) {
       console.error('Failed to generate WARP configuration:', error);
@@ -69,10 +89,17 @@ export class WarpService {
   }
 
   /**
+   * Получение списка поддерживаемых форматов
+   */
+  public getSupportedFormats(): ConfigFormat[] {
+    return EnhancedWarpConfigBuilder.getSupportedFormats();
+  }
+
+  /**
    * Валидация входящего запроса
    */
   private validateRequest(request: WarpGenerationRequest): void {
-    const { selectedServices, siteMode, deviceType, endpoint } = request;
+    const { selectedServices, siteMode, deviceType, endpoint, configFormat } = request;
 
     if (!['all', 'specific'].includes(siteMode)) {
       throw new WarpGenerationError(`Invalid site mode: ${siteMode}`);
@@ -84,6 +111,10 @@ export class WarpService {
 
     if (!endpoint?.trim()) {
       throw new WarpGenerationError('Endpoint is required');
+    }
+
+    if (configFormat && !this.getSupportedFormats().includes(configFormat)) {
+      throw new WarpGenerationError(`Unsupported config format: ${configFormat}`);
     }
 
     if (siteMode === 'specific') {
@@ -106,14 +137,21 @@ export class WarpService {
    * Извлечение параметров конфигурации из ответа Cloudflare
    */
   private extractConfigParams(
-    warpConfig: any,
+    warpConfig: WarpConfigResponse,
     keyPair: { privateKey: string; publicKey: string },
     request: WarpGenerationRequest
-  ): WarpConfigParams {
+  ): ExtendedWarpConfigParams {
     const peer = warpConfig.result.config.peers[0];
     const interfaceConfig = warpConfig.result.config.interface;
+    const configFormat = request.configFormat || 'wireguard';
 
     const allowedIPs = this.generateAllowedIPs(request);
+
+    // Извлекаем reserved из client_id если доступен
+    let reserved = '';
+    if (warpConfig.result.config.client_id) {
+      reserved = warpConfig.result.config.client_id;
+    }
 
     return {
       privateKey: keyPair.privateKey,
@@ -123,6 +161,8 @@ export class WarpService {
       allowedIPs,
       endpoint: request.endpoint,
       deviceType: request.deviceType,
+      configFormat,
+      reserved
     };
   }
 
@@ -148,6 +188,28 @@ export class WarpService {
 
     return ipRangesManager.generateAllowedIPs(supportedServices);
   }
+
+  /**
+   * Генерация QR заглушки для неподдерживаемых форматов
+   */
+  private async generateUnsupportedQR(format: ConfigFormat): Promise<string> {
+    const formatInfo = getConfigFormatInfo(format);
+    const formatName = formatInfo?.name || format;
+    
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="border: 1px solid #ccc;">
+        <rect width="200" height="200" fill="white"/>
+        <!-- Warning triangle -->
+        <polygon points="100,30 170,150 30,150" fill="none" stroke="#f59e0b" stroke-width="3"/>
+        <text x="100" y="140" text-anchor="middle" font-family="Arial" font-size="24" fill="#f59e0b">!</text>
+        <!-- Format name -->
+        <text x="100" y="175" text-anchor="middle" font-family="Arial" font-size="12" fill="#6b7280">${formatName}</text>
+        <text x="100" y="190" text-anchor="middle" font-family="Arial" font-size="10" fill="#9ca3af">QR не поддерживается</text>
+      </svg>
+    `.trim();
+
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
 }
 
 /**
@@ -157,5 +219,25 @@ export class WarpGenerationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'WarpGenerationError';
+  }
+}
+
+/**
+ * Фабрика для создания сервисов WARP
+ */
+export class WarpServiceFactory {
+  /**
+   * Создание экземпляра enhanced сервиса
+   */
+  public static createEnhancedService(): EnhancedWarpService {
+    return new EnhancedWarpService();
+  }
+
+  /**
+   * Создание экземпляра legacy сервиса (для обратной совместимости)
+   */
+  public static createLegacyService() {
+    // Можно импортировать старый WarpService если нужно
+    return new EnhancedWarpService();
   }
 }

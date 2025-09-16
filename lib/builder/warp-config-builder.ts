@@ -1,10 +1,17 @@
 /**
- * Построитель конфигураций WireGuard для WARP
+ * Расширенный построитель конфигураций WARP с поддержкой различных форматов
  */
 
 import type { DeviceType, WarpConfigParams, DNSConfig } from '../types';
 
-export class WarpConfigBuilder {
+export type ConfigFormat = 'wireguard' | 'throne' | 'clash' | 'nekoray' | 'husi' | 'karing';
+
+export interface ExtendedWarpConfigParams extends WarpConfigParams {
+  configFormat: ConfigFormat;
+  reserved?: string; // для некоторых форматов
+}
+
+export class EnhancedWarpConfigBuilder {
   private static readonly DEFAULT_DNS: DNSConfig = {
     primary: ['1.1.1.1', '2606:4700:4700::1111'],
     secondary: ['1.0.0.1', '2606:4700:4700::1001'],
@@ -31,39 +38,264 @@ export class WarpConfigBuilder {
   } as const;
 
   /**
-   * Построение полной конфигурации WireGuard
+   * Главная функция построения конфигурации
    */
-  public static build(params: WarpConfigParams): string {
-    const sections = [
-      WarpConfigBuilder.buildInterfaceSection(params),
-      WarpConfigBuilder.buildPeerSection(params),
-    ];
-
-    return sections.join('\n\n');
+  public static build(params: ExtendedWarpConfigParams): string {
+    switch (params.configFormat) {
+      case 'wireguard':
+        return EnhancedWarpConfigBuilder.buildWireGuardConfig(params);
+      case 'throne':
+        return EnhancedWarpConfigBuilder.buildThroneConfig(params);
+      case 'clash':
+        return EnhancedWarpConfigBuilder.buildClashConfig(params);
+      case 'nekoray':
+        return EnhancedWarpConfigBuilder.buildNekoRayConfig(params);
+      case 'husi':
+        return EnhancedWarpConfigBuilder.buildHusiConfig(params);
+      case 'karing':
+        return EnhancedWarpConfigBuilder.buildKaringConfig(params);
+      default:
+        throw new Error(`Unsupported config format: ${params.configFormat}`);
+    }
   }
 
   /**
-   * Построение конфигурации без MTU (для QR кодов)
+   * Конфигурация для QR кода (упрощенная)
    */
-  public static buildForQR(params: WarpConfigParams): string {
-    const fullConfig = WarpConfigBuilder.build(params);
-    return WarpConfigBuilder.removeMTULine(fullConfig);
+  public static buildForQR(params: ExtendedWarpConfigParams): string {
+    if (params.configFormat === 'throne') {
+      // Throne использует специальный URL формат для QR
+      return EnhancedWarpConfigBuilder.buildThroneConfig(params);
+    }
+    
+    const fullConfig = EnhancedWarpConfigBuilder.build(params);
+    return EnhancedWarpConfigBuilder.removeMTULine(fullConfig);
   }
 
   /**
-   * Построение секции [Interface]
+   * Стандартная WireGuard конфигурация
    */
-  private static buildInterfaceSection(params: WarpConfigParams): string {
+  private static buildWireGuardConfig(params: ExtendedWarpConfigParams): string {
+    const interfaceSection = EnhancedWarpConfigBuilder.buildInterfaceSection(params);
+    const peerSection = EnhancedWarpConfigBuilder.buildPeerSection(params);
+    
+    return `${interfaceSection}\n\n${peerSection}`;
+  }
+
+  /**
+   * Конфигурация для Throne
+   */
+  private static buildThroneConfig(params: ExtendedWarpConfigParams): string {
+    const { privateKey, clientIPv4, clientIPv6, endpoint, deviceType } = params;
+    const profile = EnhancedWarpConfigBuilder.DEVICE_PROFILES[deviceType];
+    
+    // Убираем = из конца приватного ключа если есть
+    const cleanPrivateKey = privateKey.replace(/=$/, '');
+    
+    // Парсим reserved из base64 в формат dash-separated
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedForThrone(reserved);
+
+    return `wg://${endpoint}?private_key=${cleanPrivateKey}%3D&peer_public_key=bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo%3D&pre_shared_key=&reserved=${reservedFormatted}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${clientIPv4}/32-${clientIPv6}/128&workers=0&enable_amnezia=true&junk_packet_count=${profile.jc}&junk_packet_min_size=${profile.jmin}&junk_packet_max_size=${profile.jmax}&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
+  }
+
+  /**
+   * Конфигурация для Clash
+   */
+  private static buildClashConfig(params: ExtendedWarpConfigParams): string {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+
+    // Парсим endpoint для получения server и port
+    const [server, port] = endpoint.split(':');
+
+    return `proxies:
+- name: "WARP"
+  type: wireguard
+  private-key: ${privateKey}
+  server: ${server}
+  port: ${port || '500'}
+  ip: ${clientIPv4}
+  public-key: ${publicKey}
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [${reservedFormatted}]
+  udp: true
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1]
+  amnezia-wg-option:
+   jc: 120
+   jmin: 23
+   jmax: 911
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4
+
+proxy-groups:
+- name: Cloudflare
+  type: select
+  icon: https://www.vectorlogo.zone/logos/cloudflare/cloudflare-icon.svg
+  proxies:
+    - WARP
+  url: 'http://speed.cloudflare.com/'
+  interval: 300`;
+  }
+
+  /**
+   * Конфигурация для NekoRay/Exclave
+   */
+  private static buildNekoRayConfig(params: ExtendedWarpConfigParams): string {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+
+    // Парсим endpoint для получения server и port
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      mtu: 1280,
+      reserved: reservedFormatted.split(', ').map(Number),
+      private_key: privateKey,
+      type: "wireguard",
+      local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+      peer_public_key: publicKey,
+      server: server,
+      server_port: parseInt(port || '500', 10)
+    }, null, 2);
+  }
+
+  /**
+   * Конфигурация для Husi
+   */
+  private static buildHusiConfig(params: ExtendedWarpConfigParams): string {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint, allowedIPs } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+
+    // Парсим endpoint для получения server и port
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      type: "wireguard",
+      tag: "proxy",
+      mtu: 1280,
+      address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+      private_key: privateKey,
+      listen_port: 0,
+      peers: [
+        {
+          address: server,
+          port: parseInt(port || '500', 10),
+          public_key: publicKey,
+          pre_shared_key: "",
+          allowed_ips: allowedIPs.split(', '),
+          persistent_keepalive_interval: 600,
+          reserved: reservedFormatted
+        }
+      ],
+      detour: "direct"
+    }, null, 2);
+  }
+
+  /**
+   * Конфигурация для Karing/Hiddify
+   */
+  private static buildKaringConfig(params: ExtendedWarpConfigParams): string {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+
+    // Парсим endpoint для получения server и port
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      outbounds: [
+        {
+          tag: "WARP",
+          reserved: reservedFormatted.split(', ').map(Number),
+          mtu: 1280,
+          fake_packets: "5-10",
+          fake_packets_size: "40-100",
+          fake_packets_delay: "20-250",
+          fake_packets_mode: "m4",
+          private_key: privateKey,
+          type: "wireguard",
+          local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+          peer_public_key: publicKey,
+          server: server || "engage.cloudflareclient.com",
+          server_port: parseInt(port || '500', 10)
+        }
+      ]
+    }, null, 2);
+  }
+
+  /**
+   * Конфигурация для WARP in WARP
+   */
+  private static buildWarpInWarpConfig(params: ExtendedWarpConfigParams): string {
+    // Для WARP in WARP нужны два отдельных соединения
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+
+    // Генерируем случайные номера для тегов
+    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    const randomNumber2 = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+
+    // Парсим endpoint для получения server и port
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      outbounds: [
+        {
+          tag: `WARP_${randomNumber}`,
+          reserved: reservedFormatted.split(', ').map(Number),
+          mtu: 1280,
+          fake_packets: "5-10",
+          fake_packets_size: "40-100",
+          fake_packets_delay: "20-250",
+          fake_packets_mode: "m4",
+          private_key: privateKey,
+          type: "wireguard",
+          local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+          peer_public_key: publicKey,
+          server: server || "162.159.192.1",
+          server_port: parseInt(port || '500', 10)
+        },
+        {
+          type: "wireguard",
+          tag: `WARPinWARP_${randomNumber2}`,
+          detour: `WARP_${randomNumber}`,
+          local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`], // Используем те же адреса, в реальности нужны другие
+          private_key: privateKey, // В реальности нужен другой ключ
+          peer_public_key: publicKey,
+          reserved: reservedFormatted.split(', ').map(Number),
+          mtu: 1200,
+          server: server || "162.159.192.1",
+          server_port: 2408
+        }
+      ]
+    }, null, 2);
+  }
+
+  /**
+   * Построение секции [Interface] для WireGuard
+   */
+  private static buildInterfaceSection(params: ExtendedWarpConfigParams): string {
     const { privateKey, clientIPv4, clientIPv6, deviceType } = params;
-    const profile = WarpConfigBuilder.DEVICE_PROFILES[deviceType];
-    const dns = WarpConfigBuilder.formatDNS();
+    const profile = EnhancedWarpConfigBuilder.DEVICE_PROFILES[deviceType];
+    const dns = EnhancedWarpConfigBuilder.formatDNS();
 
     const lines = [
       '[Interface]',
       `PrivateKey = ${privateKey}`,
       `Address = ${clientIPv4}, ${clientIPv6}`,
       `DNS = ${dns}`,
-      `MTU = ${WarpConfigBuilder.DEFAULT_MTU}`,
+      `MTU = ${EnhancedWarpConfigBuilder.DEFAULT_MTU}`,
       'S1 = 0',
       'S2 = 0',
       `Jc = ${profile.jc}`,
@@ -77,16 +309,16 @@ export class WarpConfigBuilder {
 
     // Добавляем специальный параметр для AmneziaWG 1.5
     if (deviceType === 'awg15') {
-      lines.push(WarpConfigBuilder.getAmneziaWGParam());
+      lines.push(EnhancedWarpConfigBuilder.getAmneziaWGParam());
     }
 
     return lines.join('\n');
   }
 
   /**
-   * Построение секции [Peer]
+   * Построение секции [Peer] для WireGuard
    */
-  private static buildPeerSection(params: WarpConfigParams): string {
+  private static buildPeerSection(params: ExtendedWarpConfigParams): string {
     const { publicKey, allowedIPs, endpoint } = params;
 
     return [
@@ -101,7 +333,7 @@ export class WarpConfigBuilder {
    * Форматирование DNS серверов
    */
   private static formatDNS(): string {
-    const { primary, secondary } = WarpConfigBuilder.DEFAULT_DNS;
+    const { primary, secondary } = EnhancedWarpConfigBuilder.DEFAULT_DNS;
     return [...primary, ...secondary].join(', ');
   }
 
@@ -113,6 +345,40 @@ export class WarpConfigBuilder {
   }
 
   /**
+   * Форматирование reserved для Throne (dash-separated)
+   */
+  private static formatReservedForThrone(reserved: string): string {
+    if (!reserved) return '0-0-0';
+    
+    try {
+      // Если reserved это base64, декодируем
+      const buffer = Buffer.from(reserved, 'base64');
+      const bytes = Array.from(buffer);
+      return bytes.join('-');
+    } catch {
+      // Если не получилось декодировать, возвращаем дефолт
+      return '0-0-0';
+    }
+  }
+
+  /**
+   * Форматирование reserved как массив чисел
+   */
+  private static formatReservedArray(reserved: string): string {
+    if (!reserved) return '0, 0, 0';
+    
+    try {
+      // Если reserved это base64, декодируем
+      const buffer = Buffer.from(reserved, 'base64');
+      const bytes = Array.from(buffer);
+      return bytes.join(', ');
+    } catch {
+      // Если не получилось декодировать, возвращаем дефолт
+      return '0, 0, 0';
+    }
+  }
+
+  /**
    * Удаление строки MTU из конфигурации
    */
   private static removeMTULine(config: string): string {
@@ -120,39 +386,31 @@ export class WarpConfigBuilder {
   }
 
   /**
-   * Валидация параметров конфигурации
+   * Получение списка поддерживаемых форматов
    */
-  public static validateParams(params: WarpConfigParams): string[] {
-    const errors: string[] = [];
+  public static getSupportedFormats(): ConfigFormat[] {
+    return ['wireguard', 'throne', 'clash', 'nekoray', 'husi', 'karing'];
+  }
 
-    if (!params.privateKey?.trim()) {
-      errors.push('Private key is required');
-    }
+  /**
+   * Получение человекочитаемого названия формата
+   */
+  public static getFormatDisplayName(format: ConfigFormat): string {
+    const names: Record<ConfigFormat, string> = {
+      wireguard: 'AmneziaWG',
+      throne: 'Throne',
+      clash: 'Clash',
+      nekoray: 'NekoRay/Exclave',
+      husi: 'Husi',
+      karing: 'Karing/Hiddify'
+    };
+    return names[format];
+  }
 
-    if (!params.publicKey?.trim()) {
-      errors.push('Public key is required');
-    }
-
-    if (!params.clientIPv4?.trim()) {
-      errors.push('Client IPv4 address is required');
-    }
-
-    if (!params.clientIPv6?.trim()) {
-      errors.push('Client IPv6 address is required');
-    }
-
-    if (!params.allowedIPs?.trim()) {
-      errors.push('Allowed IPs are required');
-    }
-
-    if (!params.endpoint?.trim()) {
-      errors.push('Endpoint is required');
-    }
-
-    if (!Object.keys(WarpConfigBuilder.DEVICE_PROFILES).includes(params.deviceType)) {
-      errors.push(`Invalid device type: ${params.deviceType}`);
-    }
-
-    return errors;
+  /**
+   * Проверка, нужны ли дополнительные параметры для формата
+   */
+  public static requiresReserved(format: ConfigFormat): boolean {
+    return ['throne', 'clash', 'nekoray', 'husi', 'karing'].includes(format);
   }
 }
