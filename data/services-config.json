@@ -16,8 +16,7 @@
       "name": "Telegram",
       "key": "telegram",
       "icon": "FaTelegram",
-      "iconLibrary": "react-icons/fa6",
-      "type": "new"
+      "iconLibrary": "react-icons/fa6"
     },
     {
       "name": "WhatsApp",
@@ -53,8 +52,7 @@
       "name": "Signal",
       "key": "signal",
       "icon": "FaSignalMessenger",
-      "iconLibrary": "react-icons/fa6",
-      "type": "new"
+      "iconLibrary": "react-icons/fa6"
     },
     {
       "name": "Zetflix",
@@ -145,6 +143,17 @@
       "key": "ficbook",
       "icon": "FicBookIcon",
       "iconLibrary": "custom"
+    },
+    {
+      "name": "RuTor",
+      "key": "rutor",
+      "type": "new"
+      
+    },
+    {
+      "name": "Itch.io",
+      "key": "itchio",
+      "type": "new"
     }
   ]
 }
