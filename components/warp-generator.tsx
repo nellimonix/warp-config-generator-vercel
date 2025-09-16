@@ -17,29 +17,39 @@ import {
   QrCode,
   Settings,
   RefreshCw,
-  X,
   Sparkles,
-  LoaderCircle
+  LoaderCircle,
+  FileText,
+  AlertTriangle
 } from "lucide-react"
 import Image from "next/image"
 import { rybbitEvent } from "@/utils/analyticsEvent"
-import { ConfigOptions } from "./config-options"
+import { EnhancedConfigOptions } from "./config-options"
 import { Badge } from "@/components/ui/badge"
+import { CONFIG_FORMATS, type ConfigFormat, type DeviceType, type SiteMode, type EndPointType, getFileName } from "@/lib/types"
 
-export function WarpGenerator() {
+interface WarpConfigData {
+  configBase64: string;
+  qrCodeBase64: string;
+  configFormat: ConfigFormat;
+  fileName?: string;
+}
+
+export function EnhancedWarpGenerator() {
   const [status, setStatus] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [configData, setConfigData] = useState<{ configBase64: string; qrCodeBase64: string } | null>(null)
+  const [configData, setConfigData] = useState<WarpConfigData | null>(null)
   const [selectedServices, setSelectedServices] = useState<string[]>([])
-  const [siteMode, setSiteMode] = useState<"all" | "specific">("all")
-  const [deviceType, setDeviceType] = useState<"computer" | "phone" | "awg15">("computer")
-  const [endPoint, setEndPoint] = useState<"default" | "default2" | "input">("default");
-  const [customEndpoint, setCustomEndpoint] = useState("");
+  const [siteMode, setSiteMode] = useState<SiteMode>("all")
+  const [deviceType, setDeviceType] = useState<DeviceType>("computer")
+  const [endPoint, setEndPoint] = useState<EndPointType>("default")
+  const [customEndpoint, setCustomEndpoint] = useState("")
+  const [configFormat, setConfigFormat] = useState<ConfigFormat>("wireguard")
   const [isGenerated, setIsGenerated] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [isConfigCopied, setIsConfigCopied] = useState(false)
 
-  const handleEndPointChange = (value: "default" | "default2" | "input") => {
+  const handleEndPointChange = (value: EndPointType) => {
     setEndPoint(value);
     if (value === "input") {
       setCustomEndpoint("");
@@ -79,6 +89,7 @@ export function WarpGenerator() {
           siteMode: siteMode === "specific" && selectedServices.length === 0 ? "all" : siteMode,
           deviceType,
           endpoint: finalEndpoint,
+          configFormat,
         }),
       })
       const data = await response.json()
@@ -87,7 +98,7 @@ export function WarpGenerator() {
         setConfigData(data.content)
         setStatus("")
         setIsGenerated(true)
-        rybbitEvent("WARP_GEN")
+        rybbitEvent("WARP_GEN", `Format: ${configFormat}`)
       } else {
         setStatus("Ошибка: " + data.message)
       }
@@ -103,17 +114,18 @@ export function WarpGenerator() {
       navigator.clipboard.writeText(atob(configData.configBase64))
       setIsConfigCopied(true)
       setTimeout(() => { setIsConfigCopied(false) }, 3000)
-      rybbitEvent("WARP_COPY")
+      rybbitEvent("WARP_COPY", `Format: ${configData.configFormat}`)
     }
   }
 
   const downloadConfig = () => {
     if (configData) {
+      const fileName = configData.fileName || getFileName(configData.configFormat);
       const link = document.createElement("a")
       link.href = "data:application/octet-stream;base64," + configData.configBase64
-      link.download = `WARP${Math.floor(Math.random() * (9999999 - 1000000 + 1)) + 1000000}.conf`
+      link.download = fileName
       link.click()
-      rybbitEvent("WARP_DOWNLOAD")
+      rybbitEvent("WARP_DOWNLOAD", `Format: ${configData.configFormat}`)
     }
   }
 
@@ -122,8 +134,25 @@ export function WarpGenerator() {
     setIsGenerated(false)
   }
 
+  const selectedFormatInfo = CONFIG_FORMATS.find(f => f.id === configFormat);
+  const supportsQR = selectedFormatInfo?.supportsQR ?? true;
+
   return (
     <div className="w-full space-y-4">
+
+        {/* Индикатор выбранного формата */}
+        {!isGenerated && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <FileText className="h-4 w-4" />
+            <span>Формат: {selectedFormatInfo?.name || 'AmneziaWG'}</span>
+            {/* !supportsQR && (
+            <Badge variant="outline" className="text-xs">
+                Без QR
+            </Badge>
+            )*/ }
+        </div>
+        )}
+
       <div className="flex items-center gap-2">
         <Button onClick={generateConfig} disabled={isLoading || isGenerated} className="flex-grow">
           {isLoading ? <LoaderCircle className="animate-spin" /> : <Sparkles />}
@@ -149,9 +178,11 @@ export function WarpGenerator() {
               <DialogContent className="config-dialog sm:max-w-[425px] md:max-w-[700px]">
                 <DialogHeader className="dialog-header">
                   <DialogTitle>Настройка конфигурации</DialogTitle>
-                  <DialogDescription>Выберите параметры для вашей конфигурации WARP.</DialogDescription>
+                  <DialogDescription>
+                    Выберите формат конфигурации и параметры для вашего WARP соединения.
+                  </DialogDescription>
                 </DialogHeader>
-                <ConfigOptions
+                <EnhancedConfigOptions
                   selectedServices={selectedServices}
                   onServiceToggle={(service) =>
                     setSelectedServices((prev) =>
@@ -166,6 +197,8 @@ export function WarpGenerator() {
                   onEndPointChange={handleEndPointChange}
                   customEndpoint={customEndpoint}
                   onCustomEndpointChange={handleCustomEndpointChange}
+                  configFormat={configFormat}
+                  onConfigFormatChange={setConfigFormat}
                 />
               </DialogContent>
             </Dialog>
@@ -178,36 +211,81 @@ export function WarpGenerator() {
       </div>
 
       {status && <p className="text-sm text-muted-foreground">{status}</p>}
+      
       {configData && isGenerated && (
         <>
+          {/* Информация о сгенерированной конфигурации */}
+          <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-green-700 dark:text-green-300">
+                  Конфигурация {selectedFormatInfo?.name} готова!
+                </p>
+                <p className="text-green-600 dark:text-green-400 mt-1">
+                  {configData.fileName && `Файл: ${configData.fileName}`}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="flex gap-2">
             <Button onClick={downloadConfig} className="flex-[0.7]">
               <Download /> Скачать конфиг
             </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="flex-[0.3]">
-                  <QrCode /> QR код
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="config-dialog sm:max-w-[425px]">
-                <DialogHeader className="dialog-header">
-                  <DialogTitle>QR код конфигурации</DialogTitle>
-                  <DialogDescription>
-                    Отсканируйте этот QR код для импорта конфигурации
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex items-center justify-center">
-                  <Image
-                    src={configData.qrCodeBase64 || "/placeholder.svg"}
-                    alt="QR Code"
-                    width={425}
-                    height={425}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
+            
+            {supportsQR ? (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="flex-[0.3]">
+                    <QrCode /> QR код
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="config-dialog sm:max-w-[425px]">
+                  <DialogHeader className="dialog-header">
+                    <DialogTitle>QR код конфигурации</DialogTitle>
+                    <DialogDescription>
+                      Отсканируйте этот QR код для импорта конфигурации
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex items-center justify-center">
+                    <Image
+                      src={configData.qrCodeBase64 || "/placeholder.svg"}
+                      alt="QR Code"
+                      width={425}
+                      height={425}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="flex-[0.3]" disabled>
+                    <AlertTriangle className="h-4 w-4" />
+                    QR код
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="config-dialog sm:max-w-[425px]">
+                  <DialogHeader className="dialog-header">
+                    <DialogTitle>QR код</DialogTitle>
+                    <DialogDescription>
+                      Формат {selectedFormatInfo?.name} не поддерживает QR коды
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-center">
+                      <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                      <p className="text-sm text-muted-foreground">
+                        Сохраните конфигурацию как файл и импортируйте вручную в ваше приложение
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
+          
           <Button onClick={copyConfig} className="w-full">
             {!isConfigCopied ? <Copy /> : <Check />}
             {!isConfigCopied ? "Скопировать конфиг" : "Скопировано"}
@@ -217,4 +295,3 @@ export function WarpGenerator() {
     </div>
   )
 }
-

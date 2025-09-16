@@ -103,10 +103,17 @@ class CloudflareWarpClient {
 }
 
 /**
- * Генератор QR кодов
+ * Расширенный генератор QR кодов
  */
-class QRCodeGenerator {
-  static async generate(text) {
+class EnhancedQRCodeGenerator {
+  static async generate(text, configFormat = 'wireguard') {
+    // Для некоторых форматов QR коды не поддерживаются
+    const unsupportedFormats = ['clash', 'nekoray', 'husi', 'karing'];
+    
+    if (unsupportedFormats.includes(configFormat)) {
+      return EnhancedQRCodeGenerator.generateUnsupportedSVG(configFormat);
+    }
+
     try {
       const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=png&data=${encodeURIComponent(text)}`, {
         method: 'GET',
@@ -130,7 +137,28 @@ class QRCodeGenerator {
       console.warn('QR generation via API failed:', error);
     }
     
-    return QRCodeGenerator.generateFallbackSVG();
+    return EnhancedQRCodeGenerator.generateFallbackSVG();
+  }
+
+  static generateUnsupportedSVG(configFormat) {
+    const formatNames = {
+      clash: 'Clash',
+      nekoray: 'NekoRay',
+      husi: 'Husi',
+      karing: 'Karing'
+    };
+    
+    const formatName = formatNames[configFormat] || configFormat;
+    
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="border: 1px solid #ccc;">
+      <rect width="200" height="200" fill="white"/>
+      <polygon points="100,30 170,150 30,150" fill="none" stroke="#f59e0b" stroke-width="3"/>
+      <text x="100" y="140" text-anchor="middle" font-family="Arial" font-size="24" fill="#f59e0b">!</text>
+      <text x="100" y="175" text-anchor="middle" font-family="Arial" font-size="12" fill="#6b7280">${formatName}</text>
+      <text x="100" y="190" text-anchor="middle" font-family="Arial" font-size="10" fill="#9ca3af">QR не поддерживается</text>
+    </svg>`;
+
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
   static generateFallbackSVG() {
@@ -162,6 +190,280 @@ class CryptoUtils {
 
   static stringToBase64(str) {
     return Buffer.from(str).toString('base64');
+  }
+}
+
+/**
+ * Расширенный построитель конфигураций с поддержкой множественных форматов
+ */
+class EnhancedWarpConfigBuilder {
+  static DEVICE_PROFILES = {
+    computer: { jc: 4, jmin: 40, jmax: 70 },
+    phone: { jc: 120, jmin: 23, jmax: 911 },
+    awg15: { jc: 120, jmin: 23, jmax: 911 },
+  };
+
+  static build(params) {
+    switch (params.configFormat) {
+      case 'wireguard':
+        return EnhancedWarpConfigBuilder.buildWireGuardConfig(params);
+      case 'throne':
+        return EnhancedWarpConfigBuilder.buildThroneConfig(params);
+      case 'clash':
+        return EnhancedWarpConfigBuilder.buildClashConfig(params);
+      case 'nekoray':
+        return EnhancedWarpConfigBuilder.buildNekoRayConfig(params);
+      case 'husi':
+        return EnhancedWarpConfigBuilder.buildHusiConfig(params);
+      case 'karing':
+        return EnhancedWarpConfigBuilder.buildKaringConfig(params);
+      default:
+        return EnhancedWarpConfigBuilder.buildWireGuardConfig(params);
+    }
+  }
+
+  static buildForQR(params) {
+    if (params.configFormat === 'throne') {
+      return EnhancedWarpConfigBuilder.buildThroneConfig(params);
+    }
+    
+    const fullConfig = EnhancedWarpConfigBuilder.build(params);
+    return fullConfig.replace(/^MTU = \d+\n?/gm, '');
+  }
+
+  static buildWireGuardConfig(params) {
+    const interfaceSection = EnhancedWarpConfigBuilder.buildInterfaceSection(params);
+    const peerSection = EnhancedWarpConfigBuilder.buildPeerSection(params);
+    
+    return `${interfaceSection}\n\n${peerSection}`;
+  }
+
+  static buildThroneConfig(params) {
+    const { privateKey, clientIPv4, clientIPv6, endpoint, deviceType } = params;
+    const profile = EnhancedWarpConfigBuilder.DEVICE_PROFILES[deviceType];
+    
+    const cleanPrivateKey = privateKey.replace(/=$/, '');
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedForThrone(params.reserved || '');
+
+    return `wg://${endpoint}?private_key=${cleanPrivateKey}%3D&peer_public_key=bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo%3D&pre_shared_key=&reserved=${reservedFormatted}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${clientIPv4}/32-${clientIPv6}/128&workers=0&enable_amnezia=true&junk_packet_count=${profile.jc}&junk_packet_min_size=${profile.jmin}&junk_packet_max_size=${profile.jmax}&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
+  }
+
+  static buildClashConfig(params) {
+    const { privateKey, publicKey, clientIPv4, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+    const [server, port] = endpoint.split(':');
+
+    return `proxies:
+- name: "WARP"
+  type: wireguard
+  private-key: ${privateKey}
+  server: ${server}
+  port: ${port || '500'}
+  ip: ${clientIPv4}
+  public-key: ${publicKey}
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [${reservedFormatted}]
+  udp: true
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1]
+  amnezia-wg-option:
+   jc: 120
+   jmin: 23
+   jmax: 911
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4
+
+proxy-groups:
+- name: Cloudflare
+  type: select
+  icon: https://developers.cloudflare.com/_astro/logo.p_ySeMR1.svg
+  proxies:
+    - WARP
+  url: 'http://speed.cloudflare.com/'
+  interval: 300`;
+  }
+
+  static buildNekoRayConfig(params) {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      mtu: 1280,
+      reserved: reservedFormatted.split(', ').map(Number),
+      private_key: privateKey,
+      type: "wireguard",
+      local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+      peer_public_key: publicKey,
+      server: server,
+      server_port: parseInt(port || '500', 10)
+    }, null, 2);
+  }
+
+  static buildHusiConfig(params) {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint, allowedIPs } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      type: "wireguard",
+      tag: "proxy",
+      mtu: 1280,
+      address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+      private_key: privateKey,
+      listen_port: 0,
+      peers: [
+        {
+          address: server,
+          port: parseInt(port || '500', 10),
+          public_key: publicKey,
+          pre_shared_key: "",
+          allowed_ips: allowedIPs.split(', '),
+          persistent_keepalive_interval: 600,
+          reserved: reservedFormatted
+        }
+      ],
+      detour: "direct"
+    }, null, 2);
+  }
+
+  static buildKaringConfig(params) {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      outbounds: [
+        {
+          tag: "WARP",
+          reserved: reservedFormatted.split(', ').map(Number),
+          mtu: 1280,
+          fake_packets: "5-10",
+          fake_packets_size: "40-100",
+          fake_packets_delay: "20-250",
+          fake_packets_mode: "m4",
+          private_key: privateKey,
+          type: "wireguard",
+          local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+          peer_public_key: publicKey,
+          server: server || "engage.cloudflareclient.com",
+          server_port: parseInt(port || '500', 10)
+        }
+      ]
+    }, null, 2);
+  }
+
+  static buildWarpInWarpConfig(params) {
+    const { privateKey, publicKey, clientIPv4, clientIPv6, endpoint } = params;
+    const reserved = params.reserved || '';
+    const reservedFormatted = EnhancedWarpConfigBuilder.formatReservedArray(reserved);
+    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    const randomNumber2 = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    const [server, port] = endpoint.split(':');
+
+    return JSON.stringify({
+      outbounds: [
+        {
+          tag: `WARP_${randomNumber}`,
+          reserved: reservedFormatted.split(', ').map(Number),
+          mtu: 1280,
+          fake_packets: "5-10",
+          fake_packets_size: "40-100",
+          fake_packets_delay: "20-250",
+          fake_packets_mode: "m4",
+          private_key: privateKey,
+          type: "wireguard",
+          local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+          peer_public_key: publicKey,
+          server: server || "162.159.192.1",
+          server_port: parseInt(port || '500', 10)
+        },
+        {
+          type: "wireguard",
+          tag: `WARPinWARP_${randomNumber2}`,
+          detour: `WARP_${randomNumber}`,
+          local_address: [`${clientIPv4}/32`, `${clientIPv6}/128`],
+          private_key: privateKey,
+          peer_public_key: publicKey,
+          reserved: reservedFormatted.split(', ').map(Number),
+          mtu: 1200,
+          server: server || "162.159.192.1",
+          server_port: 2408
+        }
+      ]
+    }, null, 2);
+  }
+
+  static buildInterfaceSection(params) {
+    const { privateKey, clientIPv4, clientIPv6, deviceType } = params;
+    const profile = EnhancedWarpConfigBuilder.DEVICE_PROFILES[deviceType];
+
+    const lines = [
+      '[Interface]',
+      `PrivateKey = ${privateKey}`,
+      `Address = ${clientIPv4}, ${clientIPv6}`,
+      'DNS = 1.1.1.1, 2606:4700:4700::1111, 1.0.0.1, 2606:4700:4700::1001',
+      'MTU = 1280',
+      'S1 = 0',
+      'S2 = 0',
+      `Jc = ${profile.jc}`,
+      `Jmin = ${profile.jmin}`,
+      `Jmax = ${profile.jmax}`,
+      'H1 = 1',
+      'H2 = 2',
+      'H3 = 3',
+      'H4 = 4',
+    ];
+
+    if (deviceType === 'awg15') {
+      lines.push('I1 = <b 0xc2000000011419fa4bb3599f336777de79f81ca9a8d80d91eeec000044c635cef024a885dcb66d1420a91a8c427e87d6cf8e08b563932f449412cddf77d3e2594ea1c7a183c238a89e9adb7ffa57c133e55c59bec101634db90afb83f75b19fe703179e26a31902324c73f82d9354e1ed8da39af610afcb27e6590a44341a0828e5a3d2f0e0f7b0945d7bf3402feea0ee6332e19bdf48ffc387a97227aa97b205a485d282cd66d1c384bafd63dc42f822c4df2109db5b5646c458236ddcc01ae1c493482128bc0830c9e1233f0027a0d262f92b49d9d8abd9a9e0341f6e1214761043c021d7aa8c464b9d865f5fbe234e49626e00712031703a3e23ef82975f014ee1e1dc428521dc23ce7c6c13663b19906240b3efe403cf30559d798871557e4e60e86c29ea4504ed4d9bb8b549d0e8acd6c334c39bb8fb42ede68fb2aadf00cfc8bcc12df03602bbd4fe701d64a39f7ced112951a83b1dbbe6cd696dd3f15985c1b9fef72fa8d0319708b633cc4681910843ce753fac596ed9945d8b839aeff8d3bf0449197bd0bb22ab8efd5d63eb4a95db8d3ffc796ed5bcf2f4a136a8a36c7a0c65270d511aebac733e61d414050088a1c3d868fb52bc7e57d3d9fd132d78b740a6ecdc6c24936e92c28672dbe00928d89b891865f885aeb4c4996d50c2bbbb7a99ab5de02ac89b3308e57bcecf13f2da0333d1420e18b66b4c23d625d836b538fc0c221d6bd7f566a31fa292b85be96041d8e0bfe655d5dc1afed23eb8f2b3446561bbee7644325cc98d31cea38b865bdcc507e48c6ebdc7553be7bd6ab963d5a14615c4b81da7081c127c791224853e2d19bafdc0d9f3f3a6de898d14abb0e2bc849917e0a599ed4a541268ad0e60ea4d147dc33d17fa82f22aa505ccb53803a31d10a7ca2fea0b290a52ee92c7bf4aab7cea4e3c07b1989364eed87a3c6ba65188cd349d37ce4eefde9ec43bab4b4dc79e03469c2ad6b902e28e0bbbbf696781ad4edf424ffb35ce0236d373629008f142d04b5e08a124237e03e3149f4cdde92d7fae581a1ac332e26b2c9c1a6bdec5b3a9c7a2a870f7a0c25fc6ce245e029b686e346c6d862ad8df6d9b62474fbc31dbb914711f78074d4441f4e6e9edca3c52315a5c0653856e23f681558d669f4a4e6915bcf42b56ce36cb7dd3983b0b1d6fdf0f8efddb68e7ca0ae9dd4570fe6978fbb524109f6ec957ca61f1767ef74eb803b0f16abd0087cf2d01bc1db1c01d97ac81b3196c934586963fe7cf2d310e0739621e8bd00dc23fded18576d8c8f285d7bb5f43b547af3c76235de8b6f757f817683b2151600b11721219212bf27558edd439e73fce951f61d582320e5f4d6c315c71129b719277fc144bbe8ded25ab6d29b6e189c9bd9b16538faf60cc2aab3c3bb81fc2213657f2dd0ceb9b3b871e1423d8d3e8cc008721ef03b28e0ee7bb66b8f2a2ac01ef88df1f21ed49bf1ce435df31ac34485936172567488812429c269b49ee9e3d99652b51a7a614b7c460bf0d2d64d8349ded7345bedab1ea0a766a8470b1242f38d09f7855a32db39516c2bd4bcc538c52fa3a90c8714d4b006a15d9c7a7d04919a1cab48da7cce0d5de1f9e5f8936cffe469132991c6eb84c5191d1bcf69f70c58d9a7b66846440a9f0eef25ee6ab62715b50ca7bef0bc3013d4b62e1639b5028bdf757454356e9326a4c76dabfb497d451a3a1d2dbd46ec283d255799f72dfe878ae25892e25a2542d3ca9018394d8ca35b53ccd94947a8>');
+    }
+
+    return lines.join('\n');
+  }
+
+  static buildPeerSection(params) {
+    const { publicKey, allowedIPs, endpoint } = params;
+
+    return [
+      '[Peer]',
+      `PublicKey = ${publicKey}`,
+      `AllowedIPs = ${allowedIPs}`,
+      `Endpoint = ${endpoint}`,
+    ].join('\n');
+  }
+
+  static formatReservedForThrone(reserved) {
+    if (!reserved) return '0-0-0';
+    
+    try {
+      const buffer = Buffer.from(reserved, 'base64');
+      const bytes = Array.from(buffer);
+      return bytes.join('-');
+    } catch {
+      return '0-0-0';
+    }
+  }
+
+  static formatReservedArray(reserved) {
+    if (!reserved) return '0, 0, 0';
+    
+    try {
+      const buffer = Buffer.from(reserved, 'base64');
+      const bytes = Array.from(buffer);
+      return bytes.join(', ');
+    } catch {
+      return '0, 0, 0';
+    }
   }
 }
 
@@ -213,71 +515,9 @@ class IPRangesManager {
 }
 
 /**
- * Построитель конфигураций WARP
+ * Расширенный сервис для генерации WARP конфигураций
  */
-class WarpConfigBuilder {
-  static DEVICE_PROFILES = {
-    computer: { jc: 4, jmin: 40, jmax: 70 },
-    phone: { jc: 120, jmin: 23, jmax: 911 },
-    awg15: { jc: 120, jmin: 23, jmax: 911 },
-  };
-
-  static build(params) {
-    const interfaceSection = this.buildInterfaceSection(params);
-    const peerSection = this.buildPeerSection(params);
-    
-    return `${interfaceSection}\n\n${peerSection}`;
-  }
-
-  static buildForQR(params) {
-    const fullConfig = this.build(params);
-    return fullConfig.replace(/^MTU = \d+\n?/gm, '');
-  }
-
-  static buildInterfaceSection(params) {
-    const { privateKey, clientIPv4, clientIPv6, deviceType } = params;
-    const profile = this.DEVICE_PROFILES[deviceType];
-
-    let lines = [
-      '[Interface]',
-      `PrivateKey = ${privateKey}`,
-      `Address = ${clientIPv4}, ${clientIPv6}`,
-      'DNS = 1.1.1.1, 2606:4700:4700::1111, 1.0.0.1, 2606:4700:4700::1001',
-      'MTU = 1280',
-      'S1 = 0',
-      'S2 = 0',
-      `Jc = ${profile.jc}`,
-      `Jmin = ${profile.jmin}`,
-      `Jmax = ${profile.jmax}`,
-      'H1 = 1',
-      'H2 = 2',
-      'H3 = 3',
-      'H4 = 4',
-    ];
-
-    if (deviceType === 'awg15') {
-      lines.push('I1 = <b 0xc2000000011419fa4bb3599f336777de79f81ca9a8d80d91eeec000044c635cef024a885dcb66d1420a91a8c427e87d6cf8e08b563932f449412cddf77d3e2594ea1c7a183c238a89e9adb7ffa57c133e55c59bec101634db90afb83f75b19fe703179e26a31902324c73f82d9354e1ed8da39af610afcb27e6590a44341a0828e5a3d2f0e0f7b0945d7bf3402feea0ee6332e19bdf48ffc387a97227aa97b205a485d282cd66d1c384bafd63dc42f822c4df2109db5b5646c458236ddcc01ae1c493482128bc0830c9e1233f0027a0d262f92b49d9d8abd9a9e0341f6e1214761043c021d7aa8c464b9d865f5fbe234e49626e00712031703a3e23ef82975f014ee1e1dc428521dc23ce7c6c13663b19906240b3efe403cf30559d798871557e4e60e86c29ea4504ed4d9bb8b549d0e8acd6c334c39bb8fb42ede68fb2aadf00cfc8bcc12df03602bbd4fe701d64a39f7ced112951a83b1dbbe6cd696dd3f15985c1b9fef72fa8d0319708b633cc4681910843ce753fac596ed9945d8b839aeff8d3bf0449197bd0bb22ab8efd5d63eb4a95db8d3ffc796ed5bcf2f4a136a8a36c7a0c65270d511aebac733e61d414050088a1c3d868fb52bc7e57d3d9fd132d78b740a6ecdc6c24936e92c28672dbe00928d89b891865f885aeb4c4996d50c2bbbb7a99ab5de02ac89b3308e57bcecf13f2da0333d1420e18b66b4c23d625d836b538fc0c221d6bd7f566a31fa292b85be96041d8e0bfe655d5dc1afed23eb8f2b3446561bbee7644325cc98d31cea38b865bdcc507e48c6ebdc7553be7bd6ab963d5a14615c4b81da7081c127c791224853e2d19bafdc0d9f3f3a6de898d14abb0e2bc849917e0a599ed4a541268ad0e60ea4d147dc33d17fa82f22aa505ccb53803a31d10a7ca2fea0b290a52ee92c7bf4aab7cea4e3c07b1989364eed87a3c6ba65188cd349d37ce4eefde9ec43bab4b4dc79e03469c2ad6b902e28e0bbbbf696781ad4edf424ffb35ce0236d373629008f142d04b5e08a124237e03e3149f4cdde92d7fae581a1ac332e26b2c9c1a6bdec5b3a9c7a2a870f7a0c25fc6ce245e029b686e346c6d862ad8df6d9b62474fbc31dbb914711f78074d4441f4e6e9edca3c52315a5c0653856e23f681558d669f4a4e6915bcf42b56ce36cb7dd3983b0b1d6fdf0f8efddb68e7ca0ae9dd4570fe6978fbb524109f6ec957ca61f1767ef74eb803b0f16abd0087cf2d01bc1db1c01d97ac81b3196c934586963fe7cf2d310e0739621e8bd00dc23fded18576d8c8f285d7bb5f43b547af3c76235de8b6f757f817683b2151600b11721219212bf27558edd439e73fce951f61d582320e5f4d6c315c71129b719277fc144bbe8ded25ab6d29b6e189c9bd9b16538faf60cc2aab3c3bb81fc2213657f2dd0ceb9b3b871e1423d8d3e8cc008721ef03b28e0ee7bb66b8f2a2ac01ef88df1f21ed49bf1ce435df31ac34485936172567488812429c269b49ee9e3d99652b51a7a614b7c460bf0d2d64d8349ded7345bedab1ea0a766a8470b1242f38d09f7855a32db39516c2bd4bcc538c52fa3a90c8714d4b006a15d9c7a7d04919a1cab48da7cce0d5de1f9e5f8936cffe469132991c6eb84c5191d1bcf69f70c58d9a7b66846440a9f0eef25ee6ab62715b50ca7bef0bc3013d4b62e1639b5028bdf757454356e9326a4c76dabfb497d451a3a1d2dbd46ec283d255799f72dfe878ae25892e25a2542d3ca9018394d8ca35b53ccd94947a8>');
-    }
-
-    return lines.join('\n');
-  }
-
-  static buildPeerSection(params) {
-    const { publicKey, allowedIPs, endpoint } = params;
-
-    return [
-      '[Peer]',
-      `PublicKey = ${publicKey}`,
-      `AllowedIPs = ${allowedIPs}`,
-      `Endpoint = ${endpoint}`,
-    ].join('\n');
-  }
-}
-
-/**
- * Главный сервис для генерации WARP конфигураций
- */
-class WarpService {
+class EnhancedWarpService {
   constructor() {
     this.cloudflareClient = new CloudflareWarpClient();
     this.ipRangesManager = new IPRangesManager();
@@ -285,7 +525,9 @@ class WarpService {
 
   async generateConfig(request) {
     try {
-      console.log('Starting WARP config generation...');
+      console.log('Starting enhanced WARP config generation...');
+      
+      const configFormat = request.configFormat || 'wireguard';
       
       // Генерация ключей
       const keyPair = CryptoUtils.generateKeyPair();
@@ -300,20 +542,25 @@ class WarpService {
       const configParams = this.extractConfigParams(warpConfig, keyPair, request);
 
       // Построение конфигурации
-      const config = WarpConfigBuilder.build(configParams);
-      const configForQR = WarpConfigBuilder.buildForQR(configParams);
+      const config = EnhancedWarpConfigBuilder.build(configParams);
+      const configForQR = EnhancedWarpConfigBuilder.buildForQR(configParams);
 
       // Генерация QR кода
-      const qrCodeBase64 = await QRCodeGenerator.generate(configForQR);
+      const qrCodeBase64 = await EnhancedQRCodeGenerator.generate(configForQR, configFormat);
 
-      console.log('WARP configuration generated successfully');
+      // Генерация имени файла
+      const fileName = this.generateFileName(configFormat);
+
+      console.log(`Enhanced WARP configuration (${configFormat}) generated successfully`);
       
       return {
         configBase64: CryptoUtils.stringToBase64(config),
         qrCodeBase64,
+        configFormat,
+        fileName
       };
     } catch (error) {
-      console.error('Failed to generate WARP configuration:', error);
+      console.error('Failed to generate enhanced WARP configuration:', error);
       throw error;
     }
   }
@@ -321,8 +568,15 @@ class WarpService {
   extractConfigParams(warpConfig, keyPair, request) {
     const peer = warpConfig.result.config.peers[0];
     const interfaceConfig = warpConfig.result.config.interface;
+    const configFormat = request.configFormat || 'wireguard';
 
     const allowedIPs = this.generateAllowedIPs(request);
+
+    // Извлекаем reserved из client_id если доступен
+    let reserved = '';
+    if (warpConfig.result.config.client_id) {
+      reserved = warpConfig.result.config.client_id;
+    }
 
     return {
       privateKey: keyPair.privateKey,
@@ -332,6 +586,8 @@ class WarpService {
       allowedIPs,
       endpoint: request.endpoint,
       deviceType: request.deviceType,
+      configFormat,
+      reserved
     };
   }
 
@@ -352,9 +608,28 @@ class WarpService {
 
     return this.ipRangesManager.generateAllowedIPs(supportedServices);
   }
+
+  generateFileName(configFormat) {
+    const randomId = Math.floor(Math.random() * 9000000) + 1000000;
+    
+    switch (configFormat) {
+      case 'throne':
+        return `THRONE${randomId}.txt`;
+      case 'clash':
+        return `CLASH${randomId}.yaml`;
+      case 'nekoray':
+        return `NEKORAY${randomId}.json`;
+      case 'husi':
+        return `HUSI${randomId}.json`;
+      case 'karing':
+        return `KARING${randomId}.json`;
+      default:
+        return `WARP${randomId}.conf`;
+    }
+  }
 }
 
-// Главная функция обработчик
+// Главная функция обработчик для POST запросов
 export async function onRequestPost(context) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -366,16 +641,29 @@ export async function onRequestPost(context) {
   try {
     const { request } = context;
     const body = await request.json();
-    const { selectedServices, siteMode, deviceType, endpoint } = body;
+    const { 
+      selectedServices, 
+      siteMode, 
+      deviceType, 
+      endpoint,
+      configFormat = 'wireguard'
+    } = body;
     
-    console.log('WARP API Request received:', { selectedServices, siteMode, deviceType, endpoint });
+    console.log('Enhanced WARP API Request received:', { 
+      selectedServices, 
+      siteMode, 
+      deviceType, 
+      endpoint, 
+      configFormat 
+    });
     
-    const warpService = new WarpService();
+    const warpService = new EnhancedWarpService();
     const content = await warpService.generateConfig({
       selectedServices: selectedServices || [],
       siteMode: siteMode || 'all', 
       deviceType: deviceType || 'computer',
       endpoint: endpoint || '162.159.195.1:500',
+      configFormat: configFormat
     });
     
     return new Response(
@@ -383,7 +671,7 @@ export async function onRequestPost(context) {
       { headers: corsHeaders }
     );
   } catch (error) {
-    console.error('WARP API Error:', error);
+    console.error('Enhanced WARP API Error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -397,11 +685,41 @@ export async function onRequestPost(context) {
   }
 }
 
+// Обработчик для GET запросов (информация о форматах)
+export async function onRequestGet(context) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Content-Type': 'application/json',
+  };
+
+  const supportedFormats = [
+    'wireguard', 'throne', 'clash', 'nekoray', 'husi', 'karing'
+  ];
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      data: {
+        supportedFormats,
+        formatDetails: {
+          wireguard: { name: 'WireGuard', extension: 'conf', supportsQR: true },
+          throne: { name: 'Throne', extension: 'txt', supportsQR: true },
+          clash: { name: 'Clash', extension: 'yaml', supportsQR: false },
+          nekoray: { name: 'NekoRay/Exclave', extension: 'json', supportsQR: false },
+          husi: { name: 'Husi', extension: 'json', supportsQR: false },
+          karing: { name: 'Karing/Hiddify', extension: 'json', supportsQR: false }
+        }
+      }
+    }),
+    { headers: corsHeaders }
+  );
+}
+
 export async function onRequestOptions() {
   return new Response(null, {
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
