@@ -15,33 +15,44 @@ import {
   JutsuIcon, YummyAnimeIcon, XVideosIcon,
   PornoLabIcon, FicBookIcon, RuTrackerIcon
 } from "@/components/icons/custom-icons";
+import servicesConfig from "@/data/services-config.json";
 
-const services = [
-  { name: "Discord", key: "discord", icon: FaDiscord },
-  { name: "YouTube", key: "youtube", icon: FaYoutube },
-  { name: "Telegram", key: "telegram", icon: FaTelegram, type: "new" },
-  { name: "WhatsApp", key: "whatsapp", icon: IoLogoWhatsapp, type: "new" },
-  { name: "Twitter", key: "twitter", icon: FaTwitter },
-  { name: "Instagram", key: "instagram", icon: RiInstagramFill },
-  { name: "Facebook", key: "facebook", icon: FaFacebook },
-  { name: "Viber", key: "viber", icon: ViberIcon },
-  { name: "Signal", key: "signal", icon: FaSignalMessenger, type: "new" },
-  { name: "Zetflix", key: "zetflix", icon: RiNetflixFill },
-  { name: "Canva", key: "canva", icon: SiCanva },
-  { name: "Patreon", key: "patreon", icon: SiPatreon },
-  { name: "Proton", key: "proton", icon: SiProtonvpn },
-  { name: "NNM-Club", key: "nnmclub", icon: NNMClubIcon },
-  { name: "RuTracker", key: "rutracker", icon: RuTrackerIcon },
-  { name: "Kinozal", key: "kinozal", icon: KinozalIcon },
-  { name: "Copilot", key: "copilot", icon: CopilotIcon },
-  { name: "AnimeGo", key: "animego", icon: AnimeGoIcon },
-  { name: "Jutsu", key: "jutsu", icon: JutsuIcon },
-  { name: "YummyAnime", key: "yummyanime", icon: YummyAnimeIcon },
-  { name: "PornHub", key: "pornhub", icon: PornhubIcon },
-  { name: "XVideos", key: "xvideos", icon: XVideosIcon },
-  { name: "Pornolab", key: "pornolab", icon: PornoLabIcon },
-  { name: "Ficbook", key: "ficbook", icon: FicBookIcon },
-];
+// Icon mapping для динамического импорта
+const iconMap = {
+  // React Icons FA
+  "FaDiscord": FaDiscord,
+  "FaYoutube": FaYoutube,
+  "FaTwitter": FaTwitter,
+  "FaFacebook": FaFacebook,
+  "FaSignalMessenger": FaSignalMessenger,
+  // React Icons FA6
+  "FaTelegram": FaTelegram,
+  // React Icons IO
+  "IoLogoWhatsapp": IoLogoWhatsapp,
+  // React Icons RI
+  "RiInstagramFill": RiInstagramFill,
+  "RiNetflixFill": RiNetflixFill,
+  // React Icons SI
+  "SiPatreon": SiPatreon,
+  "SiCanva": SiCanva,
+  "SiProtonvpn": SiProtonvpn,
+  // Custom Icons
+  "ViberIcon": ViberIcon,
+  "NNMClubIcon": NNMClubIcon,
+  "KinozalIcon": KinozalIcon,
+  "CopilotIcon": CopilotIcon,
+  "AnimeGoIcon": AnimeGoIcon,
+  "PornhubIcon": PornhubIcon,
+  "JutsuIcon": JutsuIcon,
+  "YummyAnimeIcon": YummyAnimeIcon,
+  "XVideosIcon": XVideosIcon,
+  "PornoLabIcon": PornoLabIcon,
+  "FicBookIcon": FicBookIcon,
+  "RuTrackerIcon": RuTrackerIcon,
+  // Default fallback
+  "TbBoxMultipleFilled": TbBoxMultipleFilled
+};
+
 
 interface ConfigOptionsProps {
   selectedServices: string[]
@@ -115,8 +126,8 @@ export function ConfigOptions({
         {/* Выбор сервисов */}
         {siteMode === "specific" && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {services.map((service) => {
-              const Icon = service.icon || TbBoxMultipleFilled;
+            {servicesConfig.services.map((service) => {
+              const Icon = iconMap[service.icon as keyof typeof iconMap] || TbBoxMultipleFilled;
 
               return (
                 <Button
