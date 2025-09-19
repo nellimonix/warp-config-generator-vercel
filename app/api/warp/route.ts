@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { EnhancedWarpService, WarpGenerationError } from "@/lib/warp-service";
 import { getFileName, type ConfigFormat } from "@/lib/types";
 
+const HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET_KEY;
+
 export async function POST(req: Request) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -17,15 +19,40 @@ export async function POST(req: Request) {
       siteMode, 
       deviceType, 
       endpoint,
-      configFormat = 'wireguard' // По умолчанию WireGuard
+      configFormat = 'wireguard',
+      captchaToken
     } = body;
     
+    // === Проверка hCaptcha ===
+    if (!captchaToken) {
+      return NextResponse.json(
+        { success: false, message: "Captcha не пройдена." },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const verifyResp = await fetch("https://hcaptcha.com/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `secret=${HCAPTCHA_SECRET}&response=${captchaToken}`,
+    });
+    const verifyData = await verifyResp.json();
+
+    if (!verifyData.success) {
+      return NextResponse.json(
+        { success: false, message: "Неверная капча." },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+    // =========================
+
     console.log('Enhanced WARP API Request received:', { 
       selectedServices: selectedServices?.length || 0, 
       siteMode, 
       deviceType, 
       endpoint: endpoint ? 'provided' : 'missing',
-      configFormat
+      configFormat,
+      captchaSuccess: verifyData.success
     });
 
     // Валидация формата конфигурации

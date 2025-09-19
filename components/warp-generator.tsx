@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,6 +27,7 @@ import { rybbitEvent } from "@/utils/analyticsEvent"
 import { EnhancedConfigOptions } from "./config-options"
 import { Badge } from "@/components/ui/badge"
 import { CONFIG_FORMATS, type ConfigFormat, type DeviceType, type SiteMode, type EndPointType, getFileName } from "@/lib/types"
+import HCaptcha from "@hcaptcha/react-hcaptcha"
 
 interface WarpConfigData {
   configBase64: string;
@@ -48,6 +49,20 @@ export function EnhancedWarpGenerator() {
   const [isGenerated, setIsGenerated] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [isConfigCopied, setIsConfigCopied] = useState(false)
+  const [showCaptcha, setShowCaptcha] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const captchaRef = useRef<HCaptcha>(null)
+
+  const handleGenerateClick = () => {
+    // Показываем hCaptcha при нажатии
+    setShowCaptcha(true)
+  }
+
+  const onVerify = async (token: string) => {
+    setCaptchaToken(token)
+    setShowCaptcha(false) // скрываем капчу после прохождения
+    await generateConfig(token) // передаем token на бэкенд
+  }
 
   const handleEndPointChange = (value: EndPointType) => {
     setEndPoint(value);
@@ -60,7 +75,7 @@ export function EnhancedWarpGenerator() {
     setCustomEndpoint(endpoint);
   };
 
-  const generateConfig = async () => {
+  const generateConfig = async (token?: string) => {
     setIsLoading(true)
     setStatus("")
 
@@ -85,6 +100,7 @@ export function EnhancedWarpGenerator() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          captchaToken: token, // отправляем token на бэкенд
           selectedServices: siteMode === "specific" && selectedServices.length === 0 ? ["all"] : selectedServices,
           siteMode: siteMode === "specific" && selectedServices.length === 0 ? "all" : siteMode,
           deviceType,
@@ -145,16 +161,11 @@ export function EnhancedWarpGenerator() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <FileText className="h-4 w-4" />
             <span>Формат: {selectedFormatInfo?.name || 'AmneziaWG'}</span>
-            {/* !supportsQR && (
-            <Badge variant="outline" className="text-xs">
-                Без QR
-            </Badge>
-            )*/ }
         </div>
         )}
 
       <div className="flex items-center gap-2">
-        <Button onClick={generateConfig} disabled={isLoading || isGenerated} className="flex-grow">
+        <Button onClick={handleGenerateClick} disabled={isLoading || isGenerated} className="flex-grow">
           {isLoading ? <LoaderCircle className="animate-spin" /> : <Sparkles />}
           {isLoading ? "Генерация..." : "Сгенерировать"}
         </Button>
@@ -209,6 +220,17 @@ export function EnhancedWarpGenerator() {
           </Button>
         )}
       </div>
+
+      {/* Рендерим hCaptcha только если showCaptcha === true */}
+      {showCaptcha && (
+        <div className="mt-4">
+          <HCaptcha
+            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+            onVerify={onVerify}
+            ref={captchaRef}
+          />
+        </div>
+      )}
 
       {status && <p className="text-sm text-muted-foreground">{status}</p>}
       
