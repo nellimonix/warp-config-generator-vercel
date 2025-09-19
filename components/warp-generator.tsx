@@ -94,7 +94,7 @@ export function EnhancedWarpGenerator() {
     }
 
     try {
-      const response = await fetch("/api/warp", {
+      const response = await fetch("/api/warp_captcha", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
