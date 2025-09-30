@@ -8,12 +8,13 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiGithubLine, RiRobot2Line } from "react-icons/ri";
+import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
 import { Badge } from "@/components/ui/badge"
 
 export default function EnhancedHome() {
-  const [showNewFormatsAlert, setShowNewFormatsAlert] = useState(true);
+  const [showNewFormatsAlert, setShowNewFormatsAlert] = useState(false);
 
   return (
     <>
@@ -48,6 +49,16 @@ export default function EnhancedHome() {
           
           {/* Расширенный генератор с поддержкой множественных форматов */}
           <EnhancedWarpGenerator/>
+
+          <Button 
+            asChild 
+            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black"
+          >
+            <a href="https://t.me/findllimonix/63" target="_blank" rel="noopener noreferrer">
+              <RxLightningBolt />
+              Ультимативный конфиг
+            </a>
+          </Button>
           
           <Button asChild variant="secondary" className="w-full">
             <a href="https://t.me/warp_generator_bot" target="_blank" rel="noopener noreferrer">
