@@ -123,7 +123,7 @@ export class EnhancedWarpConfigBuilder {
   udp: true
   mtu: 1280
   remote-dns-resolve: true
-  dns: [1.1.1.1, 1.0.0.1]
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
   amnezia-wg-option:
    jc: 120
    jmin: 23
