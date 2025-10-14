@@ -146,14 +146,19 @@
     },
     {
       "name": "RuTor",
-      "key": "rutor",
-      "type": "new"
+      "key": "rutor"
       
     },
     {
       "name": "Itch.io",
-      "key": "itchio",
-      "type": "new"
+      "key": "itchio"
+    },
+    {
+      "name": "Modrinth",
+      "key": "modrinth",
+      "type": "new",
+      "icon": "SiModrinth",
+      "iconLibrary": "react-icons/si"
     }
   ]
 }

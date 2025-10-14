@@ -6,7 +6,7 @@ import { FaDiscord, FaYoutube, FaTwitter, FaFacebook } from "react-icons/fa";
 import { FaTelegram, FaSignalMessenger } from "react-icons/fa6";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { RiInstagramFill } from "react-icons/ri";
-import { SiPatreon, SiCanva, SiProtonvpn } from "react-icons/si";
+import { SiPatreon, SiCanva, SiProtonvpn, SiModrinth } from "react-icons/si";
 import { RiNetflixFill } from "react-icons/ri";
 import { TbBoxMultipleFilled } from "react-icons/tb";
 import { 
@@ -36,6 +36,7 @@ const iconMap = {
   "SiPatreon": SiPatreon,
   "SiCanva": SiCanva,
   "SiProtonvpn": SiProtonvpn,
+  "SiModrinth": SiModrinth,
   // Custom Icons
   "ViberIcon": ViberIcon,
   "NNMClubIcon": NNMClubIcon,
