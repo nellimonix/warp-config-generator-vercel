@@ -1,119 +1,153 @@
-
 # WARP Configuration Generator
 
-Генератор конфигураций для WARP с поддержкой различных платформ развертывания.
+[Русский](README_ru.md) | **English**
 
-## 🚀 Быстрое развертывание
+Configuration generator for WARP with support for various deployment platforms.
+
+## 🚀 Quick Deployment
 
 ### 1. Vercel
 
- [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nellimonix/warp-config-generator-vercel&repository-name=warp)
-- В качестве альтернативы может быть развернут с [cli](https://vercel.com/docs/cli):
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nellimonix/warp-config-generator-vercel&repository-name=warp)
+- Alternatively, can be deployed via [cli](https://vercel.com/docs/cli):
   `vercel deploy`
-- Запустить локально: `vercel dev`
-- Vercel _Functions_ [ограничения](https://vercel.com/docs/functions/limitations) (с средой выполнения _Edge_)
+- Run locally: `vercel dev`
+- Vercel _Functions_ [limitations](https://vercel.com/docs/functions/limitations) (with _Edge_ runtime)
 
 ### 2. Netlify
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](
 https://app.netlify.com/start/deploy?repository=https://github.com/nellimonix/warp-config-generator-vercel&siteName=warp
 )
-- В качестве альтернативы может быть развернут с [cli](https://docs.netlify.com/cli/get-started/):
+- Alternatively, can be deployed via [cli](https://docs.netlify.com/cli/get-started/):
   `netlify deploy`
-- Запустить локально: `netlify dev`
-- _Functions_ [ограничения](https://docs.netlify.com/functions/get-started/?fn-language=js#synchronous-function-2)
-- _Edge functions_ [ограничения](https://docs.netlify.com/edge-functions/limits/)
+- Run locally: `netlify dev`
+- _Functions_ [limitations](https://docs.netlify.com/functions/get-started/?fn-language=js#synchronous-function-2)
+- _Edge functions_ [limitations](https://docs.netlify.com/edge-functions/limits/)
 
 ### 3. Cloudflare Pages
 
-- Вы можете выполнить развертывание вручную, связав свой репозиторий с информационной панелью [Cloudflare Pages dashboard](https://dash.cloudflare.com/?to=/:account/pages).
+- You can deploy manually by connecting your repository to the [Cloudflare Pages dashboard](https://dash.cloudflare.com/?to=/:account/pages).
 - Framework preset: `Next.js (Static HTML Export)`
 - Build command: `npm run build`
 - Build output directory: `out`
-- Root directory: `оставьте пустым`
-- _Pages_ [ограничения](https://developers.cloudflare.com/pages/platform/limits/)
+- Root directory: `leave empty`
+- _Pages_ [limitations](https://developers.cloudflare.com/pages/platform/limits/)
 
-## 🛠️ Локальная разработка
+## 🛠️ Local Development
 
 ```bash
-# Установка зависимостей
+# Install dependencies
 npm install
 
-# Запуск в режиме разработки
+# Run in development mode
 npm run dev
 
-# Сборка для production
+# Build for production
 npm run build
 
-# Запуск production сборки
+# Run production build
 npm run start
 
-# Линтинг
+# Linting
 npm run lint
 ```
 
-## 📁 Структура проекта
+## 📁 Project Structure
 
 ```
-├── app/                           # Next.js App Router
-│   ├── api/warp/route.ts          # API для генерации конфигураций
-│   ├── globals.css                # Глобальные стили
-│   ├── layout.tsx                 # Layout
-│   └── page.tsx                   # Главная страница
-├── components/                    # React компоненты
-│   ├── icons/custom-icons.tsx     # Костомные иконки          
-│   ├── ui/                        # UI компоненты (shadcn/ui)
-│   ├── config-options.tsx         # Опции конфигурации
-│   ├── theme-provider.tsx         # Провайдер темы
-│   └── warp-generator.tsx         # Основной компонент
-├── functions/api/warp.js          # Cloudflare Pages функция
-├── lib/                          # Утилиты и конфигурации
-│   ├── ipRanges.ts               # IP диапазоны сервисов
-│   ├── utils.ts                  # Общие утилиты
-│   └── warpConfig.ts             # Логика генерации
-└── public/                       # Статические файлы
+├── app/                              # Next.js App Router
+│   ├── api/warp/route.ts             # API endpoint for config generation
+│   ├── globals.css                   # Global styles
+│   ├── layout.tsx                    # Root layout
+│   └── page.tsx                      # Main page
+├── components/                       # React components
+│   ├── icons/
+│   │   └── custom-icons.tsx          # Custom service icons
+│   ├── ui/                           # shadcn/ui components
+│   ├── config-options.tsx            # Configuration settings component
+│   ├── theme-provider.tsx            # Theme provider (dark/light mode)
+│   └── warp-generator.tsx            # Main generator component
+├── data/                             # Static data
+│   ├── services-config.json          # Available services configuration
+│   └── ip-ranges.json                # IP ranges for each service
+├── functions/
+│   └── api/warp.js                   # Cloudflare Pages function
+├── hooks/                            # React hooks
+│   ├── use-mobile.tsx                # Hook for mobile device detection
+│   └── use-toast.ts                  # Hook for toast notifications
+├── lib/                              # Core business logic
+│   ├── builder/
+│   │   └── warp-config-builder.ts    # WireGuard config builder
+│   ├── cloudflare-api.ts             # Cloudflare WARP API client
+│   ├── crypto-utils.ts               # Cryptographic utilities
+│   ├── ip-ranges.ts                  # IP ranges manager
+│   ├── qr-generator.ts               # QR code generator
+│   ├── types.ts                      # TypeScript types and interfaces
+│   ├── utils.ts                      # Common utilities (cn, etc.)
+│   ├── warp-service.ts               # Main WARP generation service
+│   └── warpConfig.ts                 # Legacy compatibility
+├── public/                           # Static files
+│   ├── logo.svg                      # Application logo
+│   └── cloud.ico                     # Favicon
+├── types/
+│   └── services.ts                   # Service types
+├── utils/
+│   └── services.ts                   # Services manager (ServicesManager)
+├── .gitignore                        # Git ignore rules
+├── components.json                   # shadcn/ui configuration
+├── LICENSE                           # MIT license
+├── netlify.toml                      # Netlify configuration
+├── next.config.mjs                   # Next.js configuration
+├── package.json                      # Project dependencies
+├── postcss.config.mjs                # PostCSS configuration
+├── tailwind.config.ts                # Tailwind CSS configuration
+├── tsconfig.json                     # TypeScript configuration
+├── vercel.json                       # Vercel configuration
+├── README_ru.md                      # Project documentation in Russian
+└── README.md                         # Project documentation in English
 ```
 
-## 🔧 Конфигурация
+## 🔧 Configuration
 
 ### Next.js
 
-Проект использует Next.js 14 с App Router и следующими настройками:
+The project uses Next.js 14 with App Router and the following setup:
 
 - TypeScript
 - Tailwind CSS
 - ESLint
-- Radix UI компоненты
-- Автоматическая оптимизация изображений
+- Radix UI components
+- Automatic image optimization
 
-### Сборка
+### Build
 
-Проект настроен для статической генерации с возможностью серверного рендеринга API маршрутов.
+The project is configured for static generation with server-side rendering capability for API routes.
 
-## 🌐 Поддерживаемые платформы
+## 🌐 Supported Platforms
 
-| Платформа | Поддержка | Сложность | Время развертывания |
-|-----------|-----------|-----------|-------------------|
-| Vercel | ✅ Полная | 🟢 Низкая | ~3 минуты |
-| Netlify | ✅ Полная | 🟡 Средняя | ~5 минут |
-| Cloudflare | ⚠️ Статический | 🟡 Средняя | ~5 минут |
+| Platform | Support | Complexity | Deployment Time |
+|----------|---------|------------|----------------|
+| Vercel | ✅ Full | 🟢 Low | ~3 minutes |
+| Netlify | ✅ Full | 🟡 Medium | ~5 minutes |
+| Cloudflare | ⚠️ Static | 🟡 Medium | ~5 minutes |
 
-## 📄 Лицензия
+## 📄 License
 
 MIT License
 
-## 🤝 Вклад в развитие
+## 🤝 Contributing
 
-1. Форкните репозиторий
-2. Создайте ветку для новой функции
-3. Внесите изменения
-4. Создайте Pull Request
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Create a Pull Request
 
-## Зеркала / Альтернативные ссылки
+## Mirrors / Alternative Links
 
 - Telegram Bot: [t.me/warp_generator_bot](https://t.me/warp_generator_bot)  
-- Основной сайт: [warp.llimonix.dev](https://warp.llimonix.dev)  
+- Main Site: [warp.llimonix.dev](https://warp.llimonix.dev)  
 - Vercel Mirror: [warply.vercel.app](https://warply.vercel.app)  
 - Netlify Mirror: [getwarp.netlify.app](https://getwarp.netlify.app)  
 - Cloudflare Pages Mirror: [getwarp.pages.dev](https://getwarp.pages.dev)
-- Telegram канал: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
+- Telegram Channel: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
