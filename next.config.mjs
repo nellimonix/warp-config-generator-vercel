@@ -5,8 +5,8 @@ try {
   // ignore error
 }
 
-// Определяем платформу по переменным окружения
 const isCloudflarePages = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH
+const isNetlify = process.env.NETLIFY || false
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -21,13 +21,17 @@ const nextConfig = {
   },
 }
 
-// Конфигурация для Cloudflare Pages
 if (isCloudflarePages) {
   nextConfig.output = 'export'
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
+} else if (isNetlify) {
+  // Для Netlify используем стандартную сборку с поддержкой SSR
+  nextConfig.experimental = {
+    webpackBuildWorker: true,
+  }
 } else {
-  // Конфигурация для Vercel и Netlify
+  // Для Vercel
   nextConfig.experimental = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,

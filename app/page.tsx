@@ -8,6 +8,7 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiGithubLine, RiRobot2Line } from "react-icons/ri";
+import { RxLightningBolt } from "react-icons/rx";
 import { WarpGenerator } from "@/components/warp-generator"
 
 export default function Home() {
@@ -34,14 +35,25 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center gap-6 w-[300px]">
           <Image src="/logo.svg" alt="Логотип" width={300} height={300}/>
           <WarpGenerator/>
-          <Button asChild variant="secondary" className="w-full">
-            <a href="https://t.me/warp_generator_bot" target="_blank"><RiRobot2Line />Warp Generator Bot</a>
+          <Button asChild className="w-full bg-yellow-400 hover:bg-yellow-500 text-black">
+            <a href="https://t.me/findllimonix/63" target="_blank">
+              <RxLightningBolt /> Ультимативный конфиг
+            </a>
           </Button>
           <Button asChild variant="secondary" className="w-full">
-            <a href="https://t.me/+fDYczngHDFplZDli" target="_blank"><RiTelegram2Line />Telegram канал</a>
+            <a href="https://t.me/warp_generator_bot" target="_blank">
+              <RiRobot2Line />Warp Generator Bot
+            </a>
           </Button>
           <Button asChild variant="secondary" className="w-full">
-            <a href="https://github.com/nellimonix/warp-config-generator-vercel" target="_blank"><RiGithubLine />GitHub репозиторий</a>
+            <a href="https://t.me/+fDYczngHDFplZDli" target="_blank">
+              <RiTelegram2Line />Telegram канал
+            </a>
+          </Button>
+          <Button asChild variant="secondary" className="w-full">
+            <a href="https://github.com/nellimonix/warp-config-generator-vercel" target="_blank">
+              <RiGithubLine />GitHub репозиторий
+            </a>
           </Button>
           <p className="text-sm text-muted-foreground">
             Пожалуйста, поддержите меня на GitHub, поставив звезду.
