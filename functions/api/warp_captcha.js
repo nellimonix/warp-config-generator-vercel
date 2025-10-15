@@ -647,17 +647,43 @@ export async function onRequestPost(context) {
       siteMode, 
       deviceType, 
       endpoint,
-      configFormat = 'wireguard'
+      configFormat = 'wireguard',
+      captchaToken
     } = body;
-    
+
+    // === Проверка hCaptcha ===
+    if (!captchaToken) {
+      return new Response(JSON.stringify({ success: false, message: "Captcha не пройдена." }), {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
+    const verifyResp = await fetch("https://hcaptcha.com/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `secret=${env.HCAPTCHA_SECRET_KEY}&response=${captchaToken}`,
+    });
+
+    const verifyData = await verifyResp.json();
+
+    if (!verifyData.success) {
+      return new Response(JSON.stringify({ success: false, message: "Неверная капча." }), {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+    // =========================
+
     console.log('Enhanced WARP API Request received:', { 
       selectedServices, 
       siteMode, 
       deviceType, 
       endpoint, 
-      configFormat 
+      configFormat,
+      captchaSuccess: verifyData.success
     });
-    
+
     const warpService = new EnhancedWarpService();
     const content = await warpService.generateConfig({
       selectedServices: selectedServices || [],
