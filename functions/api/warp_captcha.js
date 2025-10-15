@@ -640,7 +640,7 @@ export async function onRequestPost(context) {
   };
 
   try {
-    const { request } = context;
+    const { request, env } = context;
     const body = await request.json();
     const { 
       selectedServices, 
