@@ -1,13 +1,13 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Info,
 } from "lucide-react"
-import { RiTelegram2Line, RiGithubLine, RiRobot2Line } from "react-icons/ri";
+import { RiTelegram2Line, RiRobot2Line, RiMoneyDollarCircleLine } from "react-icons/ri";
 import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
@@ -71,6 +71,13 @@ export default function EnhancedHome() {
             <a href="https://t.me/+fDYczngHDFplZDli" target="_blank" rel="noopener noreferrer">
               <RiTelegram2Line />
               Telegram канал
+            </a>
+          </Button>
+
+          <Button asChild variant="secondary" className="w-full">
+            <a href="https://t.me/tribute/app?startapp=dxSo" target="_blank" rel="noopener noreferrer">
+              <RiMoneyDollarCircleLine />
+              Поддержать проект
             </a>
           </Button>
           
