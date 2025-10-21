@@ -74,7 +74,7 @@ interface EnhancedConfigOptionsProps {
 const getEndpointDisplayValue = (endPointValue: string) => {
   switch (endPointValue) {
     case "default":
-      return "162.159.195.1:500";
+      return "engage.cloudflareclient.com:4500";
     case "default2":
       return "engage.cloudflareclient.com:2408";
     case "input":

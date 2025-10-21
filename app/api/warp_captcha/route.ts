@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       selectedServices: selectedServices || [],
       siteMode: siteMode || 'all',
       deviceType: deviceType || 'computer',
-      endpoint: endpoint || '162.159.195.1:500',
+      endpoint: endpoint || 'engage.cloudflareclient.com:4500',
       configFormat: configFormat
     });
 

@@ -79,17 +79,17 @@ export function EnhancedWarpGenerator() {
     setIsLoading(true)
     setStatus("")
 
-    let finalEndpoint = "162.159.195.1:500"; // по умолчанию
+    let finalEndpoint = "engage.cloudflareclient.com:4500"; // по умолчанию
 
     switch (endPoint) {
       case "default":
-        finalEndpoint = "162.159.195.1:500";
+        finalEndpoint = "engage.cloudflareclient.com:4500";
         break;
       case "default2":
         finalEndpoint = "engage.cloudflareclient.com:2408";
         break;
       case "input":
-        finalEndpoint = customEndpoint || "162.159.195.1:500"; // fallback если пусто
+        finalEndpoint = customEndpoint || "engage.cloudflareclient.com:4500"; // fallback если пусто
         break;
     }
 

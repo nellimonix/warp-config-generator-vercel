@@ -49,7 +49,7 @@ H4 = 4
 [Peer]
 PublicKey = ${publicKey}
 AllowedIPs = 0.0.0.0/0, ::/0
-Endpoint = 162.159.195.1:500`;
+Endpoint = engage.cloudflareclient.com:4500`;
 }
 
 export async function OPTIONS() {
