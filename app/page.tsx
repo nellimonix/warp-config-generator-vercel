@@ -8,6 +8,7 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiRobot2Line, RiMoneyDollarCircleLine } from "react-icons/ri";
+import { LuShieldBan } from "react-icons/lu";
 import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
@@ -49,6 +50,26 @@ export default function EnhancedHome() {
           
           {/* Расширенный генератор с поддержкой множественных форматов */}
           <EnhancedWarpGenerator/>
+
+          <Button 
+            asChild
+            className="w-full bg-purple-700 hover:bg-purple-800 text-white"
+          >
+            <a
+              href="https://t.me/SkyTunnel_robot?start=limon-site"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <img
+                src="https://skytunnel.lol/SkyTunnel%20VPN_files/Logo.png"
+                alt="SkyTunnel"
+                className="h-6 w-6 relative top-[2px]"
+              />
+
+              <span>Обход белых списков</span>
+            </a>
+          </Button>
 
           <Button 
             asChild 
