@@ -8,7 +8,6 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiRobot2Line, RiMoneyDollarCircleLine } from "react-icons/ri";
-import { LuShieldBan } from "react-icons/lu";
 import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
@@ -52,6 +51,7 @@ export default function EnhancedHome() {
           <EnhancedWarpGenerator/>
 
           <Button 
+            data-rybbit-event="ads_click_stbot"
             asChild
             className="w-full bg-purple-700 hover:bg-purple-800 text-white"
           >
