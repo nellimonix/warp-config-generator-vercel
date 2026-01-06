@@ -96,7 +96,7 @@ export default function EnhancedHome() {
           </Button>
 
           <Button asChild variant="secondary" className="w-full">
-            <a href="https://t.me/tribute/app?startapp=dxSo" target="_blank" rel="noopener noreferrer">
+            <a href="https://t.me/warp_generator_bot?start=donate" target="_blank" rel="noopener noreferrer">
               <RiMoneyDollarCircleLine />
               Поддержать проект
             </a>
