@@ -14,6 +14,7 @@ export default function AnalyticsLoader() {
     else if (hostname === "getwarp.netlify.app") setSiteId("2")
     else if (hostname === "getwarp.pages.dev") setSiteId("3")
     else if (hostname === "warply.vercel.app") setSiteId("4")
+    else if (hostname === "warp.llimonix.pw") setSiteId("5d2e1371719c")
     else setSiteId(null) // аналитику не добавляем
 
   }, [])
