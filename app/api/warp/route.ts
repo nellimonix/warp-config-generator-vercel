@@ -1,3 +1,6 @@
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 import { NextResponse } from "next/server";
 import { CryptoUtils } from '@/lib/crypto-utils';
 

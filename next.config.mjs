@@ -24,19 +24,8 @@ if (isCloudflarePages) {
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
   
-  // Исключаем API routes из сборки через webpack
-  nextConfig.webpack = (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push({
-        'app/api': 'commonjs app/api'
-      })
-    }
-    return config
-  }
-  
-  nextConfig.experimental = {
-    missingSuspenseWithCSRBailout: false,
-  }
+  // Пустой turbopack config чтобы избежать warning
+  nextConfig.turbopack = {}
 } else if (isNetlify) {
   // Для Netlify используем стандартную сборку с поддержкой SSR
   nextConfig.experimental = {

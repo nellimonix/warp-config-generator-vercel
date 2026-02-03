@@ -1,3 +1,6 @@
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 import { NextResponse } from "next/server";
 import { EnhancedWarpService, WarpGenerationError } from "@/lib/warp-service";
 import { getFileName, type ConfigFormat } from "@/lib/types";
