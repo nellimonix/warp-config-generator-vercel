@@ -10,9 +10,6 @@ const isNetlify = process.env.NETLIFY || false
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -22,9 +19,24 @@ const nextConfig = {
 }
 
 if (isCloudflarePages) {
+  // Для Cloudflare Pages - статическая генерация
   nextConfig.output = 'export'
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
+  
+  // Исключаем API routes из сборки через webpack
+  nextConfig.webpack = (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({
+        'app/api': 'commonjs app/api'
+      })
+    }
+    return config
+  }
+  
+  nextConfig.experimental = {
+    missingSuspenseWithCSRBailout: false,
+  }
 } else if (isNetlify) {
   // Для Netlify используем стандартную сборку с поддержкой SSR
   nextConfig.experimental = {
