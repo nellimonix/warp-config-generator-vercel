@@ -42,7 +42,7 @@ export default function EnhancedHome() {
             <Button 
               data-rybbit-event="ads_click_stbot"
               asChild
-              className="w-full bg-purple-700 hover:bg-purple-800 text-white"
+              className="hidden w-full bg-purple-700 hover:bg-purple-800 text-white"
             >
               <a
                 href="https://t.me/SkyTunnel_robot?start=limon-site"
