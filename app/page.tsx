@@ -8,6 +8,7 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiRobot2Line, RiMoneyDollarCircleLine } from "react-icons/ri";
+import { FaGlobe } from "react-icons/fa";
 import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
@@ -56,6 +57,22 @@ export default function EnhancedHome() {
                   className="h-6 w-6 relative top-[2px]"
                 />
 
+                <span>Обход белых списков</span>
+              </a>
+            </Button>
+
+            <Button 
+              data-rybbit-event="ads_click_tbbot"
+              asChild
+              className="w-full bg-[#006fe0] hover:bg-[#0067D0] text-white"
+            >
+              <a
+                href="https://t.me/TriBukvyRoBot?start=warp_site"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <FaGlobe />
                 <span>Обход белых списков</span>
               </a>
             </Button>
