@@ -21,8 +21,25 @@ export default function EnhancedHome() {
     <>
       <main className="flex min-h-screen flex-col items-center p-4 w-full">
         <div className="flex-1 flex flex-col items-center justify-center w-full">
+          {/* Рекламный баннер */}
+          <a
+            href="https://t.me/ContinentalVPN_bot?start=Baner" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="mb-8 block"
+            data-rybbit-event="ads_click_continentalbot"
+          >
+            <Image 
+              src="/ads.png" 
+              alt="Реклама" 
+              width={400} 
+              height={100}
+              className="rounded-lg hover:opacity-90 transition-opacity"
+            />
+          </a>
+
           {showNewFormatsAlert && (
-            <Alert className="alert mb-6 break-words">
+            <Alert className="alert mb-6 break-words max-w-[400px]">
               <AlertTitle className="flex items-center gap-2">
                 <Info className="w-5 h-5 text-blue-400" />
                 ...
@@ -36,7 +53,7 @@ export default function EnhancedHome() {
           )}
 
           <div className="flex flex-col items-center justify-center gap-6 w-[300px]">
-            <Image src="/logo.svg" alt="Логотип" width={300} height={300}/>
+            <Image src="/logo.svg" alt="Логотип" hidden width={300} height={300}/>
             
             <EnhancedWarpGenerator/>
 
