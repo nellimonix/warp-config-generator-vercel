@@ -110,3 +110,17 @@
 .dialog-header {
   text-align: left;
 }
+
+.marching-ants {
+    stroke-dasharray: 10 5;
+    animation: marching-ants 1s linear infinite;
+}
+
+@keyframes marching-ants {
+    from {
+        stroke-dashoffset: 0;
+    }
+    to {
+        stroke-dashoffset: -15; /* 10 + 5 */
+    }
+}

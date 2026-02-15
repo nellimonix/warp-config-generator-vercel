@@ -8,7 +8,7 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiRobot2Line, RiMoneyDollarCircleLine } from "react-icons/ri";
-import { FaGlobe } from "react-icons/fa";
+import { FaGlobe, FaRocket } from "react-icons/fa";
 import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
@@ -22,21 +22,54 @@ export default function EnhancedHome() {
       <main className="flex min-h-screen flex-col items-center p-4 w-full">
         <div className="flex-1 flex flex-col items-center justify-center w-full">
           {/* Рекламный баннер */}
-          <a
-            href="https://t.me/ContinentalVPN_bot?start=Baner" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="mb-8 block"
-            data-rybbit-event="ads_click_continentalbot"
-          >
-            <Image 
-              src="/ads.png" 
-              alt="Реклама" 
-              width={400} 
-              height={100}
-              className="rounded-lg hover:opacity-90 transition-opacity"
-            />
-          </a>
+          <div className="mb-8 relative group">
+            <a 
+              href="https://t.me/ContinentalVPN_bot?start=Baner" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block relative"
+              data-rybbit-event="ads_click_continentalbot"
+            >
+              {/* SVG с бегущей пунктирной линией */}
+              <svg 
+                className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none"
+                style={{ left: '-8px', top: '-8px' }}
+              >
+                <rect
+                  x="2"
+                  y="2"
+                  width="calc(100% - 4px)"
+                  height="calc(100% - 4px)"
+                  rx="8"
+                  fill="none"
+                  stroke="#fae966"
+                  strokeWidth="2"
+                  strokeDasharray="10 5"
+                  className="marching-ants"
+                />
+              </svg>
+              
+              {/* Badge "КЛИКАБЕЛЬНО" */}
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-10">
+                <div className="px-3 py-1 shadow-lg text-sm font-bold flex items-center gap-2"
+                    style={{
+                      backgroundColor: '#fae966',
+                      color: '#000000',
+                      borderRadius: '9999px'
+                    }}>
+                  <FaRocket /> КЛИКАБЕЛЬНО
+                </div>
+              </div>
+              
+              <Image 
+                src="/ads.png" 
+                alt="Рекламный баннер" 
+                width={400} 
+                height={100}
+                className="rounded-lg hover:opacity-90 transition-all hover:scale-[1.02] relative"
+              />
+            </a>
+          </div>
 
           {showNewFormatsAlert && (
             <Alert className="alert mb-6 break-words max-w-[400px]">
@@ -96,11 +129,16 @@ export default function EnhancedHome() {
 
             <Button 
               asChild 
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black"
+              className="w-full bg-[#006fe0] hover:bg-[#0067D0] text-white"
             >
-              <a href="https://t.me/findllimonix/63" target="_blank" rel="noopener noreferrer">
+              <a 
+                href="https://t.me/findllimonix/68" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2"
+              >
                 <RxLightningBolt />
-                Ультимативный конфиг
+                Ускорить Telegram медиа
               </a>
             </Button>
             
