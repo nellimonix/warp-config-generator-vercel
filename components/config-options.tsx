@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { FaDiscord, FaYoutube, FaTwitter, FaFacebook } from "react-icons/fa";
 import { FaTelegram, FaSignalMessenger } from "react-icons/fa6";
 import { IoLogoWhatsapp } from "react-icons/io";
@@ -18,6 +17,8 @@ import {
 } from "@/components/icons/custom-icons";
 import servicesConfig from "@/data/services-config.json";
 import { CONFIG_FORMATS, type ConfigFormat, type DeviceType, type SiteMode, type EndPointType } from "@/lib/types";
+import ReactCountryFlag from "react-country-flag";
+import { useMobile } from "@/hooks/use-mobile" // путь под твой проект
 
 // Icon mapping для динамического импорта
 const iconMap = {
@@ -98,6 +99,7 @@ export function EnhancedConfigOptions({
   configFormat,
   onConfigFormatChange,
 }: EnhancedConfigOptionsProps) {
+  const isMobile = useMobile();
   const handleEndPointChange = (value: EndPointType) => {
     onEndPointChange(value);
     if (value === "input") {
@@ -112,6 +114,12 @@ export function EnhancedConfigOptions({
   };
 
   const selectedFormatInfo = CONFIG_FORMATS.find(f => f.id === configFormat);
+
+const countries = [
+  { name: "Германия", code: "DE" },
+  { name: "Нидерланды", code: "NL" },
+  { name: "Финляндия", code: "FI" },
+];
 
   return (
     <div className="space-y-4">
@@ -203,8 +211,7 @@ export function EnhancedConfigOptions({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="computer">Оптимальный</SelectItem>
-              <SelectItem value="phone">Альтернативный</SelectItem>
+              <SelectItem value="phone">AmneziaWG 1.0</SelectItem>
               <SelectItem value="awg15">AmneziaWG 1.5</SelectItem>
             </SelectContent>
           </Select>
@@ -246,8 +253,25 @@ export function EnhancedConfigOptions({
             disabled={endPoint !== "input"}
             readOnly={endPoint !== "input"}
           />
+          <div className={`mt-4 ${isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 md:grid-cols-3 gap-3"}`}>
+            {countries.map((c, i) => (
+              <a
+                key={i}
+                href="https://t.me/findllimonix/69"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-2xl border bg-gradient-to-br from-muted/50 to-muted p-4 hover:from-primary/10 hover:to-primary/5 hover:shadow-xl transition-all duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-lg">
+                    <ReactCountryFlag countryCode={c.code} svg className="mr-2" />
+                    {c.name}
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
-
       </div>
     </div>
   );
