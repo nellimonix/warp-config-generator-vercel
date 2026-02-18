@@ -222,8 +222,21 @@ const countries = [
               <div className="flex items-start gap-2">
                 <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">⚠️</span>
                 <div className="text-sm text-orange-700 dark:text-orange-300">
-                  <p className="font-medium mb-1">AmneziaWG 1.5 - данный параметр позволяет использовать конфиг с AmneziaVPN.</p>
-                  <p>Импортируйте конфиг в приложение <strong>AmneziaVPN</strong>! Приложение <strong>AmneziaWG</strong> пока что не поддерживает этот формат!</p>
+                  <p className="font-medium mb-1">
+                    <strong>AmneziaWG 1.5</strong> — заметно более сильная защита от блокировок и DPI-детекции благодаря маскировке трафика под обычные протоколы UDP, что увеличивает шанс стабильного подключения там, где AmneziaWG 1.0 часто блокируется.
+                  </p>
+                  <p>
+                    Импортируйте конфиг в приложение AmneziaVPN или в{" "}
+                    <a
+                      href="https://github.com/RomikB/amneziawg-windows-client/releases/v1.0.4"
+                      className="text-blue-500 hover:text-blue-600 underline font-medium"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      модифицированное приложение AmneziaWG
+                    </a>
+                    {" "} (на телефоне WG Tunnel / AmneziaVPN)!
+                  </p>
                 </div>
               </div>
             </div>
