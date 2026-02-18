@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     const result = await warpService.generateConfig({
       selectedServices: selectedServices || [],
       siteMode: siteMode || 'all',
-      deviceType: deviceType || 'computer',
+      deviceType: deviceType || 'awg15',
       endpoint: endpoint || 'engage.cloudflareclient.com:4500',
       configFormat: configFormat
     });

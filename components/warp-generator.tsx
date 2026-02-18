@@ -42,7 +42,7 @@ export function EnhancedWarpGenerator() {
   const [configData, setConfigData] = useState<WarpConfigData | null>(null)
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [siteMode, setSiteMode] = useState<SiteMode>("all")
-  const [deviceType, setDeviceType] = useState<DeviceType>("computer")
+  const [deviceType, setDeviceType] = useState<DeviceType>("awg15")
   const [endPoint, setEndPoint] = useState<EndPointType>("default")
   const [customEndpoint, setCustomEndpoint] = useState("")
   const [configFormat, setConfigFormat] = useState<ConfigFormat>("wireguard")

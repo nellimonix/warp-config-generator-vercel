@@ -2,7 +2,7 @@
  * Расширенные типы для поддержки различных форматов конфигураций
  */
 
-export type DeviceType = 'computer' | 'phone' | 'awg15';
+export type DeviceType = 'awg15' | 'phone' | 'computer';
 export type SiteMode = 'all' | 'specific';
 export type EndPointType = 'default' | 'default2' | 'input';
 export type ConfigFormat = 'wireguard' | 'throne' | 'clash' | 'nekoray' | 'husi' | 'karing';

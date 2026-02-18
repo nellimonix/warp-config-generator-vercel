@@ -16,7 +16,7 @@ export interface IPRanges {
 
 // Типы для компонентов
 export type SiteMode = 'all' | 'specific';
-export type DeviceType = 'computer' | 'phone' | 'awg15';
+export type DeviceType = 'awg15' | 'phone' | 'computer';
 export type EndPointType = 'default' | 'default2' | 'input';
 
 export interface WarpConfigResponse {
