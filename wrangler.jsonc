@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "warp-config-generator",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Worker script that handles API requests
+  "main": "./worker/index.js",
+
+  // Static assets (Next.js static export)
+  "assets": {
+    "directory": "./out",
+    "binding": "ASSETS",
+    // SPA mode: all non-asset routes serve index.html
+    "not_found_handling": "single-page-application",
+    // Worker handles requests first (needed for /api/ routes)
+    "run_worker_first": true
+  },
+
+  // Enable workers.dev subdomain
+  "workers_dev": true,
+
+  // Preview URLs for non-production branches
+  "preview_urls": true
+}

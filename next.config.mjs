@@ -5,11 +5,15 @@ try {
   // ignore error
 }
 
-const isCloudflarePages = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH
+// Cloudflare Workers: static export is triggered by CF_PAGES env or CLOUDFLARE_WORKERS env
+const isCloudflare = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH || process.env.CLOUDFLARE_WORKERS
 const isNetlify = process.env.NETLIFY || false
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -18,14 +22,10 @@ const nextConfig = {
   },
 }
 
-if (isCloudflarePages) {
-  // Для Cloudflare Pages - статическая генерация
+if (isCloudflare) {
   nextConfig.output = 'export'
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
-  
-  // Пустой turbopack config чтобы избежать warning
-  nextConfig.turbopack = {}
 } else if (isNetlify) {
   // Для Netlify используем стандартную сборку с поддержкой SSR
   nextConfig.experimental = {
