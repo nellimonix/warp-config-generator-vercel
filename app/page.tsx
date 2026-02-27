@@ -52,28 +52,12 @@ export default function EnhancedHome() {
                 className="flex items-center gap-2"
               >
                 <img
-                  src="https://skytunnel.lol/SkyTunnel%20VPN_files/Logo.png"
+                  src="https://i.postimg.cc/MpmYtq3F/Logo.png"
                   alt="SkyTunnel"
                   className="h-6 w-6 relative top-[2px]"
                 />
 
-                <span>Обход белых списков</span>
-              </a>
-            </Button>
-
-            <Button 
-              data-rybbit-event="ads_click_tbbot"
-              asChild
-              className="hidden w-full bg-[#006fe0] hover:bg-[#0067D0] text-white"
-            >
-              <a
-                href="https://t.me/TriBukvyRoBot?start=warp_site"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
-              >
-                <FaGlobe />
-                <span>Обход белых списков</span>
+                <span>Oбxoд бeлыx cпиcкoв</span>
               </a>
             </Button>
 
@@ -88,7 +72,7 @@ export default function EnhancedHome() {
                 className="flex items-center justify-center gap-2"
               >
                 <RxLightningBolt />
-                Ускорить Telegram медиа
+                Ускорить Теlеgrаm медиа
               </a>
             </Button>
             

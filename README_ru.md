@@ -113,8 +113,7 @@ MIT License
 ## Зеркала / Альтернативные ссылки
 
 - Telegram Bot: [t.me/warp_generator_bot](https://t.me/warp_generator_bot)  
-- Основной сайт: [warp.llimonix.dev](https://warp.llimonix.dev)  
-- Vercel Mirror: [warply.vercel.app](https://warply.vercel.app)  
-- Netlify Mirror: [getwarp.netlify.app](https://getwarp.netlify.app)  
-- Cloudflare Pages Mirror: [getwarp.pages.dev](https://getwarp.pages.dev)
+- Основной сайт: [warp2.llimonix.pw](https://warp2.llimonix.pw)  
+- Vercel Mirror: [warply2.vercel.app](https://warply2.vercel.app)  
+- Netlify Mirror: [getwarp2.netlify.app](https://getwarp2.netlify.app)  
 - Telegram канал: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
