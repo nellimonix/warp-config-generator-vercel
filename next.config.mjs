@@ -5,15 +5,11 @@ try {
   // ignore error
 }
 
-// Cloudflare Workers: static export is triggered by CF_PAGES env or CLOUDFLARE_WORKERS env
 const isCloudflare = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH || process.env.CLOUDFLARE_WORKERS
 const isNetlify = process.env.NETLIFY || false
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -27,12 +23,10 @@ if (isCloudflare) {
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
 } else if (isNetlify) {
-  // Для Netlify используем стандартную сборку с поддержкой SSR
   nextConfig.experimental = {
     webpackBuildWorker: true,
   }
 } else {
-  // Для Vercel
   nextConfig.experimental = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
