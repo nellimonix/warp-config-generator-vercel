@@ -15,6 +15,7 @@ export default function AnalyticsLoader() {
     else if (hostname === "getwarp.pages.dev") setSiteId("3")
     else if (hostname === "warply2.vercel.app") setSiteId("4")
     else if (hostname === "warp2.llimonix.pw") setSiteId("5d2e1371719c")
+    else if (hostname === "warp.llimonix.workers.dev") setSiteId("cb305889f0b2")
     else setSiteId(null) // аналитику не добавляем
 
   }, [])
