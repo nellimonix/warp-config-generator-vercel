@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "warp",
-  "compatibility_date": "2025-04-01",
+  "compatibility_date": "2026-02-28",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/index.js",
   "find_additional_modules": true,
