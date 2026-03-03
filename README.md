@@ -25,14 +25,13 @@ https://app.netlify.com/start/deploy?repository=https://github.com/nellimonix/wa
 - _Functions_ [limitations](https://docs.netlify.com/functions/get-started/?fn-language=js#synchronous-function-2)
 - _Edge functions_ [limitations](https://docs.netlify.com/edge-functions/limits/)
 
-### 3. Cloudflare Pages
+### Deploy to Cloudflare
 
-- You can deploy manually by connecting your repository to the [Cloudflare Pages dashboard](https://dash.cloudflare.com/?to=/:account/pages).
-- Framework preset: `Next.js (Static HTML Export)`
-- Build command: `npm run build`
-- Build output directory: `out`
-- Root directory: `leave empty`
-- _Pages_ [limitations](https://developers.cloudflare.com/pages/platform/limits/)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nellimonix/warp-config-generator-vercel)
+- Alternatively can be deployed with [cli](https://developers.cloudflare.com/workers/wrangler/):
+  `wrangler deploy`
+- Serve locally: `wrangler dev`
+- _Worker_ [limits](https://developers.cloudflare.com/workers/platform/limits/#worker-limits)
 
 ## 🛠️ Local Development
 
@@ -57,7 +56,7 @@ npm run lint
 
 ```
 ├── app/                              # Next.js App Router
-│   ├── api/warp/route.ts             # API endpoint for config generation
+│   ├── api/warp_captcha/route.ts     # API endpoint for config generation
 │   ├── globals.css                   # Global styles
 │   ├── layout.tsx                    # Root layout
 │   └── page.tsx                      # Main page
@@ -72,10 +71,10 @@ npm run lint
 │   ├── services-config.json          # Available services configuration
 │   └── ip-ranges.json                # IP ranges for each service
 ├── functions/
-│   └── api/warp.js                   # Cloudflare Pages function
+│   └── api/warp_captcha.js           # Cloudflare Workers API function
+├── worker/
+│   └── index.js                      # Cloudflare Worker entry point
 ├── hooks/                            # React hooks
-│   ├── use-mobile.tsx                # Hook for mobile device detection
-│   └── use-toast.ts                  # Hook for toast notifications
 ├── lib/                              # Core business logic
 │   ├── builder/
 │   │   └── warp-config-builder.ts    # WireGuard config builder
@@ -88,8 +87,6 @@ npm run lint
 │   ├── warp-service.ts               # Main WARP generation service
 │   └── warpConfig.ts                 # Legacy compatibility
 ├── public/                           # Static files
-│   ├── logo.svg                      # Application logo
-│   └── cloud.ico                     # Favicon
 ├── types/
 │   └── services.ts                   # Service types
 ├── utils/
@@ -104,6 +101,7 @@ npm run lint
 ├── tailwind.config.ts                # Tailwind CSS configuration
 ├── tsconfig.json                     # TypeScript configuration
 ├── vercel.json                       # Vercel configuration
+├── wrangler.jsonc                    # Cloudflare Workers configuration
 ├── README_ru.md                      # Project documentation in Russian
 └── README.md                         # Project documentation in English
 ```
@@ -130,7 +128,7 @@ The project is configured for static generation with server-side rendering capab
 |----------|---------|------------|----------------|
 | Vercel | ✅ Full | 🟢 Low | ~3 minutes |
 | Netlify | ✅ Full | 🟡 Medium | ~5 minutes |
-| Cloudflare | ⚠️ Static | 🟡 Medium | ~5 minutes |
+| Cloudflare Workers | ✅ Full | 🟡 Medium | ~5 minutes |
 
 ## 📄 License
 
@@ -146,8 +144,8 @@ MIT License
 ## Mirrors / Alternative Links
 
 - Telegram Bot: [t.me/warp_generator_bot](https://t.me/warp_generator_bot)  
-- Main Site: [warp.llimonix.dev](https://warp.llimonix.dev)  
-- Vercel Mirror: [warply.vercel.app](https://warply.vercel.app)  
-- Netlify Mirror: [getwarp.netlify.app](https://getwarp.netlify.app)  
-- Cloudflare Pages Mirror: [getwarp.pages.dev](https://getwarp.pages.dev)
+- Main Site: [warp2.llimonix.pw](https://warp2.llimonix.pw)  
+- Vercel Mirror: [warply2.vercel.app](https://warply2.vercel.app)  
+- Netlify Mirror: [getwarp2.netlify.app](https://getwarp2.netlify.app)  
+- Cloudflare Mirror: [warp.llimonix.workers.dev](https://warp.llimonix.workers.dev)  
 - Telegram Channel: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)

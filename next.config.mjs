@@ -5,14 +5,11 @@ try {
   // ignore error
 }
 
-const isCloudflarePages = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH
+const isCloudflare = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH || process.env.CLOUDFLARE_WORKERS
 const isNetlify = process.env.NETLIFY || false
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -21,17 +18,15 @@ const nextConfig = {
   },
 }
 
-if (isCloudflarePages) {
+if (isCloudflare) {
   nextConfig.output = 'export'
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
 } else if (isNetlify) {
-  // Для Netlify используем стандартную сборку с поддержкой SSR
   nextConfig.experimental = {
     webpackBuildWorker: true,
   }
 } else {
-  // Для Vercel
   nextConfig.experimental = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
