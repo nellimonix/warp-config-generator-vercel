@@ -56,7 +56,7 @@ npm run lint
 
 ```
 ├── app/                              # Next.js App Router
-│   ├── api/warp_captcha/route.ts     # API endpoint for config generation
+│   ├── api/warp/route.ts             # API endpoint for config generation
 │   ├── globals.css                   # Global styles
 │   ├── layout.tsx                    # Root layout
 │   └── page.tsx                      # Main page
@@ -71,7 +71,7 @@ npm run lint
 │   ├── services-config.json          # Available services configuration
 │   └── ip-ranges.json                # IP ranges for each service
 ├── functions/
-│   └── api/warp_captcha.js           # Cloudflare Workers API function
+│   └── api/warp.js                   # Cloudflare Workers API function
 ├── worker/
 │   └── index.js                      # Cloudflare Worker entry point
 ├── hooks/                            # React hooks
