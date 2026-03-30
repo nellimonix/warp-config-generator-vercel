@@ -7,6 +7,7 @@ try {
 
 const isCloudflare = process.env.CF_PAGES || process.env.CF_PAGES_BRANCH || process.env.CLOUDFLARE_WORKERS
 const isNetlify = process.env.NETLIFY || false
+const isDocker = process.env.DOCKER_BUILD || false
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -22,6 +23,11 @@ if (isCloudflare) {
   nextConfig.output = 'export'
   nextConfig.distDir = 'out'
   nextConfig.trailingSlash = true
+} else if (isDocker) {
+  nextConfig.output = 'standalone'
+  nextConfig.experimental = {
+    webpackBuildWorker: true,
+  }
 } else if (isNetlify) {
   nextConfig.experimental = {
     webpackBuildWorker: true,
