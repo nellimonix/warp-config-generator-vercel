@@ -43,4 +43,4 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trigger Dokploy deploy
-              run: curl -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" --fail --silent
+        run: curl -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" --fail --silent
