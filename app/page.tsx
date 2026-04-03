@@ -8,7 +8,6 @@ import {
   Info,
 } from "lucide-react"
 import { RiTelegram2Line, RiRobot2Line, RiMoneyDollarCircleLine } from "react-icons/ri";
-import { FaGlobe, FaRocket } from "react-icons/fa";
 import { RxLightningBolt } from "react-icons/rx";
 import { EnhancedWarpGenerator } from "@/components/warp-generator"
 import { GitHubStarsBadge } from "@/components/github-stars-badge"
@@ -46,7 +45,7 @@ export default function EnhancedHome() {
               className="w-full bg-purple-700 hover:bg-purple-800 text-white"
             >
               <a
-                href="https://t.me/SkyTunnel_robot?start=limon-site"
+                href="tg://resolve?domain=SkyTunnel_robot&start=limon-site"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
@@ -66,7 +65,7 @@ export default function EnhancedHome() {
               className="w-full bg-[#006fe0] hover:bg-[#0067D0] text-white"
             >
               <a 
-                href="https://t.me/findllimonix/68" 
+                href="tg://resolve?domain=findllimonix&post=68" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2"
@@ -77,21 +76,21 @@ export default function EnhancedHome() {
             </Button>
             
             <Button asChild variant="secondary" className="w-full">
-              <a href="https://t.me/warp_generator_bot" target="_blank" rel="noopener noreferrer">
+              <a href="tg://resolve?domain=warp_generator_bot" target="_blank" rel="noopener noreferrer">
                 <RiRobot2Line />
                 Warp Generator Bot
               </a>
             </Button>
             
             <Button asChild variant="secondary" className="w-full">
-              <a href="https://t.me/+fDYczngHDFplZDli" target="_blank" rel="noopener noreferrer">
+              <a href="tg://join?invite=fDYczngHDFplZDli" target="_blank" rel="noopener noreferrer">
                 <RiTelegram2Line />
                 Telegram канал
               </a>
             </Button>
 
             <Button asChild variant="secondary" className="w-full">
-              <a href="https://t.me/warp_generator_bot?start=donate" target="_blank" rel="noopener noreferrer">
+              <a href="tg://resolve?domain=warp_generator_bot&start=donate" target="_blank" rel="noopener noreferrer">
                 <RiMoneyDollarCircleLine />
                 Поддержать проект
               </a>
