@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LINKS } from '@/config/site';
 import { ENDPOINTS } from '@/config/endpoints';
+import { FlagIcon } from '@/components/icons/flag-icon';
 import { RiRobot2Fill } from "react-icons/ri";
 import { BsTelegram } from "react-icons/bs";
 import { FaGithub, FaHeart } from "react-icons/fa";
@@ -15,17 +16,12 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-function SidebarLink({ href, icon, children, badge, variant = 'default' }: {
+function SidebarLink({ href, icon, children, badge }: {
   href: string; icon: React.ReactNode; children: React.ReactNode; badge?: React.ReactNode;
-  variant?: 'default' | 'accent';
 }) {
   return (
     <a href={href} target="_blank" rel="noopener noreferrer"
-      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-md)] transition-all ${
-        variant === 'accent'
-          ? 'bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)]'
-          : 'bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)]'
-      }`}>
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-md)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] transition-all">
       <div className="w-8 h-8 rounded-lg bg-[var(--surface-3)] flex items-center justify-center shrink-0 text-[var(--text-muted)]">
         {icon}
       </div>
@@ -52,17 +48,6 @@ function GitHubStars() {
     <span className="text-[11px] text-[var(--amber-300)] bg-[var(--amber-900)] rounded px-1.5 py-0.5 font-medium">
       ★ {count !== null ? count : '...'}
     </span>
-  );
-}
-
-function FlagIcon({ code }: { code: string }) {
-  return (
-    <img
-      src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
-      alt={code} width={20} height={15}
-      className="rounded-[2px] object-cover"
-      style={{ width: 20, height: 15 }}
-    />
   );
 }
 
@@ -119,7 +104,6 @@ export function Sidebar() {
         <div className="flex items-center justify-center w-5 h-5 shrink-0">
           <FaHeart className="text-[var(--amber-300)] text-[14px]" />
         </div>
-
         <span className="text-[13px] font-medium text-[var(--amber-300)] leading-none">
           Поддержать проект
         </span>

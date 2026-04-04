@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { CONFIG_FORMATS } from '@/config/formats';
 import { ENDPOINTS } from '@/config/endpoints';
+import { FlagIcon } from '@/components/icons/flag-icon';
 import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
 
 interface DropdownOption {
@@ -38,7 +39,7 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
         <p className="text-[11px] text-[var(--text-dim)] font-light mb-0.5">{label}</p>
         <div className="flex items-center justify-between gap-2">
           <span className="text-[13px] font-medium text-[var(--text)] flex items-center gap-2 truncate">
-            {current?.flag && <FlagImg code={current.flag} />}
+            {current?.flag && <FlagIcon code={current.flag} />}
             {current?.label || value}
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -57,21 +58,13 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
                   ? 'text-[var(--amber-300)] bg-[var(--amber-900)]/50'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
               }`}>
-              {opt.flag && <FlagImg code={opt.flag} />}
+              {opt.flag && <FlagIcon code={opt.flag} />}
               {opt.label}
             </button>
           ))}
         </div>
       )}
     </div>
-  );
-}
-
-function FlagImg({ code }: { code: string }) {
-  return (
-    <img src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`} alt={code}
-      width={18} height={13} className="rounded-[2px] object-cover inline-block"
-      style={{ width: 18, height: 13 }} />
   );
 }
 
@@ -99,7 +92,7 @@ export function ConfigSelectors({
           options={CONFIG_FORMATS.map((f) => ({ id: f.id, label: f.name }))}
           onChange={(v) => onFormatChange(v as ConfigFormat)} />
         <Dropdown label="Настройки соединения" value={deviceType}
-          options={[{ id: 'awg15', label: 'AmneziaWG 1.5' }, /* { id: 'phone', label: 'AmneziaWG 1.0' } */]}
+          options={[{ id: 'awg15', label: 'AmneziaWG 1.5' }]}
           onChange={(v) => onDeviceChange(v as DeviceType)} />
         <Dropdown label="Тип конфигурации" value={siteMode}
           options={[{ id: 'all', label: 'Все сайты' }, { id: 'specific', label: 'Определенные сайты' }]}
@@ -109,7 +102,6 @@ export function ConfigSelectors({
           onChange={onEndpointChange} />
       </div>
 
-      {/* Custom endpoint input */}
       {endpointId === 'custom' && (
         <input
           type="text"
