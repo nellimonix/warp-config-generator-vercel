@@ -1,4 +1,5 @@
 import { LINKS } from '@/config/site';
+import { trackEvent } from '@/lib/analytics';
 
 interface PromoItem {
   href: string;
@@ -42,6 +43,7 @@ export function PromoCards() {
     <div className="grid grid-cols-2 gap-2 max-[500px]:grid-cols-1">
       {PROMOS.map((p) => (
         <a key={p.href} href={p.href} target="_blank" rel="noopener noreferrer"
+          onClick={() => trackEvent('ads_click', p.title)}
           className={`flex items-center gap-3 px-4 py-3.5 rounded-[var(--radius-md)] ${p.bg} ${p.hoverBg} transition-all`}>
           <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0 overflow-hidden">
             {p.image ? (

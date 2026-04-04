@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
-import { SITE } from '@/config/site';
 import '@/styles/globals.css';
+import { SITE } from '@/config/site';
+import AnalyticsLoader from '@/components/rybbit-analytics';
 
 export const metadata: Metadata = {
   title: SITE.name,
@@ -22,7 +23,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
-        <link rel="icon" href="/cloud.ico" type="image/x-icon" />
+        <AnalyticsLoader />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
       </head>
       <body className="font-sans">
         {children}

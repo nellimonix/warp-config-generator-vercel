@@ -6,7 +6,7 @@ export const CONFIG_FORMATS: ConfigFormatInfo[] = [
     name: 'AmneziaWG',
     description: 'Стандартный формат WireGuard (.conf)',
     extension: 'conf',
-    supportsQR: true,
+    supportsQR: false,
   },
   {
     id: 'clash',
