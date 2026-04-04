@@ -7,7 +7,4 @@ build
 *.md
 .DS_Store
 .env*
-.vercel
-.netlify
-.wrangler
 npm-debug.log*
