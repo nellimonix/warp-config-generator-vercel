@@ -1,41 +1,32 @@
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import type React from "react"
-import AnalyticsLoader from "@/components/rybbit-analytics"
-
-const inter = Inter({ subsets: ["latin"] })
+import type { Metadata } from 'next';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+import { SITE } from '@/config/site';
+import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: "WARP Конфигуратор - Генератор конфигураций Cloudflare WARP",
-  description: "Удобный генератор конфигураций Cloudflare WARP. Создавайте конфиги для оптимизации сетевого подключения, повышения безопасности и защиты трафика. Поддержка всех платформ.",
-  keywords: "WARP, Cloudflare, конфигуратор, генератор конфигураций, сетевая безопасность, защита трафика, DNS, оптимизация сети",
-  authors: [{ name: "WARP Generator" }],
+  title: SITE.name,
+  description: SITE.description,
+  keywords: 'WARP, Cloudflare, конфигуратор, генератор, VPN, WireGuard, AmneziaWG',
+  authors: [{ name: 'llimonix' }],
   openGraph: {
-    title: "WARP Конфигуратор - Cloudflare WARP",
-    description: "Генератор конфигураций Cloudflare WARP для оптимизации и защиты сетевого подключения",
-    type: "website",
-    locale: "ru_RU",
+    title: SITE.name,
+    description: SITE.description,
+    type: 'website',
+    locale: SITE.locale,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
-}
+  robots: { index: true, follow: true },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className="dark" style={{ colorScheme: "dark" }}>
+    <html lang="ru" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
-        <AnalyticsLoader/>
         <link rel="icon" href="/cloud.ico" type="image/x-icon" />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
+      <body className="font-sans">
+        {children}
       </body>
     </html>
-  )
+  );
 }
