@@ -3,6 +3,7 @@ import { trackEvent } from '@/lib/analytics';
 
 interface PromoItem {
   href: string;
+  trackId: string;
   title: string;
   subtitle: string;
   image?: string;
@@ -16,6 +17,7 @@ interface PromoItem {
 const PROMOS: PromoItem[] = [
   {
     href: LINKS.skyTunnel,
+    trackId: 'skytunnel',
     title: 'Oбxoд бeлыx cпискoв',
     subtitle: 'Доступ к зaблoкиpoвaнным ресурсам',
     image: 'https://i.postimg.cc/MpmYtq3F/Logo.png',
@@ -27,6 +29,7 @@ const PROMOS: PromoItem[] = [
   },
   {
     href: LINKS.telegramMedia,
+    trackId: 'tg_media',
     title: 'Ускорить Telegram медиа',
     subtitle: 'Быстрая загрузка контента',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/960px-Telegram_logo.svg.png',
@@ -43,7 +46,7 @@ export function PromoCards() {
     <div className="grid grid-cols-2 gap-2 max-[500px]:grid-cols-1">
       {PROMOS.map((p) => (
         <a key={p.href} href={p.href} target="_blank" rel="noopener noreferrer"
-          onClick={() => trackEvent('ads_click', p.title)}
+          onClick={() => trackEvent('ads_click', p.trackId)}
           className={`flex items-center gap-3 px-4 py-3.5 rounded-[var(--radius-md)] ${p.bg} ${p.hoverBg} transition-all`}>
           <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0 overflow-hidden">
             {p.image ? (

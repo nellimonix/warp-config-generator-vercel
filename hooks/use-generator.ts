@@ -1,26 +1,22 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
 import type { GenerateResult, ApiResponse } from '@/types';
 import { getEndpointValue, isExternalEndpoint } from '@/config/endpoints';
+import { trackEvent } from '@/lib/analytics';
 
 export interface GeneratorState {
-  // Settings
   configFormat: ConfigFormat;
   deviceType: DeviceType;
   siteMode: SiteMode;
   endpointId: string;
   customEndpoint: string;
   selectedServices: string[];
-
-  // Generation state
   isLoading: boolean;
   isGenerated: boolean;
   error: string;
   result: GenerateResult | null;
-
-  // Captcha
   showCaptcha: boolean;
 }
 
@@ -40,8 +36,7 @@ export function useGenerator() {
   });
 
   const set = useCallback(<K extends keyof GeneratorState>(
-    key: K,
-    value: GeneratorState[K]
+    key: K, value: GeneratorState[K]
   ) => {
     setState((prev) => ({ ...prev, [key]: value }));
   }, []);
@@ -56,13 +51,11 @@ export function useGenerator() {
   }, []);
 
   const setEndpoint = useCallback((id: string) => {
-    // Check if this is a fake server endpoint
     const externalUrl = isExternalEndpoint(id);
     if (externalUrl) {
       window.open(externalUrl, '_blank');
       return;
     }
-
     setState((prev) => ({
       ...prev,
       endpointId: id,
@@ -107,6 +100,7 @@ export function useGenerator() {
           isGenerated: true,
           result: data.content!,
         }));
+        trackEvent('WARP_GEN');
       } else {
         setState((prev) => ({
           ...prev,
@@ -137,6 +131,7 @@ export function useGenerator() {
     if (!state.result) return false;
     try {
       await navigator.clipboard.writeText(atob(state.result.configBase64));
+      trackEvent('WARP_COPY');
       return true;
     } catch {
       return false;
@@ -149,17 +144,11 @@ export function useGenerator() {
     a.href = 'data:application/octet-stream;base64,' + state.result.configBase64;
     a.download = state.result.fileName;
     a.click();
+    trackEvent('WARP_DOWNLOAD');
   }, [state.result]);
 
   return {
-    state,
-    set,
-    toggleService,
-    setEndpoint,
-    handleGenerate,
-    onCaptchaVerify,
-    reset,
-    copyConfig,
-    downloadConfig,
+    state, set, toggleService, setEndpoint,
+    handleGenerate, onCaptchaVerify, reset, copyConfig, downloadConfig,
   };
 }
