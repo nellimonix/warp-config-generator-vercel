@@ -42,7 +42,6 @@ const CLIENTS: PlatformSection[] = [
   {
     platform: 'iOS',
     icon: <FaAppStoreIos />,
-
     apps: [
       { name: 'AmneziaWG', description: 'Официальный клиент для iOS', url: 'https://apps.apple.com/app/amneziawg/id6478942365' },
       { name: 'DefaultVPN', description: 'VPN-клиент с поддержкой AWG', url: 'https://apps.apple.com/app/defaultvpn/id6744577928' },
@@ -68,6 +67,68 @@ const CLIENTS: PlatformSection[] = [
     ],
   },
 ];
+
+function NoteTag({ note, noteUrl }: { note: string; noteUrl?: string }) {
+  const cls = "text-[10px] text-[var(--amber-300)] bg-[var(--amber-900)]/50 rounded py-0.5";
+  if (noteUrl) {
+    return (
+      <a href={noteUrl} target="_blank" rel="noopener noreferrer"
+        className={`${cls} hover:bg-[var(--amber-700)]/50 transition-colors`}>
+        {note}
+      </a>
+    );
+  }
+  return <span className={cls}>{note}</span>;
+}
+
+function AppCard({ app }: { app: ClientApp }) {
+  const hasButtons = app.url || app.downloadUrl;
+  const hasExtra = app.description || app.note;
+
+  return (
+    <div className="bg-[var(--surface-2)] rounded-[var(--radius-md)] px-3.5 py-2.5 group">
+      <div className={`flex gap-3 ${hasExtra ? 'items-start' : 'items-center'}`}>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-medium text-[var(--text)] leading-snug">{app.name}</p>
+          {app.description && (
+            <p className="text-[11px] text-[var(--text-dim)] mt-0.5 leading-relaxed break-words">
+              {app.description}
+            </p>
+          )}
+        </div>
+
+        {hasButtons && (
+          <div className="flex items-center gap-1.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+            {app.url && (
+              <a href={app.url} target="_blank" rel="noopener noreferrer"
+                className="w-7 h-7 rounded-md bg-[var(--surface-3)] flex items-center justify-center hover:bg-[var(--surface)] transition-colors"
+                title="GitHub / Сайт">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </a>
+            )}
+            {app.downloadUrl && (
+              <a href={app.downloadUrl} target="_blank" rel="noopener noreferrer"
+                className="w-7 h-7 rounded-md bg-[var(--amber-900)] flex items-center justify-center hover:bg-[var(--amber-700)] transition-colors"
+                title="Скачать">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="var(--amber-300)" strokeWidth="1.5" />
+                </svg>
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {app.note && (
+        <div className="mt-1.5">
+          <NoteTag note={app.note} noteUrl={app.noteUrl} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AboutTab() {
   return (
@@ -105,52 +166,7 @@ export function AboutTab() {
               </div>
               <div className="grid gap-1.5">
                 {section.apps.map((app) => (
-                  <div key={app.name} className="flex items-center gap-3 px-3.5 py-2.5 bg-[var(--surface-2)] rounded-[var(--radius-md)] group">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-[var(--text)]">{app.name}</span>
-                        {app.note && (
-                          app.noteUrl ? (
-                            <a
-                              href={app.noteUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] text-[var(--amber-300)] bg-[var(--amber-900)]/50 rounded px-1.5 py-0.5 shrink-0"
-                            >
-                              {app.note}
-                            </a>
-                          ) : (
-                            <span className="text-[10px] text-[var(--amber-300)] bg-[var(--amber-900)]/50 rounded px-1.5 py-0.5 shrink-0">
-                              {app.note}
-                            </span>
-                          )
-                        )}
-                      </div>
-                      {app.description && (
-                        <p className="text-[11px] text-[var(--text-dim)] mt-0.5 truncate">{app.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
-                      {app.url && (
-                        <a href={app.url} target="_blank" rel="noopener noreferrer"
-                          className="w-7 h-7 rounded-md bg-[var(--surface-3)] flex items-center justify-center hover:bg-[var(--surface)] transition-colors"
-                          title="GitHub / Сайт">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
-                          </svg>
-                        </a>
-                      )}
-                      {app.downloadUrl && (
-                        <a href={app.downloadUrl} target="_blank" rel="noopener noreferrer"
-                          className="w-7 h-7 rounded-md bg-[var(--amber-900)] flex items-center justify-center hover:bg-[var(--amber-700)] transition-colors"
-                          title="Скачать">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="var(--amber-300)" strokeWidth="1.5" />
-                          </svg>
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                  <AppCard key={app.name} app={app} />
                 ))}
               </div>
             </div>
