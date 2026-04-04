@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
         <AnalyticsLoader />
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/cloud.ico" type="image/x-icon" />
       </head>
       <body className="font-sans">
         {children}

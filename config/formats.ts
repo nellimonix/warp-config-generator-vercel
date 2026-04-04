@@ -20,7 +20,7 @@ export const CONFIG_FORMATS: ConfigFormatInfo[] = [
     name: 'WireSock',
     description: 'WireGuard с маскировкой протокола (.conf)',
     extension: 'conf',
-    supportsQR: true,
+    supportsQR: false,
   },
 ];
 
