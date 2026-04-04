@@ -4,6 +4,7 @@ import Image from "next/image";
 const TABS = [
   { id: 'generator', label: 'Генератор' },
   // { id: 'formats', label: 'Форматы' },
+  { id: 'applications', label: 'Приложения' },
   { id: 'about', label: 'О проекте' },
 ];
 

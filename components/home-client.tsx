@@ -111,7 +111,8 @@ export function HomeClient({ services }: HomeClientProps) {
           </div>
 
           {activeTab === 'formats' && <FormatsTab />}
-          {activeTab === 'about' && <AboutTab />}
+          {activeTab === 'about'  && <AboutTab />}
+          {activeTab === 'applications' && <AboutTab />}
         </div>
 
         <Sidebar />
