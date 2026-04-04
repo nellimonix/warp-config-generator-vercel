@@ -55,55 +55,62 @@ npm run lint
 ## 📁 Структура проекта
 
 ```
-├── app/                              # Next.js App Router
-│   ├── api/warp_captcha/route.ts     # API endpoint для генерации конфигураций
-│   ├── globals.css                   # Глобальные стили
-│   ├── layout.tsx                    # Root layout
-│   └── page.tsx                      # Главная страница
-├── components/                       # React компоненты
-│   ├── icons/
-│   │   └── custom-icons.tsx          # Кастомные иконки сервисов
-│   ├── ui/                           # shadcn/ui компоненты
-│   ├── config-options.tsx            # Компонент настроек конфигурации
-│   ├── theme-provider.tsx            # Провайдер темы (dark/light mode)
-│   └── warp-generator.tsx            # Основной компонент генератора
-├── data/                             # Статические данные
-│   ├── services-config.json          # Конфигурация доступных сервисов
-│   └── ip-ranges.json                # IP диапазоны для каждого сервиса
-├── functions/
-│   └── api/warp_captcha.js           # Cloudflare Workers API функция
-├── worker/
-│   └── index.js                      # Точка входа Cloudflare Worker
-├── hooks/                            # React hooks
-├── lib/                              # Основная бизнес-логика
-│   ├── builder/
-│   │   └── warp-config-builder.ts    # Построитель WireGuard конфигураций
-│   ├── cloudflare-api.ts             # Клиент для Cloudflare WARP API
-│   ├── crypto-utils.ts               # Криптографические утилиты
-│   ├── ip-ranges.ts                  # Менеджер IP диапазонов
-│   ├── qr-generator.ts               # Генератор QR кодов
-│   ├── types.ts                      # TypeScript типы и интерфейсы
-│   ├── utils.ts                      # Общие утилиты (cn и др.)
-│   ├── warp-service.ts               # Главный сервис генерации WARP
-│   └── warpConfig.ts                 # Legacy совместимость
-├── public/                           # Статические файлы
-├── types/
-│   └── services.ts                   # Типы для сервисов
-├── utils/
-│   └── services.ts                   # Менеджер сервисов (ServicesManager)
-├── .gitignore                        # Git ignore правила
-├── components.json                   # Конфигурация shadcn/ui
-├── LICENSE                           # MIT лицензия
-├── netlify.toml                      # Конфигурация для Netlify
-├── next.config.mjs                   # Конфигурация Next.js
-├── package.json                      # Зависимости проекта
-├── postcss.config.mjs                # Конфигурация PostCSS
-├── tailwind.config.ts                # Конфигурация Tailwind CSS
-├── tsconfig.json                     # Конфигурация TypeScript
-├── vercel.json                       # Конфигурация для Vercel
-├── wrangler.jsonc                    # Конфигурация Cloudflare Workers
-├── README_ru.md                      # Документация проекта на русском
-└── README.md                         # Документация проекта на английском
+├── app/
+│   ├── layout.tsx                 Корневой layout (шрифт Geist, мета)
+│   ├── page.tsx                   Серверный компонент — загрузка сервисов
+│   └── api/generate/route.ts      POST endpoint (hCaptcha + генерация)
+│
+├── components/
+│   ├── home-client.tsx            Клиентская оболочка (табы, состояние, капча)
+│   ├── layout/
+│   │   ├── topbar.tsx             Логотип + навигация по табам
+│   │   ├── sidebar.tsx            Ссылки, серверы, донат (sticky)
+│   │   └── footer.tsx
+│   ├── generator/
+│   │   ├── config-selectors.tsx   Кастомные дропдауны (формат, тип и пр.)
+│   │   ├── service-picker.tsx     Сетка выбора сервисов
+│   │   ├── result-panel.tsx       Блок результата (скачать / копировать / QR)
+│   │   ├── formats-tab.tsx        Список поддерживаемых форматов
+│   │   └── about-tab.tsx          О проекте + совместимые клиенты
+│   └── promo/
+│       ├── promo-cards.tsx        Промо-карточки (SkyTunnel и др.)
+│       └── banner.tsx             Опциональный рекламный баннер
+│
+├── config/
+│   ├── services/                  27 JSON-файлов — по одному на сервис
+│   │   ├── discord.json
+│   │   ├── telegram.json
+│   │   └── ...
+│   ├── services-loader.ts         Автозагрузка всех JSON при старте
+│   ├── endpoints.ts               Реальные + фейковые endpoint-ы серверов
+│   ├── formats.ts                 6 определений форматов конфигов
+│   ├── banner.ts                  Вкл/выкл баннера + URL картинки
+│   └── site.ts                    Метаданные сайта + внешние ссылки
+│
+├── lib/
+│   ├── builders/                  По одному файлу на формат конфига
+│   │   ├── wireguard.ts
+│   │   ├── throne.ts
+│   │   ├── clash.ts
+│   │   ├── nekoray.ts
+│   │   ├── husi.ts
+│   │   ├── karing.ts
+│   │   ├── shared.ts              Профили устройств, DNS, константы
+│   │   └── index.ts               Диспетчер — buildConfig(format, params)
+│   ├── warp-service.ts            Оркестратор (ключи → CF → сборка → QR)
+│   ├── cloudflare-client.ts       Регистрация через Cloudflare WARP API
+│   ├── crypto.ts                  Генерация ключей (tweetnacl)
+│   ├── qr-generator.ts            QR через внешний API + SVG-заглушка
+│   └── ip-ranges.ts               Реэкспорт из services-loader
+│
+├── hooks/
+│   ├── use-generator.ts           Вся клиентская логика генерации
+│   └── use-mobile.ts              Хук для адаптивности
+│
+├── types/                         TypeScript типы
+├── styles/globals.css             Дизайн-токены + тёмная тема
+├── Dockerfile                     Standalone production-сборка
+└── package.json
 ```
 
 ## 🔧 Конфигурация

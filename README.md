@@ -55,55 +55,62 @@ npm run lint
 ## 📁 Project Structure
 
 ```
-├── app/                              # Next.js App Router
-│   ├── api/warp_captcha/route.ts     # API endpoint for config generation
-│   ├── globals.css                   # Global styles
-│   ├── layout.tsx                    # Root layout
-│   └── page.tsx                      # Main page
-├── components/                       # React components
-│   ├── icons/
-│   │   └── custom-icons.tsx          # Custom service icons
-│   ├── ui/                           # shadcn/ui components
-│   ├── config-options.tsx            # Configuration settings component
-│   ├── theme-provider.tsx            # Theme provider (dark/light mode)
-│   └── warp-generator.tsx            # Main generator component
-├── data/                             # Static data
-│   ├── services-config.json          # Available services configuration
-│   └── ip-ranges.json                # IP ranges for each service
-├── functions/
-│   └── api/warp_captcha.js           # Cloudflare Workers API function
-├── worker/
-│   └── index.js                      # Cloudflare Worker entry point
-├── hooks/                            # React hooks
-├── lib/                              # Core business logic
-│   ├── builder/
-│   │   └── warp-config-builder.ts    # WireGuard config builder
-│   ├── cloudflare-api.ts             # Cloudflare WARP API client
-│   ├── crypto-utils.ts               # Cryptographic utilities
-│   ├── ip-ranges.ts                  # IP ranges manager
-│   ├── qr-generator.ts               # QR code generator
-│   ├── types.ts                      # TypeScript types and interfaces
-│   ├── utils.ts                      # Common utilities (cn, etc.)
-│   ├── warp-service.ts               # Main WARP generation service
-│   └── warpConfig.ts                 # Legacy compatibility
-├── public/                           # Static files
-├── types/
-│   └── services.ts                   # Service types
-├── utils/
-│   └── services.ts                   # Services manager (ServicesManager)
-├── .gitignore                        # Git ignore rules
-├── components.json                   # shadcn/ui configuration
-├── LICENSE                           # MIT license
-├── netlify.toml                      # Netlify configuration
-├── next.config.mjs                   # Next.js configuration
-├── package.json                      # Project dependencies
-├── postcss.config.mjs                # PostCSS configuration
-├── tailwind.config.ts                # Tailwind CSS configuration
-├── tsconfig.json                     # TypeScript configuration
-├── vercel.json                       # Vercel configuration
-├── wrangler.jsonc                    # Cloudflare Workers configuration
-├── README_ru.md                      # Project documentation in Russian
-└── README.md                         # Project documentation in English
+├── app/
+│   ├── layout.tsx                 Root layout (Geist font, meta)
+│   ├── page.tsx                   Server component — loads services
+│   └── api/generate/route.ts      POST endpoint (hCaptcha + generation)
+│
+├── components/
+│   ├── home-client.tsx            Client shell (tabs, state, captcha modal)
+│   ├── layout/
+│   │   ├── topbar.tsx             Logo + tab navigation
+│   │   ├── sidebar.tsx            Links, servers, donate (sticky)
+│   │   └── footer.tsx
+│   ├── generator/
+│   │   ├── config-selectors.tsx   Custom dropdowns (format, device, etc.)
+│   │   ├── service-picker.tsx     Service selection grid
+│   │   ├── result-panel.tsx       Download / copy / QR result block
+│   │   ├── formats-tab.tsx        Supported formats list
+│   │   └── about-tab.tsx          About + compatible clients
+│   └── promo/
+│       ├── promo-cards.tsx        Promotional cards (SkyTunnel, etc.)
+│       └── banner.tsx             Optional ad banner
+│
+├── config/
+│   ├── services/                  27 JSON files — one per service
+│   │   ├── discord.json
+│   │   ├── telegram.json
+│   │   └── ...
+│   ├── services-loader.ts         Auto-loads all JSONs at startup
+│   ├── endpoints.ts               Real + fake server endpoints
+│   ├── formats.ts                 6 config format definitions
+│   ├── banner.ts                  Banner on/off + image URL
+│   └── site.ts                    Site metadata + external links
+│
+├── lib/
+│   ├── builders/                  One file per config format
+│   │   ├── wireguard.ts
+│   │   ├── throne.ts
+│   │   ├── clash.ts
+│   │   ├── nekoray.ts
+│   │   ├── husi.ts
+│   │   ├── karing.ts
+│   │   ├── shared.ts              Device profiles, DNS, constants
+│   │   └── index.ts               Dispatcher — buildConfig(format, params)
+│   ├── warp-service.ts            Orchestrator (keys → CF → build → QR)
+│   ├── cloudflare-client.ts       Cloudflare WARP API registration
+│   ├── crypto.ts                  Key generation (tweetnacl)
+│   ├── qr-generator.ts            QR via external API + SVG fallback
+│   └── ip-ranges.ts               Re-exports from services-loader
+│
+├── hooks/
+│   ├── use-generator.ts           All client-side generation logic
+│   └── use-mobile.ts              Responsive breakpoint hook
+│
+├── types/                         TypeScript type definitions
+├── styles/globals.css             Design tokens + dark theme
+├── Dockerfile                     Standalone production build
+└── package.json
 ```
 
 ## 🔧 Configuration
