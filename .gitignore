@@ -11,3 +11,5 @@ package-lock.json
 .wrangler/
 .vercel/
 .netlify/
+config/output.txt
+config/build_ips.py
