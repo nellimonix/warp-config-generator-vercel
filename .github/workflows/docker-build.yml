@@ -49,6 +49,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_HCAPTCHA_SITE_KEY }}
+            NEXT_PUBLIC_RYBBIT_ANALYTICS_SITE_ID=${{ secrets.NEXT_PUBLIC_RYBBIT_ANALYTICS_SITE_ID }}
 
       - name: Trigger Dokploy deploy
         if: github.ref_name == 'production'
