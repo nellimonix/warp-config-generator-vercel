@@ -1,30 +1,13 @@
-'use client';
-
 import Script from 'next/script';
-import { useEffect, useState } from 'react';
 
 export default function AnalyticsLoader() {
-  const [siteId, setSiteId] = useState<string | null>(null);
+  const siteId = process.env.NEXT_PUBLIC_RYBBIT_ANALYTICS_SITE_ID;
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const h = window.location.hostname;
-    if (h === 'warp.llimonix.dev') setSiteId('1');
-    else if (h === 'getwarp2.netlify.app') setSiteId('2');
-    else if (h === 'getwarp.pages.dev') setSiteId('3');
-    else if (h === 'warply2.vercel.app') setSiteId('4');
-    else if (h === 'warp2.llimonix.pw') setSiteId('5d2e1371719c');
-    else if (h === 'warp.llimonix.workers.dev') setSiteId('cb305889f0b2');
-    else setSiteId(null);
-  }, []);
-
-  if (!siteId) return null;
+  if (!siteId) {
+    return null;
+  }
 
   return (
-    <Script
-      src="https://anltcs.llimonix.dev/api/script.js"
-      data-site-id={siteId}
-      strategy="afterInteractive"
-    />
+    <Script src="https://anltcs.llimonix.dev/api/script.js" data-site-id={siteId} strategy="afterInteractive" />
   );
 }
