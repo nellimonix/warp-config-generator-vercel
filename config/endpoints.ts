@@ -23,7 +23,6 @@ export const ENDPOINTS: EndpointOption[] = [
     label: 'Указать свой адрес',
     value: '',
   },
-  // Fake server endpoints — redirect to Telegram
   {
     id: 'server-de',
     label: 'Германия',
@@ -44,6 +43,20 @@ export const ENDPOINTS: EndpointOption[] = [
     value: '',
     externalUrl: 'tg://resolve?domain=findllimonix&post=69',
     flag: 'FI',
+  },
+  {
+    id: 'server-pl',
+    label: 'Польша',
+    value: '',
+    externalUrl: 'tg://resolve?domain=findllimonix&post=69',
+    flag: 'PL',
+  },
+  {
+    id: 'server-lv',
+    label: 'Латвия',
+    value: '',
+    externalUrl: 'tg://resolve?domain=findllimonix&post=69',
+    flag: 'LV',
   },
 ];
 
