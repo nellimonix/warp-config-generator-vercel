@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { ResultPanel } from '@/components/generator/result-panel';
 import { PromoCards } from '@/components/promo/promo-cards';
 import { Banner } from '@/components/promo/banner';
+import { Notice } from '@/components/promo/notice';
 import { FormatsTab } from '@/components/generator/formats-tab';
 import { AboutTab } from '@/components/generator/about-tab';
 import { ConfigSelectors } from '@/components/generator/config-selectors';
@@ -36,6 +37,7 @@ export function HomeClient({ services }: HomeClientProps) {
 
           {/* Generator tab — always mounted */}
           <div className={activeTab === 'generator' ? '' : 'hidden'}>
+            <Notice />
             <Banner />
 
             {/* Generator card */}
