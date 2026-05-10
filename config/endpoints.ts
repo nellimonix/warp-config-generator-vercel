@@ -11,7 +11,7 @@ export const ENDPOINTS: EndpointOption[] = [
   {
     id: 'default',
     label: 'По умолчанию',
-    value: 'engage.cloudflareclient.com:4500',
+    value: '162.159.195.1:500',
   },
   {
     id: 'default2',
