@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
 import type { GenerateResult, ApiResponse } from '@/types';
 import { getEndpointValue, isExternalEndpoint } from '@/config/endpoints';
-import { trackEvent } from '@/lib/analytics';
 
 export interface GeneratorState {
   configFormat: ConfigFormat;
@@ -17,7 +16,6 @@ export interface GeneratorState {
   isGenerated: boolean;
   error: string;
   result: GenerateResult | null;
-  showCaptcha: boolean;
 }
 
 export function useGenerator() {
@@ -32,7 +30,6 @@ export function useGenerator() {
     isGenerated: false,
     error: '',
     result: null,
-    showCaptcha: false,
   });
 
   const set = useCallback(<K extends keyof GeneratorState>(
@@ -63,17 +60,8 @@ export function useGenerator() {
     }));
   }, []);
 
-  const handleGenerate = useCallback(() => {
-    setState((prev) => ({ ...prev, showCaptcha: true, error: '' }));
-  }, []);
-
-  const onCaptchaVerify = useCallback(async (token: string) => {
-    setState((prev) => ({
-      ...prev,
-      showCaptcha: false,
-      isLoading: true,
-      error: '',
-    }));
+  const handleGenerate = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: '' }));
 
     try {
       const endpoint = getEndpointValue(state.endpointId, state.customEndpoint);
@@ -82,7 +70,6 @@ export function useGenerator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          captchaToken: token,
           selectedServices: state.selectedServices,
           siteMode: state.siteMode,
           deviceType: state.deviceType,
@@ -100,7 +87,6 @@ export function useGenerator() {
           isGenerated: true,
           result: data.content!,
         }));
-        trackEvent('WARP_GEN');
       } else {
         setState((prev) => ({
           ...prev,
@@ -123,7 +109,6 @@ export function useGenerator() {
       isGenerated: false,
       result: null,
       error: '',
-      showCaptcha: false,
     }));
   }, []);
 
@@ -131,7 +116,6 @@ export function useGenerator() {
     if (!state.result) return false;
     try {
       await navigator.clipboard.writeText(atob(state.result.configBase64));
-      trackEvent('WARP_COPY');
       return true;
     } catch {
       return false;
@@ -144,11 +128,10 @@ export function useGenerator() {
     a.href = 'data:application/octet-stream;base64,' + state.result.configBase64;
     a.download = state.result.fileName;
     a.click();
-    trackEvent('WARP_DOWNLOAD');
   }, [state.result]);
 
   return {
     state, set, toggleService, setEndpoint,
-    handleGenerate, onCaptchaVerify, reset, copyConfig, downloadConfig,
+    handleGenerate, reset, copyConfig, downloadConfig,
   };
 }

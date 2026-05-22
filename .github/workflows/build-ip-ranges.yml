@@ -1,0 +1,99 @@
+name: Build IP_RANGES + sync to production
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'config/services/**'
+      - 'scripts/build-ip-ranges.mjs'
+      - '.github/workflows/build-ip-ranges.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ip-ranges
+  cancel-in-progress: false
+
+jobs:
+  build-master:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_files: ${{ steps.commit.outputs.changed_files }}
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Rebuild IP_RANGES
+        run: node scripts/build-ip-ranges.mjs
+
+      - name: Commit & push to master
+        id: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain worker/api-handler.js functions/api/generate.js)" ]; then
+            echo "No changes to commit on master."
+            echo "changed_files=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git add worker/api-handler.js functions/api/generate.js
+          git commit -m "chore(ip-ranges): rebuild from config/services/* [skip ci]"
+          git push origin master
+          echo "changed_files=1" >> "$GITHUB_OUTPUT"
+
+  sync-to-production:
+    runs-on: ubuntu-latest
+    needs: build-master
+    steps:
+      - name: Checkout production
+        uses: actions/checkout@v4
+        with:
+          ref: production
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch master
+        run: git fetch origin master:master
+
+      - name: Copy config/services/* from master
+        run: |
+          set -e
+          git checkout master -- config/services
+          mkdir -p scripts
+          git checkout master -- scripts/build-ip-ranges.mjs || true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Rebuild IP_RANGES on production
+        run: node scripts/build-ip-ranges.mjs
+
+      - name: Commit & push to production
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add config/services scripts/build-ip-ranges.mjs worker/api-handler.js functions/api/generate.js
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit on production."
+            exit 0
+          fi
+
+          git commit -m "chore(ip-ranges): sync services from master + rebuild [skip ci]"
+          git push origin production

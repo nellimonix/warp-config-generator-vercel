@@ -1,8 +1,7 @@
-import { SITE } from '@/config/site';
 import { FaAndroid, FaWindows, FaAppStoreIos, FaApple } from "react-icons/fa";
 import { MdRouter } from "react-icons/md";
 
-const TECH = ['Next.js', 'TypeScript', 'Tailwind CSS', 'Docker', 'WireGuard', 'hCaptcha'];
+const TECH = ['Next.js', 'TypeScript', 'Tailwind CSS', 'Docker', 'WireGuard'];
 
 interface ClientApp {
   name: string;
@@ -137,7 +136,7 @@ export function AboutTab() {
       <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] p-5">
         <h2 className="text-[17px] font-medium mb-3">О проекте</h2>
         <p className="text-[14px] text-[var(--text-muted)] leading-relaxed mb-4">
-          {SITE.description}. Создавайте конфиги для оптимизации сетевого подключения,
+          Генератор конфигураций Cloudflare WARP. Создавайте конфиги для оптимизации сетевого подключения,
           повышения безопасности и защиты трафика. Поддержка множества форматов и платформ.
         </p>
         <div className="flex flex-wrap gap-2">

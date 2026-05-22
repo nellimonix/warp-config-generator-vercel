@@ -6,7 +6,6 @@ export interface GenerateRequest {
   deviceType: DeviceType;
   endpoint: string;
   configFormat: ConfigFormat;
-  captchaToken: string;
 }
 
 export interface GenerateResult {

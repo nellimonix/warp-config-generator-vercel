@@ -10,13 +10,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# NEXT_PUBLIC_* vars must be present at build time — Next.js inlines them into the client JS bundle
-ARG NEXT_PUBLIC_HCAPTCHA_SITE_KEY=""
-ENV NEXT_PUBLIC_HCAPTCHA_SITE_KEY=$NEXT_PUBLIC_HCAPTCHA_SITE_KEY
-
-ARG NEXT_PUBLIC_RYBBIT_ANALYTICS_SITE_ID=""
-ENV NEXT_PUBLIC_RYBBIT_ANALYTICS_SITE_ID=$NEXT_PUBLIC_RYBBIT_ANALYTICS_SITE_ID
-
 ENV DOCKER_BUILD=1
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
@@ -24,6 +17,13 @@ RUN npm run build
 # ── Stage 3: Production ──
 FROM node:22-alpine AS runner
 WORKDIR /app
+
+LABEL org.opencontainers.image.title="warp-config-generator"
+LABEL org.opencontainers.image.description="WARP config generator — public Docker build"
+LABEL org.opencontainers.image.source="https://github.com/nellimonix/warp-config-generator-vercel"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL build.variant="public"
+
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
