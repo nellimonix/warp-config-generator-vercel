@@ -1,0 +1,50 @@
+name: Build IP_RANGES
+
+on:
+  push:
+    branches: [production]
+    paths:
+      - 'config/services/**'
+      - 'scripts/build-ip-ranges.mjs'
+      - '.github/workflows/build-ip-ranges.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ip-ranges-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: production
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Rebuild IP_RANGES
+        run: node scripts/build-ip-ranges.mjs
+
+      - name: Commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain worker/api-handler.js functions/api/generate.js)" ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git add worker/api-handler.js functions/api/generate.js
+          git commit -m "chore(ip-ranges): rebuild from config/services/* [skip ci]"
+          git push origin production
