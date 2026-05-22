@@ -2,6 +2,8 @@
 
 [Русский](README_ru.md) | **English**
 
+![WARP Generator screenshot](.github/assets/screenshot.png)
+
 Open-source generator for Cloudflare WARP configs (WireGuard / AmneziaWG / Clash / Throne / Nekoray / Husi / Karing / WireSock).
 This is the **public** branch — no captcha, no analytics, no promo blocks. Deploy your own.
 

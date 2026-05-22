@@ -2,6 +2,8 @@
 
 **Русский** | [English](README.md)
 
+![Скриншот WARP Generator](.github/assets/screenshot.png)
+
 Открытый генератор конфигов Cloudflare WARP (WireGuard / AmneziaWG / Clash / Throne / Nekoray / Husi / Karing / WireSock).
 Это **публичная** ветка — без капчи, без аналитики, без промо-блоков. Self-host friendly.
 
