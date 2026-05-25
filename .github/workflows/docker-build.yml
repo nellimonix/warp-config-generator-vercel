@@ -114,7 +114,3 @@ jobs:
             -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
-
-      - name: Trigger Dokploy deploy
-        if: github.ref_name == 'production'
-        run: curl -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" --fail --silent
