@@ -24,6 +24,11 @@ export async function POST(req: Request) {
       deviceType: body.deviceType || 'awg15',
       endpoint: body.endpoint || 'engage.cloudflareclient.com:4500',
       configFormat: body.configFormat || 'wireguard',
+      dnsId: body.dnsId,
+      ipv6: body.ipv6,
+      excludeLan: body.excludeLan,
+      persistentKeepalive: body.persistentKeepalive,
+      customI1Domain: body.customI1Domain,
     });
 
     return json<ApiResponse<GenerateResult>>({ success: true, content: result }, 200, headers);

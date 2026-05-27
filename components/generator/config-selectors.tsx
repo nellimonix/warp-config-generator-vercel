@@ -3,13 +3,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { CONFIG_FORMATS } from '@/config/formats';
 import { ENDPOINTS } from '@/config/endpoints';
+import { DNS_PROVIDERS } from '@/config/dns';
 import { FlagIcon } from '@/components/icons/flag-icon';
+import { Toggle } from './toggle';
 import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
 
 interface DropdownOption {
   id: string;
   label: string;
   flag?: string;
+  disabled?: boolean;
 }
 
 interface DropdownProps {
@@ -51,17 +54,28 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
       {open && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[var(--surface)] rounded-[var(--radius-md)] py-1 max-h-[220px] overflow-y-auto"
           style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-          {options.map((opt) => (
-            <button key={opt.id} onClick={() => { onChange(opt.id); setOpen(false); }}
-              className={`w-full text-left px-3.5 py-2 text-[13px] flex items-center gap-2 transition-colors ${
-                opt.id === value
-                  ? 'text-[var(--amber-300)] bg-[var(--amber-900)]/50'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
-              }`}>
-              {opt.flag && <FlagIcon code={opt.flag} />}
-              {opt.label}
-            </button>
-          ))}
+          {options.map((opt) => {
+            if (opt.disabled) {
+              return (
+                <div key={opt.id}
+                  className="w-full text-left px-3.5 py-2 text-[13px] flex items-center gap-2 text-[var(--text-dim)] opacity-50 cursor-not-allowed">
+                  {opt.flag && <FlagIcon code={opt.flag} />}
+                  {opt.label}
+                </div>
+              );
+            }
+            return (
+              <button key={opt.id} onClick={() => { onChange(opt.id); setOpen(false); }}
+                className={`w-full text-left px-3.5 py-2 text-[13px] flex items-center gap-2 transition-colors ${
+                  opt.id === value
+                    ? 'text-[var(--amber-300)] bg-[var(--amber-900)]/50'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
+                }`}>
+                {opt.flag && <FlagIcon code={opt.flag} />}
+                {opt.label}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -74,16 +88,22 @@ interface ConfigSelectorsProps {
   siteMode: SiteMode;
   endpointId: string;
   customEndpoint: string;
+  dnsId: string;
+  communityDns: boolean;
+  excludeLan: boolean;
   onFormatChange: (v: ConfigFormat) => void;
   onDeviceChange: (v: DeviceType) => void;
   onSiteModeChange: (v: SiteMode) => void;
   onEndpointChange: (id: string) => void;
   onCustomEndpointChange: (v: string) => void;
+  onDnsChange: (id: string) => void;
+  onExcludeLanChange: (v: boolean) => void;
 }
 
 export function ConfigSelectors({
-  configFormat, deviceType, siteMode, endpointId, customEndpoint,
+  configFormat, deviceType, siteMode, endpointId, customEndpoint, dnsId, communityDns, excludeLan,
   onFormatChange, onDeviceChange, onSiteModeChange, onEndpointChange, onCustomEndpointChange,
+  onDnsChange, onExcludeLanChange,
 }: ConfigSelectorsProps) {
   return (
     <div className="space-y-2 mb-3.5">
@@ -95,8 +115,17 @@ export function ConfigSelectors({
           options={[{ id: 'awg15', label: 'AmneziaWG 1.5' }]}
           onChange={(v) => onDeviceChange(v as DeviceType)} />
         <Dropdown label="Тип конфигурации" value={siteMode}
-          options={[{ id: 'all', label: 'Все сайты' }, { id: 'specific', label: 'Определенные сайты' }]}
+          options={[
+            { id: 'all', label: 'Все сайты' },
+            { id: 'specific', label: 'Определенные сайты', disabled: communityDns },
+          ]}
           onChange={(v) => onSiteModeChange(v as SiteMode)} />
+        <Dropdown label="DNS" value={dnsId}
+          options={DNS_PROVIDERS.map((d) => ({
+            id: d.id,
+            label: d.isCommunity ? `${d.label} • community` : d.label,
+          }))}
+          onChange={onDnsChange} />
         <Dropdown label="Конечная точка" value={endpointId}
           options={ENDPOINTS.map((e) => ({ id: e.id, label: e.label, flag: e.flag }))}
           onChange={onEndpointChange} />
@@ -110,6 +139,12 @@ export function ConfigSelectors({
           placeholder="host:port (например 162.159.192.1:4500)"
           className="w-full h-10 bg-[var(--surface-2)] rounded-[var(--radius-md)] px-3.5 text-[13px] text-[var(--text)] placeholder:text-[var(--text-dim)] outline-none focus:bg-[var(--surface-3)] transition-colors"
         />
+      )}
+
+      {siteMode === 'all' && (
+        <div className="pt-1">
+          <Toggle checked={excludeLan} onChange={onExcludeLanChange} label="Исключить LAN" />
+        </div>
       )}
     </div>
   );
