@@ -107,28 +107,28 @@ export function ConfigSelectors({
 }: ConfigSelectorsProps) {
   return (
     <div className="space-y-2 mb-3.5">
-      <div className="grid grid-cols-2 gap-2 max-[500px]:grid-cols-1">
+      <div className="grid grid-cols-2 gap-2 max-[500px]:grid-cols-1 min-[501px]:[&>*:last-child:nth-child(odd)]:col-span-2">
         <Dropdown label="Формат конфигурации" value={configFormat}
           options={CONFIG_FORMATS.map((f) => ({ id: f.id, label: f.name }))}
           onChange={(v) => onFormatChange(v as ConfigFormat)} />
         <Dropdown label="Настройки соединения" value={deviceType}
           options={[{ id: 'awg15', label: 'AmneziaWG 1.5' }]}
           onChange={(v) => onDeviceChange(v as DeviceType)} />
+        <Dropdown label="DNS" value={dnsId}
+          options={DNS_PROVIDERS.map((d) => ({
+            id: d.id,
+            label: d.isCommunity ? `${d.label} •` : d.label,
+          }))}
+          onChange={onDnsChange} />
+        <Dropdown label="Конечная точка" value={endpointId}
+          options={ENDPOINTS.map((e) => ({ id: e.id, label: e.label, flag: e.flag }))}
+          onChange={onEndpointChange} />
         <Dropdown label="Тип конфигурации" value={siteMode}
           options={[
             { id: 'all', label: 'Все сайты' },
             { id: 'specific', label: 'Определенные сайты', disabled: communityDns },
           ]}
           onChange={(v) => onSiteModeChange(v as SiteMode)} />
-        <Dropdown label="DNS" value={dnsId}
-          options={DNS_PROVIDERS.map((d) => ({
-            id: d.id,
-            label: d.isCommunity ? `${d.label} • community` : d.label,
-          }))}
-          onChange={onDnsChange} />
-        <Dropdown label="Конечная точка" value={endpointId}
-          options={ENDPOINTS.map((e) => ({ id: e.id, label: e.label, flag: e.flag }))}
-          onChange={onEndpointChange} />
       </div>
 
       {endpointId === 'custom' && (
