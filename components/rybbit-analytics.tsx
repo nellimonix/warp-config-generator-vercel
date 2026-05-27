@@ -8,6 +8,6 @@ export default function AnalyticsLoader() {
   }
 
   return (
-    <Script src="https://anltcs.llimonix.dev/api/script.js" data-site-id={siteId} strategy="afterInteractive" />
+    <Script src="https://mtrcs.llimonix.dev/api/script.js" data-site-id={siteId} strategy="afterInteractive" />
   );
 }
