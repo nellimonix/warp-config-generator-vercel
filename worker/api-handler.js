@@ -52,14 +52,197 @@ const IP_RANGES = {
 }
 // IP_RANGES:END
 
-function resolveAllowedIPs(keys, siteMode) {
-  if (siteMode === 'all') return '0.0.0.0/0, ::/0';
+const LAN_EXCLUDE_IPS = '1.0.0.0/8, 2.0.0.0/7, 4.0.0.0/6, 8.0.0.0/7, 11.0.0.0/8, 12.0.0.0/6, 16.0.0.0/4, 32.0.0.0/3, 64.0.0.0/3, 96.0.0.0/4, 112.0.0.0/5, 120.0.0.0/6, 124.0.0.0/7, 126.0.0.0/8, 128.0.0.0/3, 160.0.0.0/5, 168.0.0.0/8, 169.0.0.0/9, 169.128.0.0/10, 169.192.0.0/11, 169.224.0.0/12, 169.240.0.0/13, 169.248.0.0/14, 169.252.0.0/15, 169.255.0.0/16, 170.0.0.0/7, 172.0.0.0/12, 172.32.0.0/11, 172.64.0.0/10, 172.128.0.0/9, 173.0.0.0/8, 174.0.0.0/7, 176.0.0.0/4, 192.0.0.0/9, 192.128.0.0/11, 192.160.0.0/13, 192.169.0.0/16, 192.170.0.0/15, 192.172.0.0/14, 192.176.0.0/12, 192.192.0.0/10, 193.0.0.0/8, 194.0.0.0/7, 196.0.0.0/6, 200.0.0.0/5, 208.0.0.0/4, 224.0.0.0/4, ::/1, 8000::/2, c000::/3, e000::/4, f000::/5, f800::/6, fe00::/9, fec0::/10, ff00::/8';
+
+function resolveAllowedIPs(keys, siteMode, opts = {}) {
+  const ipv6 = opts.ipv6 !== false;
+  const defaultAll = ipv6 ? '0.0.0.0/0, ::/0' : '0.0.0.0/0';
+  if (siteMode === 'all') {
+    if (opts.excludeLan) return LAN_EXCLUDE_IPS;
+    return defaultAll;
+  }
   const ranges = new Set();
-  keys.forEach(k => {
-    const r = IP_RANGES[k];
-    if (r) r.split(', ').forEach(x => ranges.add(x.trim()));
-  });
-  return ranges.size > 0 ? Array.from(ranges).join(', ') : '0.0.0.0/0, ::/0';
+  keys.forEach(k => { const r = IP_RANGES[k]; if (r) r.split(', ').forEach(x => ranges.add(x.trim())); });
+  return ranges.size > 0 ? Array.from(ranges).join(', ') : defaultAll;
+}
+
+// ---- DNS ----
+
+const DNS_PROVIDERS = [
+  { id: 'cf', label: '1.1.1.1', ipv4: ['1.1.1.1', '1.0.0.1'], ipv6: ['2606:4700:4700::1111', '2606:4700:4700::1001'], isCommunity: false },
+  { id: 'google', label: '8.8.8.8', ipv4: ['8.8.8.8', '8.8.4.4'], ipv6: ['2001:4860:4860::8888', '2001:4860:4860::8844'], isCommunity: false },
+  { id: 'malw', label: 'dns.malw.link', ipv4: ['84.21.189.133', '193.23.209.189'], ipv6: ['2a12:bec4:1460:294::2', '2a01:ecc0:680:120::2'], isCommunity: true },
+  { id: 'xbox', label: 'xbox-dns.ru', ipv4: ['111.88.96.50', '111.88.96.51'], ipv6: ['2a00:ab00:1233:26::50', '2a00:ab00:1233:26::51'], isCommunity: true },
+  { id: 'geohide', label: 'dns.geohide.ru', ipv4: ['45.155.204.190', '37.230.192.51'], ipv6: [], isCommunity: true },
+  { id: 'comss', label: 'dns.comss.one', ipv4: ['83.220.169.155', '212.109.195.93', '195.133.25.16'], ipv6: ['2a01:230:4:915::2', '2a01:230:4:306::2'], isCommunity: true },
+];
+
+function getDnsProvider(id) { return DNS_PROVIDERS.find(p => p.id === id) || DNS_PROVIDERS[0]; }
+function isCommunityDns(id) { return getDnsProvider(id).isCommunity; }
+function buildDnsLine(id, includeIPv6) {
+  const p = getDnsProvider(id);
+  const ips = includeIPv6 ? [...p.ipv4, ...p.ipv6] : p.ipv4;
+  return ips.join(', ');
+}
+
+// ---- QUIC (I1 mask) — port of quic.js, level 4 ----
+
+let quicHmacKey = null;
+function quicU8a(b) { return b instanceof Uint8Array ? b : new Uint8Array(b); }
+function quicToHex(b) { return [...quicU8a(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+function quicStr8(data) {
+  if (!data) return new ArrayBuffer(1);
+  const input = (typeof data === 'string') ? new TextEncoder().encode(data) : quicU8a(data);
+  const result = new Uint8Array(input.byteLength + 1);
+  new DataView(result.buffer).setUint8(0, input.byteLength);
+  result.set(input, 1);
+  return result.buffer;
+}
+function quicStr16(data) {
+  if (!data) return new ArrayBuffer(2);
+  const input = (typeof data === 'string') ? new TextEncoder().encode(data) : quicU8a(data);
+  const result = new Uint8Array(input.byteLength + 2);
+  new DataView(result.buffer).setUint16(0, input.byteLength, false);
+  result.set(input, 2);
+  return result.buffer;
+}
+function quicVarint(x) {
+  let result;
+  if (x < 0x40) return new Uint8Array([x]).buffer;
+  else if (x < 0x4000) { result = new Uint8Array(2); new DataView(result.buffer).setUint16(0, x, false); result[0] |= 0x40; }
+  else if (x < 0x40000000) { result = new Uint8Array(4); new DataView(result.buffer).setUint32(0, x, false); result[0] |= 0x80; }
+  else { result = new Uint8Array(8); new DataView(result.buffer).setBigUint64(0, BigInt(x), false); result[0] |= 0xc0; }
+  return result.buffer;
+}
+function quicVarintLength(x) { return x < 0x40 ? 1 : x < 0x4000 ? 2 : x < 0x40000000 ? 4 : 8; }
+function quicConcatBuffers(buffers, allocateBefore = 0, allocateAfter = 0) {
+  const u = buffers.map(quicU8a);
+  const total = u.reduce((a, b) => a + b.byteLength, allocateBefore + allocateAfter);
+  const result = new Uint8Array(total);
+  let off = allocateBefore;
+  for (const b of u) { result.set(b, off); off += b.byteLength; }
+  return result.buffer;
+}
+function quicXorBuffer(dst, src, dstOffset, srcOffset, length) {
+  const d = quicU8a(dst), s = quicU8a(src);
+  for (let i = 0; i < length; i++) d[dstOffset + i] ^= s[srcOffset + i];
+}
+async function quicHmac(key, buffer) {
+  const k = (key instanceof CryptoKey) ? key : await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return crypto.subtle.sign('HMAC', k, buffer);
+}
+async function quicInitHmacKey() {
+  const salt = new Uint8Array([0x38,0x76,0x2c,0xf7,0xf5,0x59,0x34,0xb3,0x4d,0x17,0x9a,0xe6,0xa4,0xc8,0x0c,0xad,0xcc,0xbb,0x7f,0x0a]);
+  quicHmacKey = await crypto.subtle.importKey('raw', salt, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+}
+async function quicDeriveSecret(key, length, label, context = '') {
+  const data = quicConcatBuffers([quicStr8('tls13 ' + label), quicStr8(context), new Uint8Array([0x01])], 2);
+  new DataView(data).setUint16(0, length, false);
+  return (await quicHmac(key, data)).slice(0, length);
+}
+async function quicEncryptPayload(key, payload, iv, aad) {
+  const k = (key instanceof CryptoKey) ? key : await crypto.subtle.importKey('raw', key, { name: 'AES-GCM', length: 128 }, false, ['encrypt']);
+  return crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: aad, tagLength: 128 }, k, payload);
+}
+async function quicDeriveHpMask(key, sample) {
+  const k = (key instanceof CryptoKey) ? key : await crypto.subtle.importKey('raw', key, { name: 'AES-CBC', length: 128 }, false, ['encrypt']);
+  return crypto.subtle.encrypt({ name: 'AES-CBC', iv: new ArrayBuffer(16) }, k, sample);
+}
+function quicMeasureLengths(dcidLength, scidLength, tokenLength, pknLength, payloadLength, padto = 0) {
+  const baseHeaderLength = 8 + dcidLength + scidLength + tokenLength + pknLength;
+  const tagLength = 16;
+  let paddingLength = 0;
+  const getLBS = () => quicVarintLength(pknLength + payloadLength + paddingLength + tagLength);
+  const getOL = () => baseHeaderLength + getLBS() + payloadLength + paddingLength + tagLength;
+  let overallLength = getOL();
+  if (overallLength < padto) {
+    paddingLength = padto - overallLength;
+    while (paddingLength && getOL() > padto) paddingLength--;
+    if (getOL() < padto) paddingLength++;
+    overallLength = getOL();
+  }
+  if (pknLength + payloadLength + paddingLength + tagLength < 20) {
+    paddingLength = 20 - pknLength - payloadLength - tagLength;
+    overallLength = getOL();
+  }
+  return { total: overallLength, header: baseHeaderLength + getLBS(), padding: paddingLength };
+}
+async function quicInitial(dcid, scid, token, pkn, payload, padto) {
+  const lengths = quicMeasureLengths(dcid.byteLength, scid.byteLength, token.byteLength, pkn.byteLength, payload.byteLength, padto);
+  const header = quicConcatBuffers([
+    new Uint8Array([0xc0 | (pkn.byteLength - 1), 0, 0, 0, 1]),
+    quicStr8(dcid), quicStr8(scid), quicStr8(token),
+    quicVarint(pkn.byteLength + payload.byteLength + lengths.padding + 16),
+    pkn,
+  ]);
+  if (!quicHmacKey) await quicInitHmacKey();
+  const initSecret = await quicHmac(quicHmacKey, dcid);
+  const clientSecret = await quicDeriveSecret(initSecret, 32, 'client in');
+  const quicKey = await quicDeriveSecret(clientSecret, 16, 'quic key');
+  const quicIv = await quicDeriveSecret(clientSecret, 12, 'quic iv');
+  const quicHp = await quicDeriveSecret(clientSecret, 16, 'quic hp');
+  quicXorBuffer(quicIv, pkn, 12 - pkn.byteLength, 0, pkn.byteLength);
+  const paddedPayload = quicConcatBuffers([payload], 0, lengths.padding);
+  const encryptedPayload = await quicEncryptPayload(quicKey, paddedPayload, quicIv, header);
+  const mask = new Uint8Array(await quicDeriveHpMask(quicHp, encryptedPayload.slice(4 - pkn.byteLength, 20 - pkn.byteLength)));
+  mask[0] &= 0x0f;
+  quicXorBuffer(header, mask, 0, 0, 1);
+  quicXorBuffer(header, mask, header.byteLength - pkn.byteLength, 1, pkn.byteLength);
+  return quicConcatBuffers([header, encryptedPayload]);
+}
+function quicCryptoFrame(data, offset = 0) {
+  return quicConcatBuffers([new Uint8Array([0x06]), quicVarint(offset), quicVarint(data.byteLength), data]);
+}
+function quicTlsExt(code, content) {
+  const length = content.byteLength;
+  const result = quicConcatBuffers([content], 4);
+  const view = new DataView(result);
+  view.setUint16(0, code, false); view.setUint16(2, length, false);
+  return result;
+}
+function quicTlsExtSni(sni) {
+  const sniBuffer = quicStr16(sni);
+  const extBuffer = quicConcatBuffers([sniBuffer], 3);
+  const view = new DataView(extBuffer);
+  view.setUint16(0, sniBuffer.byteLength + 1, false); view.setUint8(2, 0);
+  return quicTlsExt(0, extBuffer);
+}
+function quicTlsClientHelloSniOnly(sni) {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  const payload = quicConcatBuffers([new Uint8Array([0x03, 0x03]), randomBytes, new Uint8Array([0, 0, 0, 0]), quicStr16(quicTlsExtSni(sni))], 4);
+  const view = new DataView(payload);
+  view.setUint32(0, payload.byteLength - 4, false); view.setUint8(0, 0x01);
+  return payload;
+}
+function quicTlsClientHelloToFrames(clientHello, level = 0) {
+  let payload, cutSettings;
+  if (!level) {
+    payload = quicCryptoFrame(clientHello);
+    const dataOffset = payload.byteLength - clientHello.byteLength;
+    cutSettings = [dataOffset + 6, 32, clientHello.byteLength - 38, 16];
+  } else {
+    const presets = { 1: [38, Infinity, 0, 38, 32, false], 2: [38, Infinity, 0, 38, 37, false], 3: [0, 1, 38, Infinity, 0, false], 4: [0, 1, 38, Infinity, 0, true] };
+    let [p1s, p1e, p2s, p2e, dropTail, skipZeroes] = presets[level];
+    if (skipZeroes) { const h = new Uint8Array(clientHello); while (h[p2s] === 0) p2s++; }
+    payload = quicConcatBuffers([quicCryptoFrame(clientHello.slice(p1s, p1e), p1s), quicCryptoFrame(clientHello.slice(p2s, p2e), p2s)]);
+    cutSettings = [payload.byteLength - dropTail, 16 + dropTail];
+  }
+  return [payload, cutSettings];
+}
+function quicFixCutSettings(cutSettings, packetLength, pknLength, payloadLength) {
+  if (cutSettings[0] < 20 - pknLength) { const toAdd = 20 - pknLength - cutSettings[0]; cutSettings[0] += toAdd; cutSettings[1] -= toAdd; }
+  cutSettings[0] += packetLength - payloadLength - 16;
+}
+async function generateI1Line(domain) {
+  const sni = (domain || '').trim();
+  const dcid = new Uint8Array(1); crypto.getRandomValues(dcid);
+  const scid = new Uint8Array(0), token = new Uint8Array(0), pkn = new Uint8Array([0]);
+  const clientHello = quicTlsClientHelloSniOnly(sni);
+  const [payload, cutSettings] = quicTlsClientHelloToFrames(clientHello, 4);
+  const packet = await quicInitial(dcid, scid, token, pkn, payload, 0);
+  quicFixCutSettings(cutSettings, packet.byteLength, pkn.byteLength, payload.byteLength);
+  return `I1 = <b 0x${quicToHex(packet)}>`;
 }
 
 // ---- Cloudflare WARP API ----
@@ -108,9 +291,11 @@ const DNS = '1.1.1.1, 2606:4700:4700::1111, 1.0.0.1, 2606:4700:4700::1001';
 const AWG_PARAM = "I1 = <b 0xc10000000114367096bb0fb3f58f3a3fb8aaacd61d63a1c8a40e14f7374b8a62dccba6431716c3abf6f5afbcfb39bd008000047c32e268567c652e6f4db58bff759bc8c5aaca183b87cb4d22938fe7d8dca22a679a79e4d9ee62e4bbb3a380dd78d4e8e48f26b38a1d42d76b371a5a9a0444827a69d1ab5872a85749f65a4104e931740b4dc1e2dd77733fc7fac4f93011cd622f2bb47e85f71992e2d585f8dc765a7a12ddeb879746a267393ad023d267c4bd79f258703e27345155268bd3cc0506ebd72e2e3c6b5b0f005299cd94b67ddabe30389c4f9b5c2d512dcc298c14f14e9b7f931e1dc397926c31fbb7cebfc668349c218672501031ecce151d4cb03c4c660b6c6fe7754e75446cd7de09a8c81030c5f6fb377203f551864f3d83e27de7b86499736cbbb549b2f37f436db1cae0a4ea39930f0534aacdd1e3534bc87877e2afabe959ced261f228d6362e6fd277c88c312d966c8b9f67e4a92e757773db0b0862fb8108d1d8fa262a40a1b4171961f0704c8ba314da2482ac8ed9bd28d4b50f7432d89fd800c25a50c5e2f5c0710544fef5273401116aa0572366d8e49ad758fcb29e6a92912e644dbe227c247cb3417eabfab2db16796b2fba420de3b1dc94e8361f1f324a331ddaf1e626553138860757fd0bf687566108b77b70fb9f8f8962eca599c4a70ed373666961a8cb506b96756d9e28b94122b20f16b54f118c0e603ce0b831efea614ad836df6cf9affbdd09596412547496967da758cec9080295d853b0861670b71d9abde0d562b1a6de82782a5b0c14d297f27283a895abc889a5f6703f0e6eb95f67b2da45f150d0d8ab805612d570c2d5cb6997ac3a7756226c2f5c8982ffbd480c5004b0660a3c9468945efde90864019a2b519458724b55d766e16b0da25c0557c01f3c11ddeb024b62e303640e17fdd57dedb3aeb4a2c1b7c93059f9c1d7118d77caac1cd0f6556e46cbc991c1bb16970273dea833d01e5090d061a0c6d25af2415cd2878af97f6d0e7f1f936247b394ecb9bd484da6be936dee9b0b92dc90101a1b4295e97a9772f2263eb09431995aa173df4ca2abd687d87706f0f93eaa5e13cbe3b574fa3cfe94502ace25265778da6960d561381769c24e0cbd7aac73c16f95ae74ff7ec38124f7c722b9cb151d4b6841343f29be8f35145e1b27021056820fed77003df8554b4155716c8cf6049ef5e318481460a8ce3be7c7bfac695255be84dc491c19e9dedc449dd3471728cd2a3ee51324ccb3eef121e3e08f8e18f0006ea8957371d9f2f739f0b89e4db11e5c6430ada61572e589519fbad4498b460ce6e4407fc2d8f2dd4293a50a0cb8fcaaf35cd9a8cc097e3603fbfa08d9036f52b3e7fcce11b83ad28a4ac12dba0395a0cc871cefd1a2856fffb3f28d82ce35cf80579974778bab13d9b3578d8c75a2d196087a2cd439aff2bb33f2db24ac175fff4ed91d36a4cdbfaf3f83074f03894ea40f17034629890da3efdbb41141b38368ab532209b69f057ddc559c19bc8ae62bf3fd564c9a35d9a83d14a95834a92bae6d9a29ae5e8ece07910d16433e4c6230c9bd7d68b47de0de9843988af6dc88b5301820443bd4d0537778bf6b4c1dd067fcf14b81015f2a67c7f2a28f9cb7e0684d3cb4b1c24d9b343122a086611b489532f1c3a26779da1706c6759d96d8ab>";
 
 function buildWireguard(p) {
-  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${p.v4}, ${p.v6}`, `DNS = ${DNS}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 120', 'Jmin = 23', 'Jmax = 911', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4'];
-  if (p.deviceType === 'awg15') lines.push(AWG_PARAM);
+  const address = p.includeIPv6 ? `${p.v4}, ${p.v6}` : p.v4;
+  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 120', 'Jmin = 23', 'Jmax = 911', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4'];
+  if (p.deviceType === 'awg15') lines.push(p.i1);
   lines.push('', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`);
+  if (p.keepalive !== undefined) lines.push(`PersistentKeepalive = ${p.keepalive}`);
   return lines.join('\n');
 }
 
@@ -122,7 +307,7 @@ function buildThrone(p) {
 
 function buildClash(p) {
   const [server, port] = p.endpoint.split(':');
-  return `proxies:\n- name: "WARP"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n  public-key: ${p.publicKey}\n  allowed-ips: ['0.0.0.0/0']\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [1.1.1.1, 1.0.0.1]\n  amnezia-wg-option:\n   jc: 120\n   jmin: 23\n   jmax: 911\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h4: 3\n   h3: 4`;
+  return `proxies:\n- name: "WARP"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n  public-key: ${p.publicKey}\n  allowed-ips: ['0.0.0.0/0']\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [${p.dns}]\n  amnezia-wg-option:\n   jc: 120\n   jmin: 23\n   jmax: 911\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h4: 3\n   h3: 4`;
 }
 
 function buildNekoray(p) {
@@ -142,8 +327,10 @@ function buildKaring(p) {
 
 const MASKING_DOMAINS = ['ozon.ru', 'apteka.ru', 'mail.ru', 'psbank.ru', 'lenta.ru', 'www.pochta.ru', 'rzd.ru', 'rutube.ru', 'gosuslugi.ru'];
 function buildWiresock(p) {
-  const domain = MASKING_DOMAINS[Math.floor(Math.random() * MASKING_DOMAINS.length)];
-  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${p.v4}, ${p.v6}`, `DNS = ${DNS}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 120', 'Jmin = 23', 'Jmax = 911', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4', '# Protocol masking', `Id = ${domain}`, 'Ip = quic', 'Ib = firefox', '', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`];
+  const domain = (p.maskDomain && p.maskDomain.trim()) || MASKING_DOMAINS[Math.floor(Math.random() * MASKING_DOMAINS.length)];
+  const address = p.includeIPv6 ? `${p.v4}, ${p.v6}` : p.v4;
+  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 120', 'Jmin = 23', 'Jmax = 911', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4', '# Protocol masking', `Id = ${domain}`, 'Ip = quic', 'Ib = firefox', '', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`];
+  if (p.keepalive !== undefined) lines.push(`PersistentKeepalive = ${p.keepalive}`);
   return lines.join('\n');
 }
 
@@ -166,7 +353,7 @@ export async function onRequestGet() {
 export async function onRequestPost({ request }) {
   try {
     const body = await request.json();
-    const { selectedServices = [], siteMode = 'all', deviceType = 'awg15', endpoint = 'engage.cloudflareclient.com:4500', configFormat = 'wireguard' } = body;
+    const { selectedServices = [], siteMode = 'all', deviceType = 'awg15', endpoint = 'engage.cloudflareclient.com:4500', configFormat = 'wireguard', dnsId = 'cf', ipv6 = true, excludeLan = false, persistentKeepalive = null, customI1Domain = '' } = body;
 
     // Generate
     const kp = generateKeyPair();
@@ -175,9 +362,18 @@ export async function onRequestPost({ request }) {
     const peer = warp.result.config.peers[0];
     const iface = warp.result.config.interface;
     const reserved = warp.result.config.client_id || '';
-    const allowedIPs = resolveAllowedIPs(selectedServices, siteMode);
 
-    const p = { privateKey: kp.privateKey, publicKey: peer.public_key, v4: iface.addresses.v4, v6: iface.addresses.v6, allowedIPs, endpoint, deviceType, reserved };
+    // Community DNS forbids split tunneling: force "all sites", drop services.
+    let mode = siteMode, services = selectedServices;
+    if (isCommunityDns(dnsId)) { mode = 'all'; services = []; }
+
+    const allowedIPs = resolveAllowedIPs(services, mode, { excludeLan, ipv6 });
+    const domain = (customI1Domain || '').trim();
+    const i1 = domain ? await generateI1Line(domain) : AWG_PARAM;
+    const keepalive = (typeof persistentKeepalive === 'number' && persistentKeepalive > 0 && persistentKeepalive <= 65535)
+      ? Math.floor(persistentKeepalive) : undefined;
+
+    const p = { privateKey: kp.privateKey, publicKey: peer.public_key, v4: iface.addresses.v4, v6: iface.addresses.v6, allowedIPs, endpoint, deviceType, reserved, dns: buildDnsLine(dnsId, ipv6), includeIPv6: ipv6, i1, keepalive, maskDomain: domain };
 
     const builder = BUILDERS[configFormat];
     if (!builder) return json({ success: false, message: `Unknown format: ${configFormat}` }, 400);

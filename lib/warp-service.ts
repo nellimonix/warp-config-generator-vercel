@@ -3,7 +3,10 @@ import type { GenerateRequest, GenerateResult, CloudflareWarpResponse } from '@/
 import { generateKeyPair, toBase64 } from './crypto';
 import { registerClient, enableWarp } from './cloudflare-client';
 import { resolveAllowedIPs } from '@/config/services-loader';
+import { buildDnsLine, isCommunityDns, DEFAULT_DNS_ID } from '@/config/dns';
 import { buildConfig, buildConfigForQR } from './builders';
+import { DEFAULT_I1 } from './builders/shared';
+import { generateI1Line } from './quic';
 import { generateQR, unsupportedQR } from './qr-generator';
 import { getFileName, getFormatInfo, supportsQR } from '@/config/formats';
 
@@ -18,7 +21,12 @@ export async function generateWarpConfig(req: GenerateRequest): Promise<Generate
   try {
     validate(req);
 
-    const format = req.configFormat;
+    // Community DNS forbids split tunneling: force "all sites", drop services.
+    const effectiveReq: GenerateRequest = isCommunityDns(req.dnsId ?? DEFAULT_DNS_ID)
+      ? { ...req, siteMode: 'all', selectedServices: [] }
+      : req;
+
+    const format = effectiveReq.configFormat;
 
     // 1. Generate keys
     const keyPair = generateKeyPair();
@@ -30,7 +38,7 @@ export async function generateWarpConfig(req: GenerateRequest): Promise<Generate
     const warpResponse = await enableWarp(clientId, token);
 
     // 4. Extract params
-    const params = extractBuildParams(warpResponse, keyPair, req);
+    const params = await extractBuildParams(warpResponse, keyPair, effectiveReq);
 
     // 5. Build config text
     const configText = buildConfig(format, params);
@@ -77,22 +85,49 @@ function validate(req: GenerateRequest): void {
   }
 }
 
-function extractBuildParams(
+async function extractBuildParams(
   warpRes: CloudflareWarpResponse,
   keyPair: { privateKey: string; publicKey: string },
   req: GenerateRequest
-): BuildParams {
+): Promise<BuildParams> {
   const peer = warpRes.result.config.peers[0];
   const iface = warpRes.result.config.interface;
+
+  const ipv6 = req.ipv6 ?? true;
+  const dnsId = req.dnsId ?? DEFAULT_DNS_ID;
+  const domain = sanitizeDomain(req.customI1Domain);
+  const i1 = domain ? await generateI1Line(domain) : DEFAULT_I1;
+  const keepalive = normalizeKeepalive(req.persistentKeepalive);
 
   return {
     privateKey: keyPair.privateKey,
     publicKey: peer.public_key,
     clientIPv4: iface.addresses.v4,
     clientIPv6: iface.addresses.v6,
-    allowedIPs: resolveAllowedIPs(req.selectedServices, req.siteMode),
+    allowedIPs: resolveAllowedIPs(req.selectedServices, req.siteMode, { excludeLan: req.excludeLan, ipv6 }),
     endpoint: req.endpoint,
     deviceType: req.deviceType,
     reserved: warpRes.result.config.client_id || '',
+    dns: buildDnsLine(dnsId, ipv6),
+    includeIPv6: ipv6,
+    persistentKeepalive: keepalive,
+    i1,
+    maskDomain: domain,
   };
+}
+
+/** Returns a clean SNI domain, or undefined when empty/invalid. */
+function sanitizeDomain(raw?: string): string | undefined {
+  const d = raw?.trim();
+  if (!d) return undefined;
+  if (d.length > 253 || /\s/.test(d)) return undefined;
+  return d;
+}
+
+/** Returns a positive integer keepalive, or undefined to omit it. */
+function normalizeKeepalive(value?: number | null): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  const n = Math.floor(value);
+  if (n <= 0 || n > 65535) return undefined;
+  return n;
 }

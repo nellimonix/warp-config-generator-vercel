@@ -5,6 +5,11 @@ import { reservedToCommaSeparated } from '../crypto';
 export function buildClash(p: BuildParams): string {
   const { server, port } = parseEndpoint(p.endpoint);
   const reserved = reservedToCommaSeparated(p.reserved);
+  const dnsList = p.dns
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(', ');
 
   return `proxies:
 - name: "WARP"
@@ -19,7 +24,7 @@ export function buildClash(p: BuildParams): string {
   udp: true
   mtu: 1280
   remote-dns-resolve: true
-  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  dns: [${dnsList}]
   amnezia-wg-option:
    jc: 120
    jmin: 23

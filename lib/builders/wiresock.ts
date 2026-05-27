@@ -1,5 +1,5 @@
 import type { BuildParams } from '@/types';
-import { DEVICE_PROFILES, MTU, formatDNS } from './shared';
+import { DEVICE_PROFILES, MTU } from './shared';
 
 const MASKING_DOMAINS = [
   'ozon.ru', 'apteka.ru', 'mail.ru', 'psbank.ru', 'lenta.ru',
@@ -12,12 +12,15 @@ function randomDomain(): string {
 
 export function buildWiresock(p: BuildParams): string {
   const prof = DEVICE_PROFILES[p.deviceType];
+  const address = p.includeIPv6 ? `${p.clientIPv4}, ${p.clientIPv6}` : p.clientIPv4;
+  // Custom "I1" domain is used verbatim as the WireSock Id (no crypto); else random.
+  const maskDomain = p.maskDomain?.trim() || randomDomain();
 
   const lines = [
     '[Interface]',
     `PrivateKey = ${p.privateKey}`,
-    `Address = ${p.clientIPv4}, ${p.clientIPv6}`,
-    `DNS = ${formatDNS()}`,
+    `Address = ${address}`,
+    `DNS = ${p.dns}`,
     `MTU = ${MTU}`,
     'S1 = 0',
     'S2 = 0',
@@ -29,7 +32,7 @@ export function buildWiresock(p: BuildParams): string {
     'H3 = 3',
     'H4 = 4',
     '# Protocol masking',
-    `Id = ${randomDomain()}`,
+    `Id = ${maskDomain}`,
     'Ip = quic',
     'Ib = firefox',
     '',
@@ -38,6 +41,10 @@ export function buildWiresock(p: BuildParams): string {
     `AllowedIPs = ${p.allowedIPs}`,
     `Endpoint = ${p.endpoint}`,
   ];
+
+  if (p.persistentKeepalive !== undefined) {
+    lines.push(`PersistentKeepalive = ${p.persistentKeepalive}`);
+  }
 
   return lines.join('\n');
 }

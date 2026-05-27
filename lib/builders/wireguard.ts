@@ -1,14 +1,15 @@
 import type { BuildParams } from '@/types';
-import { DEVICE_PROFILES, MTU, AWG15_PARAM, formatDNS } from './shared';
+import { DEVICE_PROFILES, MTU } from './shared';
 
 export function buildWireguard(p: BuildParams): string {
   const prof = DEVICE_PROFILES[p.deviceType];
+  const address = p.includeIPv6 ? `${p.clientIPv4}, ${p.clientIPv6}` : p.clientIPv4;
 
   const iface = [
     '[Interface]',
     `PrivateKey = ${p.privateKey}`,
-    `Address = ${p.clientIPv4}, ${p.clientIPv6}`,
-    `DNS = ${formatDNS()}`,
+    `Address = ${address}`,
+    `DNS = ${p.dns}`,
     `MTU = ${MTU}`,
     'S1 = 0',
     'S2 = 0',
@@ -21,7 +22,7 @@ export function buildWireguard(p: BuildParams): string {
     'H4 = 4',
   ];
 
-  if (p.deviceType === 'awg15') iface.push(AWG15_PARAM);
+  if (p.deviceType === 'awg15') iface.push(p.i1);
 
   const peer = [
     '[Peer]',
@@ -29,6 +30,10 @@ export function buildWireguard(p: BuildParams): string {
     `AllowedIPs = ${p.allowedIPs}`,
     `Endpoint = ${p.endpoint}`,
   ];
+
+  if (p.persistentKeepalive !== undefined) {
+    peer.push(`PersistentKeepalive = ${p.persistentKeepalive}`);
+  }
 
   return iface.join('\n') + '\n\n' + peer.join('\n');
 }

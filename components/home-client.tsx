@@ -9,7 +9,9 @@ import { FormatsTab } from '@/components/generator/formats-tab';
 import { AboutTab } from '@/components/generator/about-tab';
 import { ConfigSelectors } from '@/components/generator/config-selectors';
 import { ServicePicker } from '@/components/generator/service-picker';
+import { AdvancedSettings } from '@/components/generator/advanced-settings';
 import { useGenerator } from '@/hooks/use-generator';
+import { isCommunityDns } from '@/config/dns';
 import type { ServiceEntry } from '@/types';
 import { FaCircleCheck } from "react-icons/fa6";
 
@@ -44,16 +46,34 @@ export function HomeClient({ services }: HomeClientProps) {
                   siteMode={state.siteMode}
                   endpointId={state.endpointId}
                   customEndpoint={state.customEndpoint}
+                  dnsId={state.dnsId}
+                  communityDns={isCommunityDns(state.dnsId)}
+                  excludeLan={state.excludeLan}
                   onFormatChange={(v) => gen.set('configFormat', v)}
                   onDeviceChange={(v) => gen.set('deviceType', v)}
-                  onSiteModeChange={(v) => gen.set('siteMode', v)}
+                  onSiteModeChange={gen.setSiteMode}
                   onEndpointChange={gen.setEndpoint}
                   onCustomEndpointChange={(v) => gen.set('customEndpoint', v)}
+                  onDnsChange={gen.setDnsId}
+                  onExcludeLanChange={(v) => gen.set('excludeLan', v)}
                 />
 
-                {state.siteMode === 'specific' && (
+                {state.siteMode === 'specific' && !isCommunityDns(state.dnsId) && (
                   <ServicePicker services={services} selected={state.selectedServices} onToggle={gen.toggleService} />
                 )}
+
+                <AdvancedSettings
+                  ipv6={state.ipv6}
+                  onIpv6Change={(v) => gen.set('ipv6', v)}
+                  keepaliveEnabled={state.keepaliveEnabled}
+                  onKeepaliveEnabledChange={(v) => gen.set('keepaliveEnabled', v)}
+                  keepaliveValue={state.keepaliveValue}
+                  onKeepaliveValueChange={(v) => gen.set('keepaliveValue', v)}
+                  customI1Enabled={state.customI1Enabled}
+                  onCustomI1EnabledChange={(v) => gen.set('customI1Enabled', v)}
+                  customI1Domain={state.customI1Domain}
+                  onCustomI1DomainChange={(v) => gen.set('customI1Domain', v)}
+                />
               </div>
 
               {!state.isGenerated ? (
