@@ -13,6 +13,7 @@ export const LINKS = {
   githubRepo: 'nellimonix/warp-config-generator-vercel',
   donate: 'tg://resolve?domain=warp_generator_bot&start=donate',
   skyTunnel: 'tg://resolve?domain=SkyTunnel_robot&start=limon-site',
+  triBukvy: 'tg://resolve?domain=TriBukvyRoBot&start=warp_site',
   telegramMedia: 'https://mtproxy.cfd?utm_source=warp_generator&utm_medium=referral',
 } as const;
 
