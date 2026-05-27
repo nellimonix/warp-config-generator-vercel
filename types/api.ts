@@ -7,6 +7,16 @@ export interface GenerateRequest {
   endpoint: string;
   configFormat: ConfigFormat;
   captchaToken: string;
+  /** DNS provider id (see config/dns.ts). Defaults to 'cf'. */
+  dnsId?: string;
+  /** Include IPv6 in Address / DNS / default AllowedIPs. Defaults to true. */
+  ipv6?: boolean;
+  /** Exclude LAN ranges (only honored when siteMode='all'). Defaults to false. */
+  excludeLan?: boolean;
+  /** PersistentKeepalive value; null/undefined disables it. */
+  persistentKeepalive?: number | null;
+  /** Custom domain for the I1 mask; empty/undefined uses the default I1. */
+  customI1Domain?: string;
 }
 
 export interface GenerateResult {

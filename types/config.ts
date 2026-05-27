@@ -1,4 +1,4 @@
-export type ConfigFormat = 'wireguard' | 'clash' | 'wiresock';
+export type ConfigFormat = 'wireguard' | 'throne' | 'clash' | 'nekoray' | 'husi' | 'karing' | 'wiresock';
 
 export type DeviceType = 'awg15' | 'phone';
 
@@ -32,6 +32,16 @@ export interface BuildParams {
   endpoint: string;
   deviceType: DeviceType;
   reserved: string;
+  /** Resolved `DNS = ...` value (IPv6 entries already dropped when disabled). */
+  dns: string;
+  /** Whether the client IPv6 address is kept in `Address`. */
+  includeIPv6: boolean;
+  /** WireGuard `PersistentKeepalive` value; omitted from output when undefined. */
+  persistentKeepalive?: number;
+  /** Full `I1 = <b 0x...>` line — default constant or generated from a custom domain. */
+  i1: string;
+  /** Raw domain from "custom I1" — used as WireSock `Id` verbatim (no crypto). */
+  maskDomain?: string;
 }
 
 export interface DNSConfig {

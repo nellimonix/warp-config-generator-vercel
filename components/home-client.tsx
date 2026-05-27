@@ -12,7 +12,9 @@ import { FormatsTab } from '@/components/generator/formats-tab';
 import { AboutTab } from '@/components/generator/about-tab';
 import { ConfigSelectors } from '@/components/generator/config-selectors';
 import { ServicePicker } from '@/components/generator/service-picker';
+import { AdvancedSettings } from '@/components/generator/advanced-settings';
 import { useGenerator } from '@/hooks/use-generator';
+import { isCommunityDns } from '@/config/dns';
 import { HCAPTCHA_SITE_KEY } from '@/config/site';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import type { ServiceEntry } from '@/types';
@@ -53,20 +55,38 @@ export function HomeClient({ services }: HomeClientProps) {
                   siteMode={state.siteMode}
                   endpointId={state.endpointId}
                   customEndpoint={state.customEndpoint}
+                  dnsId={state.dnsId}
+                  communityDns={isCommunityDns(state.dnsId)}
+                  excludeLan={state.excludeLan}
                   onFormatChange={(v) => gen.set('configFormat', v)}
                   onDeviceChange={(v) => gen.set('deviceType', v)}
-                  onSiteModeChange={(v) => gen.set('siteMode', v)}
+                  onSiteModeChange={gen.setSiteMode}
                   onEndpointChange={gen.setEndpoint}
                   onCustomEndpointChange={(v) => gen.set('customEndpoint', v)}
+                  onDnsChange={gen.setDnsId}
+                  onExcludeLanChange={(v) => gen.set('excludeLan', v)}
                 />
 
-                {state.siteMode === 'specific' && (
+                {state.siteMode === 'specific' && !isCommunityDns(state.dnsId) && (
                   <ServicePicker services={services} selected={state.selectedServices} onToggle={gen.toggleService} />
                 )}
+
+                <AdvancedSettings
+                  ipv6={state.ipv6}
+                  onIpv6Change={(v) => gen.set('ipv6', v)}
+                  keepaliveEnabled={state.keepaliveEnabled}
+                  onKeepaliveEnabledChange={(v) => gen.set('keepaliveEnabled', v)}
+                  keepaliveValue={state.keepaliveValue}
+                  onKeepaliveValueChange={(v) => gen.set('keepaliveValue', v)}
+                  customI1Enabled={state.customI1Enabled}
+                  onCustomI1EnabledChange={(v) => gen.set('customI1Enabled', v)}
+                  customI1Domain={state.customI1Domain}
+                  onCustomI1DomainChange={(v) => gen.set('customI1Domain', v)}
+                />
               </div>
 
               {!state.isGenerated ? (
-                <button onClick={gen.handleGenerate} disabled={state.isLoading}
+                <button onClick={() => (HCAPTCHA_SITE_KEY ? gen.handleGenerate() : gen.onCaptchaVerify(''))} disabled={state.isLoading}
                   className="w-full h-12 bg-[var(--amber-900)] hover:bg-[var(--amber-700)] active:scale-[0.985] disabled:opacity-50 disabled:cursor-wait rounded-[var(--radius-md)] text-[14px] font-medium text-[var(--amber-300)] flex items-center justify-center gap-2 transition-all">
                   {state.isLoading ? (
                     <>

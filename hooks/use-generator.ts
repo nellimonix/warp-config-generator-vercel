@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
 import type { GenerateResult, ApiResponse } from '@/types';
 import { getEndpointValue, isExternalEndpoint } from '@/config/endpoints';
+import { DEFAULT_DNS_ID, isCommunityDns } from '@/config/dns';
 import { trackEvent } from '@/lib/analytics';
 
 export interface GeneratorState {
@@ -13,6 +14,13 @@ export interface GeneratorState {
   endpointId: string;
   customEndpoint: string;
   selectedServices: string[];
+  dnsId: string;
+  ipv6: boolean;
+  excludeLan: boolean;
+  keepaliveEnabled: boolean;
+  keepaliveValue: string;
+  customI1Enabled: boolean;
+  customI1Domain: string;
   isLoading: boolean;
   isGenerated: boolean;
   error: string;
@@ -28,6 +36,13 @@ export function useGenerator() {
     endpointId: 'default',
     customEndpoint: '',
     selectedServices: [],
+    dnsId: DEFAULT_DNS_ID,
+    ipv6: true,
+    excludeLan: false,
+    keepaliveEnabled: false,
+    keepaliveValue: '',
+    customI1Enabled: false,
+    customI1Domain: '',
     isLoading: false,
     isGenerated: false,
     error: '',
@@ -41,13 +56,36 @@ export function useGenerator() {
     setState((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  // Community DNS forbids split tunneling: selecting one forces "all sites" and
+  // clears any selected services (the picker is hidden / "specific" disabled in UI).
+  const setDnsId = useCallback((id: string) => {
+    setState((prev) => {
+      if (isCommunityDns(id)) {
+        return { ...prev, dnsId: id, siteMode: 'all', selectedServices: [] };
+      }
+      return { ...prev, dnsId: id };
+    });
+  }, []);
+
+  // "Exclude LAN" only applies to "all sites"; switching to "specific" turns it off.
+  const setSiteMode = useCallback((mode: SiteMode) => {
+    setState((prev) => {
+      // Block "specific" while a community DNS is selected.
+      if (mode === 'specific' && isCommunityDns(prev.dnsId)) return prev;
+      if (mode === 'specific') return { ...prev, siteMode: mode, excludeLan: false };
+      return { ...prev, siteMode: mode };
+    });
+  }, []);
+
   const toggleService = useCallback((key: string) => {
-    setState((prev) => ({
-      ...prev,
-      selectedServices: prev.selectedServices.includes(key)
+    setState((prev) => {
+      if (isCommunityDns(prev.dnsId)) return prev;
+      const selectedServices = prev.selectedServices.includes(key)
         ? prev.selectedServices.filter((s) => s !== key)
-        : [...prev.selectedServices, key],
-    }));
+        : [...prev.selectedServices, key];
+      // Any selected service disables Exclude LAN.
+      return { ...prev, selectedServices, excludeLan: selectedServices.length ? false : prev.excludeLan };
+    });
   }, []);
 
   const setEndpoint = useCallback((id: string) => {
@@ -77,6 +115,10 @@ export function useGenerator() {
 
     try {
       const endpoint = getEndpointValue(state.endpointId, state.customEndpoint);
+      const persistentKeepalive = state.keepaliveEnabled
+        ? (parseInt(state.keepaliveValue, 10) || 25)
+        : null;
+      const customI1Domain = state.customI1Enabled ? state.customI1Domain.trim() : '';
 
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -88,6 +130,11 @@ export function useGenerator() {
           deviceType: state.deviceType,
           endpoint,
           configFormat: state.configFormat,
+          dnsId: state.dnsId,
+          ipv6: state.ipv6,
+          excludeLan: state.excludeLan,
+          persistentKeepalive,
+          customI1Domain,
         }),
       });
 
@@ -115,7 +162,11 @@ export function useGenerator() {
         error: 'Ошибка сети. Попробуйте ещё раз.',
       }));
     }
-  }, [state.endpointId, state.customEndpoint, state.selectedServices, state.siteMode, state.deviceType, state.configFormat]);
+  }, [
+    state.endpointId, state.customEndpoint, state.selectedServices, state.siteMode,
+    state.deviceType, state.configFormat, state.dnsId, state.ipv6, state.excludeLan,
+    state.keepaliveEnabled, state.keepaliveValue, state.customI1Enabled, state.customI1Domain,
+  ]);
 
   const reset = useCallback(() => {
     setState((prev) => ({
@@ -148,7 +199,7 @@ export function useGenerator() {
   }, [state.result]);
 
   return {
-    state, set, toggleService, setEndpoint,
+    state, set, toggleService, setEndpoint, setDnsId, setSiteMode,
     handleGenerate, onCaptchaVerify, reset, copyConfig, downloadConfig,
   };
 }

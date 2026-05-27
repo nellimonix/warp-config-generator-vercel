@@ -18,14 +18,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json() as GenerateRequest;
 
-    // --- hCaptcha verification ---
-    if (!body.captchaToken) {
-      return json<ApiResponse>({ success: false, message: 'Капча не пройдена.' }, 400, headers);
-    }
-
-    const captchaOk = await verifyCaptcha(body.captchaToken);
-    if (!captchaOk) {
-      return json<ApiResponse>({ success: false, message: 'Неверная капча.' }, 400, headers);
+    // --- hCaptcha verification (only enforced when a secret is configured) ---
+    if (process.env.HCAPTCHA_SECRET_KEY) {
+      if (!body.captchaToken) {
+        return json<ApiResponse>({ success: false, message: 'Капча не пройдена.' }, 400, headers);
+      }
+      const captchaOk = await verifyCaptcha(body.captchaToken);
+      if (!captchaOk) {
+        return json<ApiResponse>({ success: false, message: 'Неверная капча.' }, 400, headers);
+      }
     }
 
     // --- Generate config ---
@@ -36,6 +37,11 @@ export async function POST(req: Request) {
       endpoint: body.endpoint || 'engage.cloudflareclient.com:4500',
       configFormat: body.configFormat || 'wireguard',
       captchaToken: body.captchaToken,
+      dnsId: body.dnsId,
+      ipv6: body.ipv6,
+      excludeLan: body.excludeLan,
+      persistentKeepalive: body.persistentKeepalive,
+      customI1Domain: body.customI1Domain,
     });
 
     return json<ApiResponse<GenerateResult>>({ success: true, content: result }, 200, headers);
