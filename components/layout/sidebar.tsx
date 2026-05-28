@@ -51,7 +51,11 @@ function GitHubStars() {
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  onTabChange?: (tab: string) => void;
+}
+
+export function Sidebar({ onTabChange }: SidebarProps = {}) {
   const servers = ENDPOINTS.filter((e) => e.flag);
 
   return (
@@ -95,10 +99,8 @@ export function Sidebar() {
 
       <div className="flex-1 min-h-[16px]" />
 
-      <a
-        href={LINKS.donate}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        onClick={() => onTabChange?.('support')}
         className="flex items-center justify-center gap-2.5 mt-2 px-3 py-3 rounded-[var(--radius-md)] bg-[var(--amber-900)] hover:bg-[var(--amber-700)] transition-all"
       >
         <div className="flex items-center justify-center w-5 h-5 shrink-0">
@@ -107,7 +109,7 @@ export function Sidebar() {
         <span className="text-[13px] font-medium text-[var(--amber-300)] leading-none">
           Поддержать проект
         </span>
-      </a>
+      </button>
     </aside>
   );
 }

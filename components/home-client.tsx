@@ -10,6 +10,7 @@ import { Banner } from '@/components/promo/banner';
 import { Notice } from '@/components/promo/notice';
 import { FormatsTab } from '@/components/generator/formats-tab';
 import { AboutTab } from '@/components/generator/about-tab';
+import { SupportTab } from '@/components/generator/support-tab';
 import { ConfigSelectors } from '@/components/generator/config-selectors';
 import { ServicePicker } from '@/components/generator/service-picker';
 import { AdvancedSettings } from '@/components/generator/advanced-settings';
@@ -135,9 +136,10 @@ export function HomeClient({ services }: HomeClientProps) {
           {activeTab === 'formats' && <FormatsTab />}
           {activeTab === 'about'  && <AboutTab />}
           {activeTab === 'applications' && <AboutTab />}
+          {activeTab === 'support' && <SupportTab />}
         </div>
 
-        <Sidebar />
+        <Sidebar onTabChange={setActiveTab} />
       </div>
 
       {/* Captcha modal overlay */}
