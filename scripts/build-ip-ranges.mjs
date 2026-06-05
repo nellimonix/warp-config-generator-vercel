@@ -48,8 +48,7 @@ function loadRanges() {
 function renderBlock(ranges) {
   const lines = [HEADER, 'const IP_RANGES = {'];
   for (const [key, ips] of Object.entries(ranges)) {
-    const safeIps = ips.replace(/"/g, '\\"');
-    lines.push(`  ${key}: "${safeIps}",`);
+    lines.push(`  ${key}: ${JSON.stringify(ips)},`);
   }
   lines.push('}');
   lines.push(END);
