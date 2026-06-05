@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>ДОСТУП ОГРАНИЧЕН // РОСКОМНАДЗОР</title>
+<style>
+  :root{
+    --rkn-red:#ff2b2b;
+    --rkn-blue:#1e4fff;
+    --hack-green:#27ff6a;
+    --bg:#05060a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);overflow:hidden;font-family:"Courier New",ui-monospace,monospace;color:#dfe6ff}
+  body{cursor:crosshair}
+
+  /* matrix rain */
+  #matrix{position:fixed;inset:0;z-index:0;opacity:.18}
+
+  /* CRT scanlines + flicker */
+  .crt::before{
+    content:"";position:fixed;inset:0;z-index:50;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.28) 3px,rgba(0,0,0,0) 4px);
+    mix-blend-mode:multiply;
+  }
+  .crt::after{
+    content:"";position:fixed;inset:0;z-index:51;pointer-events:none;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.65) 100%);
+    animation:flicker 6s infinite steps(60);
+  }
+  @keyframes flicker{0%,100%{opacity:.92}50%{opacity:1}5%{opacity:.85}}
+
+  .wrap{position:relative;z-index:10;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+
+  /* official-ish corrupted seal */
+  .seal{font-size:13px;letter-spacing:6px;color:#7d8bb5;text-transform:uppercase;margin-bottom:10px}
+  .seal b{color:var(--rkn-blue)}
+
+  /* glitch title */
+  .glitch{
+    position:relative;font-weight:900;line-height:.95;
+    font-size:clamp(34px,9vw,120px);letter-spacing:2px;
+    color:#fff;text-shadow:0 0 18px rgba(255,43,43,.55);
+  }
+  .glitch::before,.glitch::after{
+    content:attr(data-text);position:absolute;left:0;top:0;width:100%;
+    overflow:hidden;
+  }
+  .glitch::before{color:var(--rkn-red);animation:gl1 2.4s infinite linear alternate-reverse;clip-path:inset(0 0 55% 0)}
+  .glitch::after{color:var(--hack-green);animation:gl2 1.6s infinite linear alternate-reverse;clip-path:inset(55% 0 0 0)}
+  @keyframes gl1{0%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-6px,0)}80%{transform:translate(2px,1px)}100%{transform:translate(0,0)}}
+  @keyframes gl2{0%{transform:translate(0,0)}25%{transform:translate(5px,-2px)}50%{transform:translate(-3px,1px)}75%{transform:translate(4px,2px)}100%{transform:translate(0,0)}}
+
+  .sub{margin-top:18px;font-size:clamp(13px,2.4vw,18px);color:#c2ccf0;max-width:760px}
+  .sub .law{color:var(--rkn-red);font-weight:700}
+  .corrupt{color:#54607f;filter:blur(.3px)}
+
+  /* reason ticket */
+  .ticket{
+    margin-top:26px;border:1px solid rgba(120,140,200,.25);
+    background:linear-gradient(180deg,rgba(20,26,48,.85),rgba(8,10,20,.85));
+    padding:18px 22px;max-width:720px;width:100%;text-align:left;
+    box-shadow:0 0 40px rgba(30,79,255,.12),inset 0 0 60px rgba(0,0,0,.5);
+    backdrop-filter:blur(2px);
+  }
+  .ticket .row{display:flex;justify-content:space-between;gap:14px;font-size:12px;padding:4px 0;border-bottom:1px dashed rgba(120,140,200,.15)}
+  .ticket .row:last-child{border:0}
+  .ticket .k{color:#7d8bb5;text-transform:uppercase;letter-spacing:1px}
+  .ticket .v{color:#dfe6ff;text-align:right}
+  .ticket .v.red{color:var(--rkn-red)}
+  .ticket .v.grn{color:var(--hack-green)}
+
+  /* terminal redirect block */
+  .term{margin-top:26px;max-width:720px;width:100%;text-align:left;font-size:14px;color:var(--hack-green);min-height:120px}
+  .term .ln{white-space:pre-wrap;text-shadow:0 0 8px rgba(39,255,106,.4)}
+  .cursor{display:inline-block;width:9px;height:16px;background:var(--hack-green);vertical-align:-2px;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .count{
+    margin-top:8px;font-weight:900;color:#fff;
+    font-size:clamp(48px,14vw,160px);line-height:1;
+    text-shadow:0 0 30px var(--rkn-red),0 0 6px #fff;
+    animation:pulse .9s infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+  .bar{margin-top:14px;height:10px;width:min(720px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(120,140,200,.25);overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--rkn-blue),var(--hack-green));box-shadow:0 0 14px var(--hack-green)}
+
+  .sig{position:fixed;bottom:14px;right:18px;z-index:20;font-size:12px;color:#54607f;letter-spacing:2px}
+  .sig b{color:var(--rkn-red)}
+  .tag{position:fixed;top:14px;left:18px;z-index:20;font-size:12px;color:#54607f;letter-spacing:2px}
+  .tag .dot{color:var(--hack-green);animation:blink 1.4s steps(2) infinite}
+
+  .glitch-shift{animation:shift 7s infinite}
+  @keyframes shift{0%,96%,100%{transform:translate(0)}97%{transform:translate(-3px,2px) skewX(2deg)}98%{transform:translate(4px,-2px)}99%{transform:translate(-2px,1px) skewX(-1deg)}}
+
+  a.mirror{color:var(--hack-green);text-decoration:none;border-bottom:1px dotted var(--hack-green)}
+  @media(max-width:560px){.ticket .row{flex-direction:column;gap:2px}.ticket .v{text-align:left}}
+</style>
+</head>
+<body class="crt">
+  <canvas id="matrix"></canvas>
+
+  <div class="tag"><span class="dot">●</span> LIVE // sys.breach <span id="ip"></span></div>
+  <div class="sig">взломано: <b>[ Ⱨ4CK_СН//ОST ]</b></div>
+
+  <div class="wrap glitch-shift">
+    <div class="seal">единый реестр // <b>РОСКОМНАДЗОР</b> // запрещённой информации</div>
+
+    <h1 class="glitch" data-text="ДОСТУП ЗАБЛОКИРОВАН">ДОСТУП ЗАБЛОКИРОВАН</h1>
+
+    <p class="sub">
+      <b>Роскомнадзор</b> заблокировал данную страницу за нарушение
+      <span class="law">Федерального закона № 149-ФЗ</span>
+      «Об информации, информационных технологиях и&nbsp;о&nbsp;защите информации»
+      <span class="corrupt">.. . ░▒ .. 0x4F39 . .. ▓ . .. error . ̷̢̛ . ̶̱ . .. .</span>
+    </p>
+
+    <div class="ticket">
+      <div class="row"><span class="k">№ решения</span><span class="v red">2-РКН/4F-19▓░-CORRUPTED</span></div>
+      <div class="row"><span class="k">основание</span><span class="v">ст. 15.1 • п. ░ • [DATA_EXPUNGED]</span></div>
+      <div class="row"><span class="k">статус ресурса</span><span class="v red">ЗАБЛОКИРОВАНО</span></div>
+      <div class="row"><span class="k">целостность реестра</span><span class="v grn">НАРУШЕНА // override</span></div>
+      <div class="row"><span class="k">оператор связи</span><span class="v">unknown ░ rerouting…</span></div>
+    </div>
+
+    <div class="term" id="term"></div>
+
+    <div class="count" id="count">10</div>
+    <div class="bar"><i id="bar"></i></div>
+  </div>
+
+<script>
+/* === НАСТРОЙКА === */
+const MIRROR_URL = "https://example.com";   // куда уводить после отсчёта
+const START      = 10;                       // старт отсчёта
+/* ================== */
+
+/* matrix rain */
+(function(){
+  const c=document.getElementById('matrix'),x=c.getContext('2d');
+  let w,h,cols,drops;
+  const glyph="アァカサタナハマヤラ0123456789РКНFСK░▒▓БЛОКIРОВАНО<>/\\".split("");
+  function size(){w=c.width=innerWidth;h=c.height=innerHeight;cols=Math.floor(w/14);drops=Array(cols).fill(1)}
+  size();addEventListener('resize',size);
+  function draw(){
+    x.fillStyle="rgba(5,6,10,.08)";x.fillRect(0,0,w,h);
+    x.font="14px monospace";
+    for(let i=0;i<cols;i++){
+      const t=glyph[Math.floor(Math.random()*glyph.length)];
+      x.fillStyle=Math.random()<.015?"#ff2b2b":"#27ff6a";
+      x.fillText(t,i*14,drops[i]*14);
+      if(drops[i]*14>h&&Math.random()>.975)drops[i]=0;
+      drops[i]++;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* fake ip */
+(function(){
+  const r=()=>Math.floor(Math.random()*255);
+  document.getElementById('ip').textContent="["+r()+"."+r()+"."+r()+"."+r()+"]";
+})();
+
+/* terminal typing + countdown */
+const term=document.getElementById('term');
+const lines=[
+  "$ rkn-filter --inspect target ...........  [BLOCKED]",
+  "$ injecting payload 0xDE:0xAD:0xC0:0xDE ... ok",
+  "$ обход реестра запрещённых ресурсов ...... [BYPASS]",
+  "$ дешифровка маршрута до зеркала .......... done",
+  "> Выполняется переход на зеркало ...........",
+];
+let li=0,ci=0,cur="";
+function type(){
+  if(li<lines.length){
+    const div=document.getElementById("ln"+li)||(()=>{const d=document.createElement('div');d.className="ln";d.id="ln"+li;term.appendChild(d);return d})();
+    cur=lines[li].slice(0,ci++);
+    div.innerHTML=cur+'<span class="cursor"></span>';
+    if(ci>lines[li].length){li++;ci=0;}
+    setTimeout(type, li===lines.length-1?14:9);
+  }else{
+    countdown();
+  }
+}
+function countdown(){
+  const el=document.getElementById('count'),bar=document.getElementById('bar');
+  let n=START;
+  el.textContent=n;
+  const total=START;
+  const tick=()=>{
+    el.textContent=n;
+    el.style.color = n<=3 ? "#ff2b2b" : "#fff";
+    bar.style.width=((total-n)/total*100)+"%";
+    if(n<=0){
+      el.textContent="00";
+      term.innerHTML+='<div class="ln">> соединение с зеркалом установлено ✓ <span class="cursor"></span></div>';
+      bar.style.width="100%";
+      const link=document.createElement('div');
+      link.className="ln";link.style.marginTop="10px";
+      link.innerHTML='> если переход не начался: <a class="mirror" href="'+MIRROR_URL+'">открыть зеркало вручную →</a>';
+      term.appendChild(link);
+      setTimeout(()=>{ if(MIRROR_URL && MIRROR_URL!=="https://example.com") location.href=MIRROR_URL; }, 1200);
+      return;
+    }
+    n--;
+    setTimeout(tick, 900);
+  };
+  tick();
+}
+type();
+
+/* random screen glitch jolt */
+setInterval(()=>{
+  if(Math.random()<.5){
+    document.body.style.filter="hue-rotate("+(Math.random()*40-20)+"deg) contrast(1.1)";
+    setTimeout(()=>document.body.style.filter="",90);
+  }
+},2600);
+</script>
+</body>
+</html>
