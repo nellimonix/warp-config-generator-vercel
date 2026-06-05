@@ -18,8 +18,13 @@ const BUILDERS: Record<ConfigFormat, (p: BuildParams) => string> = {
 };
 
 export function buildConfig(format: ConfigFormat, params: BuildParams): string {
+  if (!Object.prototype.hasOwnProperty.call(BUILDERS, format)) {
+    throw new Error(`No builder for format: ${format}`);
+  }
   const builder = BUILDERS[format];
-  if (!builder) throw new Error(`No builder for format: ${format}`);
+  if (typeof builder !== 'function') {
+    throw new Error(`Invalid builder for format: ${format}`);
+  }
   return builder(params);
 }
 
