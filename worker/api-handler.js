@@ -292,7 +292,7 @@ const AWG_PARAM = "I1 = <b 0xc10000000114367096bb0fb3f58f3a3fb8aaacd61d63a1c8a40
 
 function buildWireguard(p) {
   const address = p.includeIPv6 ? `${p.v4}, ${p.v6}` : p.v4;
-  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 120', 'Jmin = 23', 'Jmax = 911', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4'];
+  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 4', 'Jmin = 40', 'Jmax = 70', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4'];
   if (p.deviceType === 'awg15') lines.push(p.i1);
   lines.push('', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`);
   if (p.keepalive !== undefined) lines.push(`PersistentKeepalive = ${p.keepalive}`);
@@ -302,12 +302,12 @@ function buildWireguard(p) {
 function buildThrone(p) {
   const key = p.privateKey.replace(/=$/, '');
   const reserved = reservedToDashed(p.reserved);
-  return `wg://${p.endpoint}?private_key=${key}%3D&peer_public_key=${encodeURIComponent(WARP_PUB)}&pre_shared_key=&reserved=${reserved}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${p.v4}/32-${p.v6}/128&workers=0&enable_amnezia=true&junk_packet_count=120&junk_packet_min_size=23&junk_packet_max_size=911&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
+  return `wg://${p.endpoint}?private_key=${key}%3D&peer_public_key=${encodeURIComponent(WARP_PUB)}&pre_shared_key=&reserved=${reserved}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${p.v4}/32-${p.v6}/128&workers=0&enable_amnezia=true&junk_packet_count=4&junk_packet_min_size=40&junk_packet_max_size=70&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
 }
 
 function buildClash(p) {
   const [server, port] = p.endpoint.split(':');
-  return `proxies:\n- name: "WARP"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n  public-key: ${p.publicKey}\n  allowed-ips: ['0.0.0.0/0']\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [${p.dns}]\n  amnezia-wg-option:\n   jc: 120\n   jmin: 23\n   jmax: 911\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h4: 3\n   h3: 4`;
+  return `proxies:\n- name: "WARP"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n  public-key: ${p.publicKey}\n  allowed-ips: ['0.0.0.0/0']\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [${p.dns}]\n  amnezia-wg-option:\n   jc: 4\n   jmin: 40\n   jmax: 70\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h4: 3\n   h3: 4`;
 }
 
 function buildNekoray(p) {
@@ -329,7 +329,7 @@ const MASKING_DOMAINS = ['ozon.ru', 'apteka.ru', 'mail.ru', 'psbank.ru', 'lenta.
 function buildWiresock(p) {
   const domain = (p.maskDomain && p.maskDomain.trim()) || MASKING_DOMAINS[Math.floor(Math.random() * MASKING_DOMAINS.length)];
   const address = p.includeIPv6 ? `${p.v4}, ${p.v6}` : p.v4;
-  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 120', 'Jmin = 23', 'Jmax = 911', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4', '# Protocol masking', `Id = ${domain}`, 'Ip = quic', 'Ib = firefox', '', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`];
+  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 4', 'Jmin = 40', 'Jmax = 70', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4', '# Protocol masking', `Id = ${domain}`, 'Ip = quic', 'Ib = firefox', '', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`];
   if (p.keepalive !== undefined) lines.push(`PersistentKeepalive = ${p.keepalive}`);
   return lines.join('\n');
 }

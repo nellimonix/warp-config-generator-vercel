@@ -26,9 +26,9 @@ export function buildClash(p: BuildParams): string {
   remote-dns-resolve: true
   dns: [${dnsList}]
   amnezia-wg-option:
-   jc: 120
-   jmin: 23
-   jmax: 911
+   jc: 4
+   jmin: 40
+   jmax: 70
    s1: 0
    s2: 0
    h1: 1

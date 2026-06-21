@@ -1,8 +1,8 @@
 import type { DeviceType, DeviceProfile, DNSConfig } from '@/types';
 
 export const DEVICE_PROFILES: Record<DeviceType, DeviceProfile> = {
-  phone: { jc: 120, jmin: 23, jmax: 911 },
-  awg15: { jc: 120, jmin: 23, jmax: 911 },
+  phone: { jc: 4, jmin: 40, jmax: 70 },
+  awg15: { jc: 4, jmin: 40, jmax: 70 },
 };
 
 export const DNS: DNSConfig = {
