@@ -1,0 +1,50 @@
+name: Build I1_MASKS
+
+on:
+  push:
+    branches: [production]
+    paths:
+      - 'lib/builders/shared.ts'
+      - 'scripts/build-i1-masks.mjs'
+      - '.github/workflows/build-i1-masks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-i1-masks-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: production
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Rebuild I1_MASKS
+        run: node scripts/build-i1-masks.mjs
+
+      - name: Commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain worker/api-handler.js functions/api/generate.js)" ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git add worker/api-handler.js functions/api/generate.js
+          git commit -m "chore(i1-masks): rebuild from lib/builders/shared.ts [skip ci]"
+          git push origin production

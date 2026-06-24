@@ -5,7 +5,7 @@ import { registerClient, enableWarp } from './cloudflare-client';
 import { resolveAllowedIPs } from '@/config/services-loader';
 import { buildDnsLine, isCommunityDns, DEFAULT_DNS_ID } from '@/config/dns';
 import { buildConfig, buildConfigForQR } from './builders';
-import { DEFAULT_I1 } from './builders/shared';
+import { pickI1 } from './builders/shared';
 import { generateI1Line } from './quic';
 import { generateQR, unsupportedQR } from './qr-generator';
 import { getFileName, getFormatInfo, supportsQR } from '@/config/formats';
@@ -96,7 +96,7 @@ async function extractBuildParams(
   const ipv6 = req.ipv6 ?? true;
   const dnsId = req.dnsId ?? DEFAULT_DNS_ID;
   const domain = sanitizeDomain(req.customI1Domain);
-  const i1 = domain ? await generateI1Line(domain) : DEFAULT_I1;
+  const i1 = domain ? await generateI1Line(domain) : pickI1();
   const keepalive = normalizeKeepalive(req.persistentKeepalive);
 
   return {
