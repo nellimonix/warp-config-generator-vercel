@@ -32,6 +32,13 @@ export const DNS_PROVIDERS: DnsProvider[] = [
     isCommunity: false,
   },
   {
+    id: 'quad9',
+    label: 'dns.quad9.net',
+    ipv4: ['9.9.9.9', '149.112.112.112'],
+    ipv6: ['2620:fe::fe', '2620:fe::9'],
+    isCommunity: false,
+  },
+  {
     id: 'malw',
     label: 'dns.malw.link',
     ipv4: ['84.21.189.133', '193.23.209.189'],
