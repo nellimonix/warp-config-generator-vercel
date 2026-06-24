@@ -59,6 +59,13 @@ export const DNS_PROVIDERS: DnsProvider[] = [
     ipv6: ['2a01:230:4:915::2', '2a01:230:4:306::2'],
     isCommunity: true,
   },
+  {
+    id: 'mafioznik',
+    label: 'dns.mafioznik.xyz',
+    ipv4: ['103.27.157.38', '103.27.157.100'],
+    ipv6: [],
+    isCommunity: true,
+  },
 ];
 
 export const DEFAULT_DNS_ID = 'cf';
