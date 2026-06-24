@@ -2,7 +2,7 @@ name: Build I1_MASKS
 
 on:
   push:
-    branches: [production]
+    branches: [master]
     paths:
       - 'lib/builders/shared.ts'
       - 'scripts/build-i1-masks.mjs'
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: production
+          ref: master
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
