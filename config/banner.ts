@@ -28,10 +28,8 @@ export interface NoticeConfig {
   text: string;
 }
 
-/**
 export const NOTICE: NoticeConfig = {
-  enabled: true,
+  enabled: false,
   variant: 'warning',
   text: 'На генератор выросла нагрузка, конфиги могут не генерироваться. Подключитесь к [прокси Telegram](https://mtproxy.cfd?utm_source=warp_generator&utm_medium=referral) и попробуйте свою попытку в [боте](tg://resolve?domain=warp_generator_bot).',
 };
- */
