@@ -82,6 +82,41 @@ npm run start        # serve production build
 npm run lint
 ```
 
+## ⚙️ Generator Options and API
+
+The generator exposes the same options in the UI and in `POST /api/generate`:
+
+| Option | Behavior and constraints |
+|--------|--------------------------|
+| DNS | Providers come from `config/dns.ts`. Community providers are marked with `•`; selecting one forces **All sites** and clears selected services because they do not support split tunneling. An unknown provider ID falls back to Cloudflare DNS. |
+| IPv6 | Enabled by default. Disabling it removes IPv6 from the interface address, DNS list, and the default all-sites `AllowedIPs`. |
+| Exclude LAN | Available only in **All sites** mode. It replaces the default routes with public address ranges so private/reserved LAN ranges stay outside the tunnel. |
+| PersistentKeepalive | Disabled by default. Enabling it with an empty UI field uses `25`; the API accepts integers from `1` through `65535` and omits invalid values. It is emitted by WireGuard and WireSock configs. |
+| Custom I1 | A non-empty value is trimmed and must be at most 253 characters with no whitespace. AmneziaWG WireGuard uses it to generate a QUIC `I1` mask; WireSock uses it as `Id`. Empty or invalid input silently falls back to a bundled random mask/domain. |
+
+Example request against a local deployment:
+
+```bash
+curl -X POST http://localhost:3000/api/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "selectedServices": [],
+    "siteMode": "all",
+    "deviceType": "awg15",
+    "endpoint": "engage.cloudflareclient.com:4500",
+    "configFormat": "wireguard",
+    "dnsId": "cf",
+    "ipv6": false,
+    "excludeLan": true,
+    "persistentKeepalive": 25,
+    "customI1Domain": "google.com"
+  }'
+```
+
+A successful response has `success: true` and a `content` object containing
+`configBase64`, `qrCodeBase64`, `configFormat`, and `fileName`. `configBase64`
+contains the Base64-encoded configuration; `qrCodeBase64` is an image data URL.
+
 ## ➕ Adding a new service (PR welcome)
 
 The "specific sites" mode lets users select services to route through WARP.
@@ -114,6 +149,38 @@ node scripts/build-ip-ranges.mjs
 
 Runs against `config/services/*.json` and rewrites the `// IP_RANGES:BEGIN ... // IP_RANGES:END` block in both worker/functions files. Safe to run repeatedly — idempotent.
 
+### Adding a DNS provider
+
+1. Add the provider to `DNS_PROVIDERS` in `config/dns.ts` with a unique `id`,
+   display `label`, IPv4/IPv6 arrays, and `isCommunity`.
+2. Set `isCommunity: true` if the provider cannot be used with specific-site
+   routing. Both the UI and API enforce the all-sites restriction.
+3. Mirror the entry in the embedded `DNS_PROVIDERS` arrays in
+   `worker/api-handler.js` and `functions/api/generate.js`. Unlike IP ranges
+   and I1 masks, DNS providers do not currently have an automatic sync script.
+4. Run `npm run build` before opening the PR.
+
+Docker and Vercel use `config/dns.ts` directly, while Cloudflare Workers and
+Netlify execute the embedded handlers. Keeping all three provider lists in sync
+prevents a provider shown by the static UI from falling back to Cloudflare DNS
+at generation time.
+
+### Maintaining default I1 masks
+
+`lib/builders/shared.ts` is the source of truth for masks used when no custom
+I1 domain is supplied:
+
+1. Edit only the `I1_MASKS` array between the `// I1_MASKS:BEGIN` and
+   `// I1_MASKS:END` markers.
+2. Run `node scripts/build-i1-masks.mjs`.
+3. Commit the generated changes to `worker/api-handler.js` and
+   `functions/api/generate.js` with the source change.
+
+The script validates the markers and mask format, updates both embedded
+handlers, and is idempotent. The `build-i1-masks` workflow also runs when its
+source, script, or workflow changes on `master` and rebuilds the production
+handlers. Do not hand-edit generated I1 blocks.
+
 ## 📁 Project Structure
 
 ```
@@ -131,6 +198,7 @@ Runs against `config/services/*.json` and rewrites the `// IP_RANGES:BEGIN ... /
 │   │   └── footer.tsx
 │   ├── generator/
 │   │   ├── config-selectors.tsx   Custom dropdowns (format, device, etc.)
+│   │   ├── advanced-settings.tsx  IPv6, keepalive, and custom I1 controls
 │   │   ├── service-picker.tsx     Service selection grid
 │   │   ├── result-panel.tsx       Download / copy / QR result block
 │   │   ├── formats-tab.tsx        Supported formats list
@@ -140,6 +208,7 @@ Runs against `config/services/*.json` and rewrites the `// IP_RANGES:BEGIN ... /
 ├── config/
 │   ├── services/                  JSON files — one per service (IP ranges)
 │   ├── services-loader.ts         Auto-loads all JSONs at startup
+│   ├── dns.ts                     DNS providers and split-tunnel constraints
 │   ├── endpoints.ts               Cloudflare WARP endpoints
 │   └── formats.ts                 Config format definitions
 │
@@ -152,9 +221,10 @@ Runs against `config/services/*.json` and rewrites the `// IP_RANGES:BEGIN ... /
 │   │   ├── husi.ts
 │   │   ├── karing.ts
 │   │   ├── wiresock.ts
-│   │   ├── shared.ts              Device profiles, DNS, constants
+│   │   ├── shared.ts              Device profiles and default I1 masks
 │   │   └── index.ts               Dispatcher — buildConfig(format, params)
 │   ├── warp-service.ts            Orchestrator (keys → CF → build → QR)
+│   ├── quic.ts                    Custom QUIC I1 mask generation
 │   ├── cloudflare-client.ts       Cloudflare WARP API registration
 │   ├── crypto.ts                  Key generation (tweetnacl)
 │   ├── qr-generator.ts            QR via external API + SVG fallback
@@ -165,13 +235,14 @@ Runs against `config/services/*.json` and rewrites the `// IP_RANGES:BEGIN ... /
 │   └── use-mobile.ts              Responsive breakpoint hook
 │
 ├── scripts/
-│   └── build-ip-ranges.mjs        Regenerates IP_RANGES in worker + functions
+│   ├── build-ip-ranges.mjs        Regenerates IP_RANGES in worker + functions
+│   └── build-i1-masks.mjs         Regenerates I1_MASKS in worker + functions
 │
 ├── worker/                        Cloudflare Workers runtime
 ├── functions/                     Netlify Functions runtime
 ├── types/                         TypeScript type definitions
 ├── styles/globals.css             Design tokens + dark theme
-├── .github/workflows/             CI: Docker build, IP_RANGES rebuild
+├── .github/workflows/             CI: Docker, IP_RANGES, I1_MASKS rebuilds
 ├── Dockerfile                     Standalone production build (public)
 ├── next.config.mjs
 └── package.json
