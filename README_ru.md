@@ -82,6 +82,42 @@ npm run start        # запуск production-сборки
 npm run lint
 ```
 
+## ⚙️ Настройки генератора и API
+
+Одинаковые параметры доступны в интерфейсе и в `POST /api/generate`:
+
+| Параметр | Поведение и ограничения |
+|----------|-------------------------|
+| DNS | Провайдеры задаются в `config/dns.ts`. Общественные провайдеры отмечены символом `•`; при их выборе включается режим **Все сайты**, а выбранные сервисы сбрасываются, поскольку split tunneling не поддерживается. Неизвестный ID провайдера заменяется на Cloudflare DNS. |
+| IPv6 | Включён по умолчанию. Отключение убирает IPv6 из адреса интерфейса, списка DNS и стандартного `AllowedIPs` для всех сайтов. |
+| Исключить LAN | Доступно только в режиме **Все сайты**. Стандартные маршруты заменяются диапазонами публичных адресов, поэтому приватные и зарезервированные LAN-диапазоны остаются вне туннеля. |
+| PersistentKeepalive | По умолчанию отключён. При включении с пустым полем интерфейс использует `25`; API принимает целые числа от `1` до `65535` и не добавляет некорректные значения. Параметр выводится в конфиги WireGuard и WireSock. |
+| Собственный I1 | Непустое значение очищается от пробелов по краям; его длина не должна превышать 253 символа, а внутри не должно быть пробелов. AmneziaWG WireGuard генерирует по нему QUIC-маску `I1`, а WireSock использует его как `Id`. При пустом или некорректном значении без ошибки выбирается встроенная случайная маска или домен. |
+
+Пример запроса к локальному развертыванию:
+
+```bash
+curl -X POST http://localhost:3000/api/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "selectedServices": [],
+    "siteMode": "all",
+    "deviceType": "awg15",
+    "endpoint": "engage.cloudflareclient.com:4500",
+    "configFormat": "wireguard",
+    "dnsId": "cf",
+    "ipv6": false,
+    "excludeLan": true,
+    "persistentKeepalive": 25,
+    "customI1Domain": "google.com"
+  }'
+```
+
+Успешный ответ содержит `success: true` и объект `content` с полями
+`configBase64`, `qrCodeBase64`, `configFormat` и `fileName`. Поле
+`configBase64` содержит конфигурацию в Base64, а `qrCodeBase64` — data URL
+изображения.
+
 ## ➕ Добавить новый сервис (приветствуется PR)
 
 Режим «выбранные сайты» позволяет роутить через WARP только определённые сервисы.
@@ -114,6 +150,40 @@ node scripts/build-ip-ranges.mjs
 
 Читает `config/services/*.json` и переписывает блок `// IP_RANGES:BEGIN ... // IP_RANGES:END` в обоих файлах worker/functions. Можно запускать сколько угодно раз — идемпотентно.
 
+### Добавить DNS-провайдера
+
+1. Добавьте провайдера в `DNS_PROVIDERS` в `config/dns.ts`: уникальный `id`,
+   отображаемый `label`, массивы IPv4/IPv6 и `isCommunity`.
+2. Укажите `isCommunity: true`, если провайдер несовместим с маршрутизацией
+   выбранных сайтов. Ограничение режима «Все сайты» проверяется и интерфейсом,
+   и API.
+3. Продублируйте запись во встроенных массивах `DNS_PROVIDERS` в
+   `worker/api-handler.js` и `functions/api/generate.js`. В отличие от
+   IP-диапазонов и I1-масок, для DNS-провайдеров пока нет автоматического
+   скрипта синхронизации.
+4. Перед открытием PR запустите `npm run build`.
+
+Docker и Vercel используют `config/dns.ts` напрямую, а Cloudflare Workers и
+Netlify выполняют встроенные обработчики. Синхронизация всех трёх списков не
+даёт провайдеру из статического интерфейса незаметно замениться на Cloudflare
+DNS во время генерации.
+
+### Обновление стандартных I1-масок
+
+`lib/builders/shared.ts` — источник масок, которые используются, если
+собственный I1-домен не задан:
+
+1. Редактируйте только массив `I1_MASKS` между маркерами
+   `// I1_MASKS:BEGIN` и `// I1_MASKS:END`.
+2. Запустите `node scripts/build-i1-masks.mjs`.
+3. Закоммитьте с исходным изменением сгенерированные правки в
+   `worker/api-handler.js` и `functions/api/generate.js`.
+
+Скрипт проверяет маркеры и формат масок, обновляет оба встроенных обработчика
+и является идемпотентным. Workflow `build-i1-masks` также запускается при
+изменении исходника, скрипта или самого workflow в `master` и пересобирает
+production-обработчики. Не редактируйте сгенерированные блоки I1 вручную.
+
 ## 📁 Структура проекта
 
 ```
@@ -131,6 +201,7 @@ node scripts/build-ip-ranges.mjs
 │   │   └── footer.tsx
 │   ├── generator/
 │   │   ├── config-selectors.tsx   Кастомные дропдауны (формат, тип и пр.)
+│   │   ├── advanced-settings.tsx  IPv6, keepalive и собственный I1
 │   │   ├── service-picker.tsx     Сетка выбора сервисов
 │   │   ├── result-panel.tsx       Блок результата (скачать / копировать / QR)
 │   │   ├── formats-tab.tsx        Список поддерживаемых форматов
@@ -140,6 +211,7 @@ node scripts/build-ip-ranges.mjs
 ├── config/
 │   ├── services/                  JSON-файлы — по одному на сервис (IP-диапазоны)
 │   ├── services-loader.ts         Автозагрузка всех JSON при старте
+│   ├── dns.ts                     DNS-провайдеры и ограничения split tunnel
 │   ├── endpoints.ts               Endpoint-ы Cloudflare WARP
 │   └── formats.ts                 Определения форматов конфигов
 │
@@ -152,9 +224,10 @@ node scripts/build-ip-ranges.mjs
 │   │   ├── husi.ts
 │   │   ├── karing.ts
 │   │   ├── wiresock.ts
-│   │   ├── shared.ts              Профили устройств, DNS, константы
+│   │   ├── shared.ts              Профили устройств и стандартные I1-маски
 │   │   └── index.ts               Диспетчер — buildConfig(format, params)
 │   ├── warp-service.ts            Оркестратор (ключи → CF → сборка → QR)
+│   ├── quic.ts                    Генерация собственных QUIC I1-масок
 │   ├── cloudflare-client.ts       Регистрация через Cloudflare WARP API
 │   ├── crypto.ts                  Генерация ключей (tweetnacl)
 │   ├── qr-generator.ts            QR через внешний API + SVG-заглушка
@@ -165,13 +238,14 @@ node scripts/build-ip-ranges.mjs
 │   └── use-mobile.ts              Хук адаптивности
 │
 ├── scripts/
-│   └── build-ip-ranges.mjs        Регенерация IP_RANGES в worker + functions
+│   ├── build-ip-ranges.mjs        Регенерация IP_RANGES в worker + functions
+│   └── build-i1-masks.mjs         Регенерация I1_MASKS в worker + functions
 │
 ├── worker/                        Cloudflare Workers runtime
 ├── functions/                     Netlify Functions runtime
 ├── types/                         TypeScript типы
 ├── styles/globals.css             Дизайн-токены + тёмная тема
-├── .github/workflows/             CI: Docker build, IP_RANGES rebuild
+├── .github/workflows/             CI: Docker, IP_RANGES и I1_MASKS rebuild
 ├── Dockerfile                     Standalone production-сборка (public)
 ├── next.config.mjs
 └── package.json
