@@ -152,7 +152,11 @@ MIT License
 
 - Telegram Bot: [t.me/warp_generator_bot](https://t.me/warp_generator_bot)  
 - Main Site: [warp3.llimonix.pw](https://warp3.llimonix.pw)  
-- Vercel Mirror: [warply2.vercel.app](https://warply2.vercel.app)  
-- Netlify Mirror: [getwarp2.netlify.app](https://getwarp2.netlify.app)  
-- Cloudflare Mirror: [warp.llimonix.workers.dev](https://warp.llimonix.workers.dev)  
+- Vercel Mirror: [warply2.vercel.app](https://warply2.vercel.app)
+- Netlify Mirror: [getwarp2.netlify.app](https://getwarp2.netlify.app)
+- Cloudflare Mirror: [warp.llimonix.workers.dev](https://warp.llimonix.workers.dev)
 - Telegram Channel: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=nellimonix/warp-config-generator-vercel&type=date&legend=bottom-right&sealed_token=239JRz1TCX2p0ksZ8FDfmV9rtt4mTaU88UCtljMUhAEtzLx3IE7A7souoN6aCO4BD9Io76Jg-9Zrk_vaT3pB2cVwSfcUCf8RqLS1z2pLcjvxTTBmwcFIoA)](https://www.star-history.com/?repos=nellimonix%2Fwarp-config-generator-vercel&type=date&legend=bottom-right)
