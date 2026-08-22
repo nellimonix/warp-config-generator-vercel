@@ -73,12 +73,12 @@ export function Captcha({ onVerify }: CaptchaProps) {
   }, [challenge, onVerify]);
 
   if (error) {
-    return <p className="max-w-[280px] text-center text-[13px] text-[var(--error)]">{error}</p>;
+    return <p className="w-full text-center text-[13px] text-[var(--error)]">{error}</p>;
   }
 
   if (!challenge) {
     return (
-      <div className="flex h-[74px] w-[280px] items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[13px] text-[var(--text-muted)]">
+      <div className="flex h-[74px] w-full items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[13px] text-[var(--text-muted)]">
         <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[var(--text-dim)] border-b-transparent" />
         Загрузка проверки...
       </div>
@@ -96,6 +96,8 @@ export function Captcha({ onVerify }: CaptchaProps) {
       configuration={JSON.stringify({ minDuration: 500, timeout: 30_000 })}
       suppressHydrationWarning
       style={{
+        display: 'block',
+        width: '100%',
         '--altcha-color-base': 'var(--surface-2)',
         '--altcha-color-base-content': 'var(--text)',
         '--altcha-border-color': 'var(--gray-600)',
@@ -105,7 +107,7 @@ export function Captcha({ onVerify }: CaptchaProps) {
         '--altcha-color-primary-content': 'var(--amber-300)',
         '--altcha-color-success': 'var(--success)',
         '--altcha-border-radius': 'var(--radius-md)',
-        '--altcha-max-width': '280px',
+        '--altcha-max-width': '100%',
       }}
     />
   );

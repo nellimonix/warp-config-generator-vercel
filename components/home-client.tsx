@@ -144,8 +144,8 @@ export function HomeClient({ services }: HomeClientProps) {
       {state.showCaptcha && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center"
           onClick={(e) => { if (e.target === e.currentTarget) gen.set('showCaptcha', false); }}>
-          <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] p-6 flex flex-col items-center gap-4">
-            <p className="text-[14px] text-[var(--text)]">Подтвердите, что вы не робот</p>
+          <div className="flex w-[calc(100vw-1rem)] max-w-[368px] flex-col items-center gap-4 rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 sm:p-6">
+            <p className="w-full text-center text-[14px] text-[var(--text)]">Подтвердите, что вы не робот</p>
             <Captcha onVerify={gen.onCaptchaVerify} />
             <button onClick={() => gen.set('showCaptcha', false)}
               className="text-[12px] text-[var(--text-dim)] hover:text-[var(--text-muted)] transition-colors">
