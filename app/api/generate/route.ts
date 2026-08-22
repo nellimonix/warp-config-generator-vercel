@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateWarpConfig, WarpGenerationError } from '@/lib/warp-service';
+import { getCaptchaSecret, verifyCaptchaPayload } from '@/lib/altcha';
 import type { GenerateRequest, ApiResponse, GenerateResult } from '@/types';
 
 const CORS = {
@@ -18,12 +19,12 @@ export async function POST(req: Request) {
   try {
     const body = await req.json() as GenerateRequest;
 
-    // --- hCaptcha verification (only enforced when a secret is configured) ---
-    if (process.env.HCAPTCHA_SECRET_KEY) {
-      if (!body.captchaToken) {
+    const captchaSecret = getCaptchaSecret(process.env);
+    if (captchaSecret) {
+      if (!body.captchaPayload) {
         return json<ApiResponse>({ success: false, message: 'Капча не пройдена.' }, 400, headers);
       }
-      const captchaOk = await verifyCaptcha(body.captchaToken);
+      const captchaOk = await verifyCaptchaPayload(body.captchaPayload, captchaSecret);
       if (!captchaOk) {
         return json<ApiResponse>({ success: false, message: 'Неверная капча.' }, 400, headers);
       }
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
       deviceType: body.deviceType || 'awg15',
       endpoint: body.endpoint || 'engage.cloudflareclient.com:4500',
       configFormat: body.configFormat || 'wireguard',
-      captchaToken: body.captchaToken,
+      captchaPayload: body.captchaPayload,
       dnsId: body.dnsId,
       ipv6: body.ipv6,
       excludeLan: body.excludeLan,
@@ -62,26 +63,6 @@ export async function POST(req: Request) {
 }
 
 // --- Helpers ---
-
-async function verifyCaptcha(token: string): Promise<boolean> {
-  const secret = process.env.HCAPTCHA_SECRET_KEY;
-  if (!secret) {
-    console.warn('HCAPTCHA_SECRET_KEY not set, skipping verification');
-    return true;
-  }
-
-  try {
-    const res = await fetch('https://hcaptcha.com/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${secret}&response=${token}`,
-    });
-    const data = await res.json() as { success: boolean };
-    return data.success;
-  } catch {
-    return false;
-  }
-}
 
 function normalizeServices(body: GenerateRequest): string[] {
   if (body.siteMode === 'specific' && (!body.selectedServices || body.selectedServices.length === 0)) {

@@ -95,5 +95,3 @@ export const CRYPTO_ADDRESSES: CryptoAddress[] = [
     address: 'TEhKos71cczeZz69Bq2xgsggRFsrwA68yD',
   },
 ];
-
-export const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '';

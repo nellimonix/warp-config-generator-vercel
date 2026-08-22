@@ -58,7 +58,7 @@ npm run lint
 ├── app/
 │   ├── layout.tsx                 Root layout (Geist font, meta)
 │   ├── page.tsx                   Server component — loads services
-│   └── api/generate/route.ts      POST endpoint (hCaptcha + generation)
+│   └── api/                       ALTCHA challenge + config generation
 │
 ├── components/
 │   ├── home-client.tsx            Client shell (tabs, state, captcha modal)

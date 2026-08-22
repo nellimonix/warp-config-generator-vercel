@@ -6,7 +6,7 @@ export interface GenerateRequest {
   deviceType: DeviceType;
   endpoint: string;
   configFormat: ConfigFormat;
-  captchaToken: string;
+  captchaPayload?: string;
   /** DNS provider id (see config/dns.ts). Defaults to 'cf'. */
   dnsId?: string;
   /** Include IPv6 in Address / DNS / default AllowedIPs. Defaults to true. */

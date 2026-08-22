@@ -105,7 +105,7 @@ export function useGenerator() {
     setState((prev) => ({ ...prev, showCaptcha: true, error: '' }));
   }, []);
 
-  const onCaptchaVerify = useCallback(async (token: string) => {
+  const onCaptchaVerify = useCallback(async (payload: string) => {
     setState((prev) => ({
       ...prev,
       showCaptcha: false,
@@ -124,7 +124,7 @@ export function useGenerator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          captchaToken: token,
+          captchaPayload: payload,
           selectedServices: state.selectedServices,
           siteMode: state.siteMode,
           deviceType: state.deviceType,

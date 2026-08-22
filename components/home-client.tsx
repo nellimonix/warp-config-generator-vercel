@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Footer } from '@/components/layout/footer';
@@ -14,10 +14,9 @@ import { SupportTab } from '@/components/generator/support-tab';
 import { ConfigSelectors } from '@/components/generator/config-selectors';
 import { ServicePicker } from '@/components/generator/service-picker';
 import { AdvancedSettings } from '@/components/generator/advanced-settings';
+import { Captcha } from '@/components/generator/captcha';
 import { useGenerator } from '@/hooks/use-generator';
 import { isCommunityDns } from '@/config/dns';
-import { HCAPTCHA_SITE_KEY } from '@/config/site';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
 import type { ServiceEntry } from '@/types';
 import { FaCircleCheck } from "react-icons/fa6";
 
@@ -29,7 +28,6 @@ export function HomeClient({ services }: HomeClientProps) {
   const [activeTab, setActiveTab] = useState('generator');
   const gen = useGenerator();
   const { state } = gen;
-  const captchaRef = useRef<HCaptcha>(null);
 
   return (
     <div className="max-w-[1100px] mx-auto px-4 lg:px-8 py-4 lg:py-6 min-h-screen flex flex-col">
@@ -87,7 +85,7 @@ export function HomeClient({ services }: HomeClientProps) {
               </div>
 
               {!state.isGenerated ? (
-                <button onClick={() => (HCAPTCHA_SITE_KEY ? gen.handleGenerate() : gen.onCaptchaVerify(''))} disabled={state.isLoading}
+                <button onClick={gen.handleGenerate} disabled={state.isLoading}
                   className="w-full h-12 bg-[var(--amber-900)] hover:bg-[var(--amber-700)] active:scale-[0.985] disabled:opacity-50 disabled:cursor-wait rounded-[var(--radius-md)] text-[14px] font-medium text-[var(--amber-300)] flex items-center justify-center gap-2 transition-all">
                   {state.isLoading ? (
                     <>
@@ -143,17 +141,12 @@ export function HomeClient({ services }: HomeClientProps) {
       </div>
 
       {/* Captcha modal overlay */}
-      {state.showCaptcha && HCAPTCHA_SITE_KEY && (
+      {state.showCaptcha && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center"
           onClick={(e) => { if (e.target === e.currentTarget) gen.set('showCaptcha', false); }}>
           <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] p-6 flex flex-col items-center gap-4">
             <p className="text-[14px] text-[var(--text)]">Подтвердите, что вы не робот</p>
-            <HCaptcha
-              sitekey={HCAPTCHA_SITE_KEY}
-              onVerify={gen.onCaptchaVerify}
-              ref={captchaRef}
-              theme="dark"
-            />
+            <Captcha onVerify={gen.onCaptchaVerify} />
             <button onClick={() => gen.set('showCaptcha', false)}
               className="text-[12px] text-[var(--text-dim)] hover:text-[var(--text-muted)] transition-colors">
               Отмена

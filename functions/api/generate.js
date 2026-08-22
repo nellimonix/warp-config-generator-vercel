@@ -1,5 +1,6 @@
 import nacl from 'tweetnacl';
 import { Buffer } from 'buffer';
+import { getCaptchaSecret, verifyCaptchaPayload } from '../../lib/altcha.js';
 
 // ---- Crypto ----
 function generateKeyPair() {
@@ -363,15 +364,12 @@ export async function onRequestGet() {
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { captchaToken, selectedServices = [], siteMode = 'all', deviceType = 'awg15', endpoint = 'engage.cloudflareclient.com:4500', configFormat = 'wireguard', dnsId = 'cf', ipv6 = true, excludeLan = false, persistentKeepalive = null, customI1Domain = '' } = body;
+    const { captchaPayload, selectedServices = [], siteMode = 'all', deviceType = 'awg15', endpoint = 'engage.cloudflareclient.com:4500', configFormat = 'wireguard', dnsId = 'cf', ipv6 = true, excludeLan = false, persistentKeepalive = null, customI1Domain = '' } = body;
 
-    // hCaptcha (only enforced when a secret is configured)
-    const secret = env.HCAPTCHA_SECRET_KEY;
+    const secret = getCaptchaSecret(env);
     if (secret) {
-      if (!captchaToken) return json({ success: false, message: 'Капча не пройдена.' }, 400);
-      const vRes = await fetch('https://hcaptcha.com/siteverify', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `secret=${secret}&response=${captchaToken}` });
-      const vData = await vRes.json();
-      if (!vData.success) return json({ success: false, message: 'Неверная капча.' }, 400);
+      if (!captchaPayload) return json({ success: false, message: 'Капча не пройдена.' }, 400);
+      if (!await verifyCaptchaPayload(captchaPayload, secret)) return json({ success: false, message: 'Неверная капча.' }, 400);
     }
 
     // Generate

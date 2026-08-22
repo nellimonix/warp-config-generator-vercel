@@ -2,7 +2,7 @@ import { SITE } from '@/config/site';
 import { FaAndroid, FaWindows, FaAppStoreIos, FaApple } from "react-icons/fa";
 import { MdRouter } from "react-icons/md";
 
-const TECH = ['Next.js', 'TypeScript', 'Tailwind CSS', 'Docker', 'AmneziaWG', 'hCaptcha'];
+const TECH = ['Next.js', 'TypeScript', 'Tailwind CSS', 'Docker', 'AmneziaWG', 'ALTCHA'];
 
 interface ClientApp {
   name: string;

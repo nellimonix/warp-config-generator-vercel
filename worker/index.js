@@ -3,7 +3,7 @@
  * Handles API requests, serves static assets for everything else.
  */
 
-import { onRequestPost, onRequestOptions, onRequestGet } from './api-handler.js';
+import { onCaptchaChallenge, onRequestPost, onRequestOptions, onRequestGet } from './api-handler.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -14,6 +14,16 @@ export default {
       if (request.method === 'OPTIONS') return onRequestOptions();
       if (request.method === 'POST') return onRequestPost({ request, env, ctx });
       if (request.method === 'GET') return onRequestGet();
+
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+
+    if (url.pathname === '/api/captcha/challenge' || url.pathname === '/api/captcha/challenge/') {
+      if (request.method === 'OPTIONS') return onRequestOptions();
+      if (request.method === 'POST') return onCaptchaChallenge({ request, env, ctx });
 
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,

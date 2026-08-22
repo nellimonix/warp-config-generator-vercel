@@ -58,7 +58,7 @@ npm run lint
 ├── app/
 │   ├── layout.tsx                 Корневой layout (шрифт Geist, мета)
 │   ├── page.tsx                   Серверный компонент — загрузка сервисов
-│   └── api/generate/route.ts      POST endpoint (hCaptcha + генерация)
+│   └── api/                       ALTCHA challenge + генерация конфигураций
 │
 ├── components/
 │   ├── home-client.tsx            Клиентская оболочка (табы, состояние, капча)
