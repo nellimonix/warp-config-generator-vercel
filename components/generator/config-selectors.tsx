@@ -5,6 +5,7 @@ import { CONFIG_FORMATS } from '@/config/formats';
 import { ENDPOINTS } from '@/config/endpoints';
 import { DNS_PROVIDERS } from '@/config/dns';
 import { FlagIcon } from '@/components/icons/flag-icon';
+import { DiceFive } from '@phosphor-icons/react';
 import { Toggle } from './toggle';
 import type { ClashProtocol, ConfigFormat, DeviceType, SiteMode } from '@/types';
 
@@ -12,6 +13,7 @@ interface DropdownOption {
   id: string;
   label: string;
   flag?: string;
+  icon?: 'dice';
   disabled?: boolean;
 }
 
@@ -43,6 +45,7 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
         <div className="flex items-center justify-between gap-2">
           <span className="text-[13px] font-medium text-[var(--text)] flex items-center gap-2 truncate">
             {current?.flag && <FlagIcon code={current.flag} />}
+            {current?.icon === 'dice' && <DiceFive size={16} weight="duotone" className="text-[var(--amber-300)]" />}
             {current?.label || value}
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -60,6 +63,7 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
                 <div key={opt.id}
                   className="w-full text-left px-3.5 py-2 text-[13px] flex items-center gap-2 text-[var(--text-dim)] opacity-50 cursor-not-allowed">
                   {opt.flag && <FlagIcon code={opt.flag} />}
+                  {opt.icon === 'dice' && <DiceFive size={16} weight="duotone" className="text-[var(--amber-300)]" />}
                   {opt.label}
                 </div>
               );
@@ -72,6 +76,7 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}>
                 {opt.flag && <FlagIcon code={opt.flag} />}
+                {opt.icon === 'dice' && <DiceFive size={16} weight="duotone" className="text-[var(--amber-300)]" />}
                 {opt.label}
               </button>
             );
@@ -137,6 +142,7 @@ export function ConfigSelectors({
             id: e.id,
             label: e.label,
             flag: e.flag,
+            icon: e.icon,
             disabled: configFormat === 'clash' && clashProtocol === 'masque'
               && !e.externalUrl && !['default', 'random'].includes(e.id),
           }))}
