@@ -6,7 +6,7 @@ import { ENDPOINTS } from '@/config/endpoints';
 import { DNS_PROVIDERS } from '@/config/dns';
 import { FlagIcon } from '@/components/icons/flag-icon';
 import { Toggle } from './toggle';
-import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
+import type { ClashProtocol, ConfigFormat, DeviceType, SiteMode } from '@/types';
 
 interface DropdownOption {
   id: string;
@@ -85,6 +85,7 @@ function Dropdown({ label, value, options, onChange }: DropdownProps) {
 interface ConfigSelectorsProps {
   configFormat: ConfigFormat;
   deviceType: DeviceType;
+  clashProtocol: ClashProtocol;
   siteMode: SiteMode;
   endpointId: string;
   customEndpoint: string;
@@ -93,6 +94,7 @@ interface ConfigSelectorsProps {
   excludeLan: boolean;
   onFormatChange: (v: ConfigFormat) => void;
   onDeviceChange: (v: DeviceType) => void;
+  onClashProtocolChange: (v: ClashProtocol) => void;
   onSiteModeChange: (v: SiteMode) => void;
   onEndpointChange: (id: string) => void;
   onCustomEndpointChange: (v: string) => void;
@@ -101,9 +103,9 @@ interface ConfigSelectorsProps {
 }
 
 export function ConfigSelectors({
-  configFormat, deviceType, siteMode, endpointId, customEndpoint, dnsId, communityDns, excludeLan,
+  configFormat, deviceType, clashProtocol, siteMode, endpointId, customEndpoint, dnsId, communityDns, excludeLan,
   onFormatChange, onDeviceChange, onSiteModeChange, onEndpointChange, onCustomEndpointChange,
-  onDnsChange, onExcludeLanChange,
+  onClashProtocolChange, onDnsChange, onExcludeLanChange,
 }: ConfigSelectorsProps) {
   return (
     <div className="space-y-2 mb-3.5">
@@ -111,9 +113,19 @@ export function ConfigSelectors({
         <Dropdown label="Формат конфигурации" value={configFormat}
           options={CONFIG_FORMATS.map((f) => ({ id: f.id, label: f.name }))}
           onChange={(v) => onFormatChange(v as ConfigFormat)} />
-        <Dropdown label="Настройки соединения" value={deviceType}
-          options={[{ id: 'awg15', label: 'AmneziaWG 1.5' }]}
-          onChange={(v) => onDeviceChange(v as DeviceType)} />
+        {configFormat === 'clash' ? (
+          <Dropdown label="Протокол Clash" value={clashProtocol}
+            options={[
+              { id: 'awg', label: 'AmneziaWG 1.5' },
+              { id: 'masque', label: 'MASQUE' },
+              { id: 'awg_masque', label: 'AmneziaWG 1.5 + MASQUE' },
+            ]}
+            onChange={(v) => onClashProtocolChange(v as ClashProtocol)} />
+        ) : (
+          <Dropdown label="Настройки соединения" value={deviceType}
+            options={[{ id: 'awg15', label: 'AmneziaWG 1.5' }]}
+            onChange={(v) => onDeviceChange(v as DeviceType)} />
+        )}
         <Dropdown label="DNS" value={dnsId}
           options={DNS_PROVIDERS.map((d) => ({
             id: d.id,
@@ -121,7 +133,13 @@ export function ConfigSelectors({
           }))}
           onChange={onDnsChange} />
         <Dropdown label="Конечная точка" value={endpointId}
-          options={ENDPOINTS.map((e) => ({ id: e.id, label: e.label, flag: e.flag }))}
+          options={ENDPOINTS.map((e) => ({
+            id: e.id,
+            label: e.label,
+            flag: e.flag,
+            disabled: configFormat === 'clash' && clashProtocol === 'masque'
+              && !e.externalUrl && !['default', 'random'].includes(e.id),
+          }))}
           onChange={onEndpointChange} />
         <Dropdown label="Тип конфигурации" value={siteMode}
           options={[

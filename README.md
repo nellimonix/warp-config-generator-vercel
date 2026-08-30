@@ -88,6 +88,8 @@ The generator exposes the same options in the UI and in `POST /api/generate`:
 
 | Option | Behavior and constraints |
 |--------|--------------------------|
+| Endpoint | `endpointRandom: true` selects a fresh Cloudflare host and port during generation. For MASQUE it uses the dedicated MASQUE address and port pools. |
+| Clash protocol | `clashProtocol` accepts `awg`, `masque`, or `awg_masque`. The combined mode emits selectable AWG, MASQUE QUIC, and MASQUE H2 proxies. |
 | DNS | Providers come from `config/dns.ts`. Community providers are marked with `•`; selecting one forces **All sites** and clears selected services because they do not support split tunneling. An unknown provider ID falls back to Cloudflare DNS. |
 | IPv6 | Enabled by default. Disabling it removes IPv6 from the interface address, DNS list, and the default all-sites `AllowedIPs`. |
 | Exclude LAN | Available only in **All sites** mode. It replaces the default routes with public address ranges so private/reserved LAN ranges stay outside the tunnel. |

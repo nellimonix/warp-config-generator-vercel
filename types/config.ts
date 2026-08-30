@@ -2,6 +2,8 @@ export type ConfigFormat = 'wireguard' | 'throne' | 'clash' | 'nekoray' | 'husi'
 
 export type DeviceType = 'awg15' | 'phone';
 
+export type ClashProtocol = 'awg' | 'masque' | 'awg_masque';
+
 export type SiteMode = 'all' | 'specific';
 
 export interface DeviceProfile {
@@ -42,6 +44,16 @@ export interface BuildParams {
   i1: string;
   /** Raw domain from "custom I1" — used as WireSock `Id` verbatim (no crypto). */
   maskDomain?: string;
+  clashProtocol?: ClashProtocol;
+  masque?: {
+    privateKey: string;
+    publicKey: string;
+    clientIPv4: string;
+    clientIPv6: string;
+    server: string;
+    port: number;
+    sni: string;
+  };
 }
 
 export interface DNSConfig {

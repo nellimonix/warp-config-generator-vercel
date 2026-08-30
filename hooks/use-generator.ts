@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { ConfigFormat, DeviceType, SiteMode } from '@/types';
+import type { ClashProtocol, ConfigFormat, DeviceType, SiteMode } from '@/types';
 import type { GenerateResult, ApiResponse } from '@/types';
 import { getEndpointValue, isExternalEndpoint } from '@/config/endpoints';
 import { DEFAULT_DNS_ID, isCommunityDns } from '@/config/dns';
@@ -9,6 +9,7 @@ import { DEFAULT_DNS_ID, isCommunityDns } from '@/config/dns';
 export interface GeneratorState {
   configFormat: ConfigFormat;
   deviceType: DeviceType;
+  clashProtocol: ClashProtocol;
   siteMode: SiteMode;
   endpointId: string;
   customEndpoint: string;
@@ -30,6 +31,7 @@ export function useGenerator() {
   const [state, setState] = useState<GeneratorState>({
     configFormat: 'wireguard',
     deviceType: 'awg15',
+    clashProtocol: 'awg',
     siteMode: 'all',
     endpointId: 'default',
     customEndpoint: '',
@@ -96,6 +98,16 @@ export function useGenerator() {
     }));
   }, []);
 
+  const setClashProtocol = useCallback((clashProtocol: ClashProtocol) => {
+    setState((prev) => ({
+      ...prev,
+      clashProtocol,
+      endpointId: clashProtocol === 'masque' && !['default', 'random'].includes(prev.endpointId)
+        ? 'default'
+        : prev.endpointId,
+    }));
+  }, []);
+
   const handleGenerate = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true, error: '' }));
 
@@ -114,7 +126,9 @@ export function useGenerator() {
           siteMode: state.siteMode,
           deviceType: state.deviceType,
           endpoint,
+          endpointRandom: state.endpointId === 'random',
           configFormat: state.configFormat,
+          clashProtocol: state.clashProtocol,
           dnsId: state.dnsId,
           ipv6: state.ipv6,
           excludeLan: state.excludeLan,
@@ -148,7 +162,7 @@ export function useGenerator() {
     }
   }, [
     state.endpointId, state.customEndpoint, state.selectedServices, state.siteMode,
-    state.deviceType, state.configFormat, state.dnsId, state.ipv6, state.excludeLan,
+    state.deviceType, state.clashProtocol, state.configFormat, state.dnsId, state.ipv6, state.excludeLan,
     state.keepaliveEnabled, state.keepaliveValue, state.customI1Enabled, state.customI1Domain,
   ]);
 
@@ -180,7 +194,7 @@ export function useGenerator() {
   }, [state.result]);
 
   return {
-    state, set, toggleService, setEndpoint, setDnsId, setSiteMode,
+    state, set, toggleService, setEndpoint, setClashProtocol, setDnsId, setSiteMode,
     handleGenerate, reset, copyConfig, downloadConfig,
   };
 }
