@@ -66,7 +66,7 @@ export function Sidebar({ onTabChange }: SidebarProps = {}) {
       <SidebarLink href={LINKS.telegramBot} icon={<RiRobot2Fill />}>
         Warp Generator Bot
       </SidebarLink>
-      <SidebarLink href="https://t.me/findllimonix/77" icon={<SiProtonvpn />}>
+      <SidebarLink href="tg://resolve?domain=findllimonix&post=77" icon={<SiProtonvpn />}>
         Proton VPN в боте
       </SidebarLink>
 

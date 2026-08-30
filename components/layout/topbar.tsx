@@ -29,6 +29,15 @@ export function Topbar({ activeTab }: TopbarProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 966px)');
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setMenuOpen(false);
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, []);
+
   return (
     <header className="relative flex items-center justify-between gap-2.5 px-4 sm:px-5 py-2.5 bg-[var(--surface)] rounded-[var(--radius-lg)] mb-4">
       <a href="/"
@@ -43,7 +52,7 @@ export function Topbar({ activeTab }: TopbarProps) {
       </a>
 
       {/* Desktop tabs */}
-      <nav className="hidden sm:flex gap-1">
+      <nav className="hidden min-[966px]:flex gap-1">
         {TABS.map((tab) => (
           <a
             key={tab.id}
@@ -65,7 +74,7 @@ export function Topbar({ activeTab }: TopbarProps) {
         onClick={() => setMenuOpen((v) => !v)}
         aria-label="Меню"
         aria-expanded={menuOpen}
-        className="sm:hidden flex items-center gap-2 h-9 px-2.5 rounded-[var(--radius-md)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition-colors shrink-0"
+        className="min-[966px]:hidden flex items-center gap-2 h-9 px-2.5 rounded-[var(--radius-md)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition-colors shrink-0"
       >
         <span className="text-[12px] text-[var(--text-muted)] max-w-[90px] truncate">{activeLabel}</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[var(--text-muted)]">
@@ -83,11 +92,11 @@ export function Topbar({ activeTab }: TopbarProps) {
       {menuOpen && (
         <>
           <div
-            className="sm:hidden fixed inset-0 z-40"
+            className="min-[966px]:hidden fixed inset-0 z-40"
             onClick={() => setMenuOpen(false)}
             aria-hidden
           />
-          <nav className="sm:hidden absolute right-3 top-[calc(100%+6px)] z-50 min-w-[180px] p-1 rounded-[var(--radius-md)] bg-[var(--surface-2)] shadow-lg flex flex-col gap-0.5 animate-in">
+          <nav className="min-[966px]:hidden absolute right-3 top-[calc(100%+6px)] z-50 min-w-[180px] p-1 rounded-[var(--radius-md)] bg-[var(--surface-2)] shadow-lg flex flex-col gap-0.5 animate-in">
             {TABS.map((tab) => (
               <a
                 key={tab.id}

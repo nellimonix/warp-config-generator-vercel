@@ -5,6 +5,7 @@ export interface EndpointOption {
   /** If set, clicking this option opens a link instead of using the endpoint */
   externalUrl?: string;
   flag?: string;
+  icon?: 'dice';
 }
 
 export const ENDPOINTS: EndpointOption[] = [
@@ -29,14 +30,15 @@ export const ENDPOINTS: EndpointOption[] = [
     value: '188.114.96.125:4500',
   },
   {
-    id: 'random',
-    label: 'Случайный',
-    value: '',
-  },
-  {
     id: 'custom',
     label: 'Указать свой адрес',
     value: '',
+  },
+  {
+    id: 'random',
+    label: 'Случайный',
+    value: '',
+    icon: 'dice',
   },
   {
     id: 'server-de',
