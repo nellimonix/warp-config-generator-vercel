@@ -11,15 +11,21 @@ export function buildClash(p: BuildParams): string {
     .filter(Boolean)
     .join(', ');
 
-  return `proxies:
-- name: "WARP"
+  const includeAwg = !p.clashProtocol || p.clashProtocol === 'awg' || p.clashProtocol === 'awg_masque';
+  const includeMasque = (p.clashProtocol === 'masque' || p.clashProtocol === 'awg_masque') && p.masque;
+  const proxies: string[] = [];
+  const names: string[] = [];
+
+  if (includeAwg) {
+    names.push('[WARP-AWG] Default');
+    proxies.push(`- name: "[WARP-AWG] Default"
   type: wireguard
   private-key: ${p.privateKey}
   server: ${server}
   port: ${port}
   ip: ${p.clientIPv4}
-  public-key: ${p.publicKey}
-  allowed-ips: ['0.0.0.0/0']
+${p.includeIPv6 ? `  ipv6: ${p.clientIPv6}\n` : ''}  public-key: ${p.publicKey}
+  allowed-ips: ${p.includeIPv6 ? "['0.0.0.0/0', '::/0']" : "['0.0.0.0/0']"}
   reserved: [${reserved}]
   udp: true
   mtu: 1280
@@ -33,15 +39,39 @@ export function buildClash(p: BuildParams): string {
    s2: 0
    h1: 1
    h2: 2
-   h4: 3
-   h3: 4
+   h3: 3
+   h4: 4`);
+  }
+
+  if (includeMasque && p.masque) {
+    const masque = p.masque;
+    names.push('[WARP-MASQUE] QUIC', '[WARP-MASQUE] H2');
+    const common = `  type: masque
+  sni: ${masque.sni}
+  private-key: ${masque.privateKey}
+  public-key: ${masque.publicKey}
+  ip: ${masque.clientIPv4}
+${p.includeIPv6 && masque.clientIPv6 ? `  ipv6: ${masque.clientIPv6}\n` : ''}  server: ${masque.server}
+  port: ${masque.port}
+  udp: true
+  remote-dns-resolve: true
+  dns: [${dnsList}]`;
+    proxies.push(`- name: "[WARP-MASQUE] QUIC"
+${common}
+- name: "[WARP-MASQUE] H2"
+${common}
+  network: h2`);
+  }
+
+  return `proxies:
+${proxies.join('\n')}
 
 proxy-groups:
 - name: Cloudflare
   type: select
   icon: https://developers.cloudflare.com/_astro/logo.p_ySeMR1.svg
   proxies:
-    - WARP
+${names.map((name) => `    - "${name}"`).join('\n')}
   url: 'http://speed.cloudflare.com/'
   interval: 300`;
 }

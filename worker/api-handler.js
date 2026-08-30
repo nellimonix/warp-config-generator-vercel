@@ -12,6 +12,36 @@ function generateKeyPair() {
   };
 }
 
+async function generateMasqueKeyPair() {
+  const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const [jwk, spki] = await Promise.all([
+    crypto.subtle.exportKey('jwk', pair.privateKey),
+    crypto.subtle.exportKey('spki', pair.publicKey),
+  ]);
+  const privateKey = buildSec1PrivateKey(base64UrlBytes(jwk.d), base64UrlBytes(jwk.x), base64UrlBytes(jwk.y));
+  return { privateKey: bytesBase64(privateKey), publicKey: bytesBase64(new Uint8Array(spki)) };
+}
+
+function base64UrlBytes(value) {
+  return new Uint8Array(Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64'));
+}
+function bytesBase64(value) { return Buffer.from(value).toString('base64'); }
+function concatDer(...parts) {
+  const output = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let offset = 0;
+  for (const part of parts) { output.set(part, offset); offset += part.length; }
+  return output;
+}
+function der(tag, content) { return concatDer(new Uint8Array([tag, content.length]), content); }
+function buildSec1PrivateKey(d, x, y) {
+  const oid = new Uint8Array([0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07]);
+  const point = concatDer(new Uint8Array([0x04]), x, y);
+  return der(0x30, concatDer(
+    new Uint8Array([0x02, 0x01, 0x01]), der(0x04, d), der(0xa0, oid),
+    der(0xa1, der(0x03, concatDer(new Uint8Array([0]), point))),
+  ));
+}
+
 function reservedToBytes(reserved) {
   if (!reserved) return [0, 0, 0];
   try { return Array.from(Buffer.from(reserved, 'base64')); }
@@ -246,10 +276,27 @@ async function generateI1Line(domain) {
   return `I1 = <b 0x${quicToHex(packet)}>`;
 }
 
+// ---- Endpoint pools ----
+const WG_ENDPOINT_HOSTS = ['engage.cloudflareclient.com', '162.159.192', '162.159.195', '8.6.112', '8.34.70', '8.34.146', '8.35.211', '8.39.125', '8.39.204', '8.39.214', '8.47.69', '188.114.96', '188.114.97', '188.114.98'];
+const WG_ENDPOINT_PORTS = [500, 854, 859, 864, 878, 880, 890, 891, 894, 903, 908, 928, 934, 939, 942, 943, 945, 946, 955, 968, 987, 988, 1002, 1010, 1014, 1018, 1070, 1074, 1180, 1387, 1701, 1843, 2371, 2408, 2506, 3138, 3476, 3581, 3854, 4177, 4198, 4233, 4500, 5279, 5956, 7103, 7152, 7156, 7281, 7559, 8319, 8742, 8854, 8886];
+const MASQUE_ENDPOINT_PREFIXES = ['162.159.198', '162.159.199'];
+const MASQUE_ENDPOINT_PORTS = [443, 500, 1701, 4500, 4443, 8443, 8095];
+function pick(items) { return items[Math.floor(Math.random() * items.length)]; }
+function generateRandomWireGuardEndpoint() {
+  const base = pick(WG_ENDPOINT_HOSTS);
+  const host = /^\d/.test(base) ? `${base}.${Math.floor(Math.random() * 256)}` : base;
+  return `${host}:${pick(WG_ENDPOINT_PORTS)}`;
+}
+function generateRandomMasqueEndpoint() {
+  return { server: `${pick(MASQUE_ENDPOINT_PREFIXES)}.${Math.floor(Math.random() * 256)}`, port: pick(MASQUE_ENDPOINT_PORTS) };
+}
+
 // ---- Cloudflare WARP API ----
 
 const CF_BASE = 'https://api.cloudflareclient.com/v0i1909051800';
+const MASQUE_BASE = 'https://api.cloudflareclient.com/v0a4471';
 const CF_HEADERS = { 'User-Agent': 'okhttp/3.12.1', 'Content-Type': 'application/json' };
+const MASQUE_HEADERS = { 'User-Agent': 'WARP for Android', 'CF-Client-Version': 'a-6.35-4471', 'Content-Type': 'application/json; charset=UTF-8' };
 
 async function registerClient(publicKey) {
   const res = await fetch(`${CF_BASE}/reg`, {
@@ -270,6 +317,39 @@ async function enableWarp(clientId, token) {
   if (!res.ok) throw new Error(`Enable WARP failed: ${res.status}`);
   return await res.json();
 }
+
+async function registerMasqueClient(publicKey) {
+  const initial = await masqueRequest('reg', 'POST', null, {
+    key: bytesBase64(randomBytes(32)), install_id: '', fcm_token: '', os_version: '',
+    tos: new Date().toISOString(), model: 'PC', serial_number: Buffer.from(randomBytes(8)).toString('hex'),
+    key_type: 'curve25519', tunnel_type: 'wireguard', locale: 'en_US',
+  });
+  if (!initial.id || !initial.token) throw new Error('Invalid MASQUE registration response');
+  const enrolled = await masqueRequest(`reg/${initial.id}`, 'PATCH', initial.token, {
+    key: publicKey, key_type: 'secp256r1', tunnel_type: 'masque', name: 'warp-site',
+  });
+  const config = enrolled.config || (await masqueRequest(`reg/${initial.id}`, 'GET', initial.token)).config;
+  const peer = config?.peers?.[0];
+  const addresses = config?.interface?.addresses;
+  if (!peer?.public_key || !addresses?.v4) throw new Error('Invalid MASQUE configuration response');
+  return {
+    clientIPv4: addresses.v4.split('/', 1)[0],
+    clientIPv6: (addresses.v6 || '').split('/', 1)[0],
+    publicKey: peer.public_key.split(/\r?\n/).filter((line) => line && !line.startsWith('-----')).join(''),
+  };
+}
+
+async function masqueRequest(path, method, token, body) {
+  const res = await fetch(`${MASQUE_BASE}/${path}`, {
+    method,
+    headers: token ? { ...MASQUE_HEADERS, Authorization: `Bearer ${token}` } : MASQUE_HEADERS,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`MASQUE registration failed: ${res.status}`);
+  const data = await res.json();
+  return data.result || data;
+}
+function randomBytes(length) { const value = new Uint8Array(length); crypto.getRandomValues(value); return value; }
 
 // ---- QR ----
 
@@ -314,7 +394,20 @@ function buildThrone(p) {
 
 function buildClash(p) {
   const [server, port] = p.endpoint.split(':');
-  return `proxies:\n- name: "WARP"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n  public-key: ${p.publicKey}\n  allowed-ips: ['0.0.0.0/0']\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [${p.dns}]\n  amnezia-wg-option:\n   jc: 4\n   jmin: 40\n   jmax: 70\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h4: 3\n   h3: 4`;
+  const includeAwg = !p.clashProtocol || p.clashProtocol === 'awg' || p.clashProtocol === 'awg_masque';
+  const includeMasque = (p.clashProtocol === 'masque' || p.clashProtocol === 'awg_masque') && p.masque;
+  const proxies = [], names = [];
+  if (includeAwg) {
+    names.push('[WARP-AWG] Default');
+    proxies.push(`- name: "[WARP-AWG] Default"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n${p.includeIPv6 ? `  ipv6: ${p.v6}\n` : ''}  public-key: ${p.publicKey}\n  allowed-ips: ${p.includeIPv6 ? "['0.0.0.0/0', '::/0']" : "['0.0.0.0/0']"}\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [${p.dns}]\n  amnezia-wg-option:\n   jc: 4\n   jmin: 40\n   jmax: 70\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h3: 3\n   h4: 4`);
+  }
+  if (includeMasque) {
+    names.push('[WARP-MASQUE] QUIC', '[WARP-MASQUE] H2');
+    const m = p.masque;
+    const common = `  type: masque\n  sni: ${m.sni}\n  private-key: ${m.privateKey}\n  public-key: ${m.publicKey}\n  ip: ${m.clientIPv4}\n${p.includeIPv6 && m.clientIPv6 ? `  ipv6: ${m.clientIPv6}\n` : ''}  server: ${m.server}\n  port: ${m.port}\n  udp: true\n  remote-dns-resolve: true\n  dns: [${p.dns}]`;
+    proxies.push(`- name: "[WARP-MASQUE] QUIC"\n${common}\n- name: "[WARP-MASQUE] H2"\n${common}\n  network: h2`);
+  }
+  return `proxies:\n${proxies.join('\n')}\n\nproxy-groups:\n- name: Cloudflare\n  type: select\n  icon: https://developers.cloudflare.com/_astro/logo.p_ySeMR1.svg\n  proxies:\n${names.map((name) => `    - "${name}"`).join('\n')}\n  url: 'http://speed.cloudflare.com/'\n  interval: 300`;
 }
 
 function buildNekoray(p) {
@@ -368,7 +461,7 @@ export async function onCaptchaChallenge({ env }) {
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { captchaPayload, selectedServices = [], siteMode = 'all', deviceType = 'awg15', endpoint = 'engage.cloudflareclient.com:4500', configFormat = 'wireguard', dnsId = 'cf', ipv6 = true, excludeLan = false, persistentKeepalive = null, customI1Domain = '' } = body;
+    const { captchaPayload, selectedServices = [], siteMode = 'all', deviceType = 'awg15', endpoint = 'engage.cloudflareclient.com:4500', endpointRandom = false, configFormat = 'wireguard', clashProtocol = 'awg', dnsId = 'cf', ipv6 = true, excludeLan = false, persistentKeepalive = null, customI1Domain = '' } = body;
 
     const secret = getCaptchaSecret(env);
     if (secret) {
@@ -376,13 +469,21 @@ export async function onRequestPost({ request, env }) {
       if (!await verifyCaptchaPayload(captchaPayload, secret)) return json({ success: false, message: 'Неверная капча.' }, 400);
     }
 
-    // Generate
-    const kp = generateKeyPair();
-    const { id, token } = await registerClient(kp.publicKey);
-    const warp = await enableWarp(id, token);
-    const peer = warp.result.config.peers[0];
-    const iface = warp.result.config.interface;
-    const reserved = warp.result.config.client_id || '';
+    const resolvedEndpoint = endpointRandom ? generateRandomWireGuardEndpoint() : endpoint;
+    const needsWireGuard = configFormat !== 'clash' || clashProtocol !== 'masque';
+    let privateKey = '', publicKey = '', v4 = '', v6 = '', reserved = '';
+    if (needsWireGuard) {
+      const kp = generateKeyPair();
+      const { id, token } = await registerClient(kp.publicKey);
+      const warp = await enableWarp(id, token);
+      const peer = warp.result.config.peers[0];
+      const iface = warp.result.config.interface;
+      privateKey = kp.privateKey;
+      publicKey = peer.public_key;
+      v4 = iface.addresses.v4;
+      v6 = iface.addresses.v6;
+      reserved = warp.result.config.client_id || '';
+    }
 
     // Community DNS forbids split tunneling: force "all sites", drop services.
     let mode = siteMode, services = selectedServices;
@@ -394,7 +495,15 @@ export async function onRequestPost({ request, env }) {
     const keepalive = (typeof persistentKeepalive === 'number' && persistentKeepalive > 0 && persistentKeepalive <= 65535)
       ? Math.floor(persistentKeepalive) : undefined;
 
-    const p = { privateKey: kp.privateKey, publicKey: peer.public_key, v4: iface.addresses.v4, v6: iface.addresses.v6, allowedIPs, endpoint, deviceType, reserved, dns: buildDnsLine(dnsId, ipv6), includeIPv6: ipv6, i1, keepalive, maskDomain: domain };
+    let masque;
+    if (configFormat === 'clash' && (clashProtocol === 'masque' || clashProtocol === 'awg_masque')) {
+      const keys = await generateMasqueKeyPair();
+      const registration = await registerMasqueClient(keys.publicKey);
+      const masqueEndpoint = endpointRandom ? generateRandomMasqueEndpoint() : { server: '162.159.198.2', port: 443 };
+      masque = { privateKey: keys.privateKey, publicKey: registration.publicKey, clientIPv4: registration.clientIPv4, clientIPv6: registration.clientIPv6, server: masqueEndpoint.server, port: masqueEndpoint.port, sni: '4pda.to' };
+    }
+
+    const p = { privateKey, publicKey, v4, v6, allowedIPs, endpoint: resolvedEndpoint, deviceType, reserved, dns: buildDnsLine(dnsId, ipv6), includeIPv6: ipv6, i1, keepalive, maskDomain: domain, clashProtocol, masque };
 
     const builder = BUILDERS[configFormat];
     if (!builder) return json({ success: false, message: `Unknown format: ${configFormat}` }, 400);

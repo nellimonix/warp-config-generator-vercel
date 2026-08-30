@@ -19,6 +19,21 @@ export const ENDPOINTS: EndpointOption[] = [
     value: 'engage.cloudflareclient.com:2408',
   },
   {
+    id: 'fra-1',
+    label: 'FRA #1',
+    value: '188.114.97.66:4500',
+  },
+  {
+    id: 'fra-2',
+    label: 'FRA #2',
+    value: '188.114.96.125:4500',
+  },
+  {
+    id: 'random',
+    label: 'Случайный',
+    value: '',
+  },
+  {
     id: 'custom',
     label: 'Указать свой адрес',
     value: '',
@@ -62,6 +77,7 @@ export const ENDPOINTS: EndpointOption[] = [
 
 export function getEndpointValue(id: string, customValue?: string): string {
   if (id === 'custom') return customValue || 'engage.cloudflareclient.com:4500';
+  if (id === 'random') return 'engage.cloudflareclient.com:4500';
   const ep = ENDPOINTS.find((e) => e.id === id);
   return ep?.value || 'engage.cloudflareclient.com:4500';
 }

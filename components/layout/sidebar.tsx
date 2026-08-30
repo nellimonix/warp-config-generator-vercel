@@ -7,6 +7,7 @@ import { FlagIcon } from '@/components/icons/flag-icon';
 import { RiRobot2Fill } from "react-icons/ri";
 import { BsTelegram } from "react-icons/bs";
 import { FaGithub, FaHeart } from "react-icons/fa";
+import { SiProtonvpn } from 'react-icons/si';
 
 function SectionLabel({ children }: { children: string }) {
   return (
@@ -64,6 +65,9 @@ export function Sidebar({ onTabChange }: SidebarProps = {}) {
       <SectionLabel>Инструменты</SectionLabel>
       <SidebarLink href={LINKS.telegramBot} icon={<RiRobot2Fill />}>
         Warp Generator Bot
+      </SidebarLink>
+      <SidebarLink href="https://t.me/findllimonix/77" icon={<SiProtonvpn />}>
+        Proton VPN в боте
       </SidebarLink>
 
       <SectionLabel>Сообщество</SectionLabel>

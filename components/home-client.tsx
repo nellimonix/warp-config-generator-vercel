@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Footer } from '@/components/layout/footer';
@@ -10,28 +9,33 @@ import { Banner } from '@/components/promo/banner';
 import { Notice } from '@/components/promo/notice';
 import { FormatsTab } from '@/components/generator/formats-tab';
 import { AboutTab } from '@/components/generator/about-tab';
+import { ApplicationsTab } from '@/components/generator/applications-tab';
+import { UltimateGuideTab } from '@/components/generator/ultimate-guide-tab';
 import { SupportTab } from '@/components/generator/support-tab';
 import { ConfigSelectors } from '@/components/generator/config-selectors';
 import { ServicePicker } from '@/components/generator/service-picker';
 import { AdvancedSettings } from '@/components/generator/advanced-settings';
 import { Captcha } from '@/components/generator/captcha';
 import { useGenerator } from '@/hooks/use-generator';
+import { useHashTabs } from '@/hooks/use-hash-tabs';
 import { isCommunityDns } from '@/config/dns';
 import type { ServiceEntry } from '@/types';
-import { FaCircleCheck } from "react-icons/fa6";
+import { ArrowClockwise, CheckCircle, SlidersHorizontal } from '@phosphor-icons/react';
 
 interface HomeClientProps {
   services: ServiceEntry[];
 }
 
+const AVAILABLE_TABS = ['generator', 'applications', 'ultimate', 'about', 'support'] as const;
+
 export function HomeClient({ services }: HomeClientProps) {
-  const [activeTab, setActiveTab] = useState('generator');
+  const { activeTab, navigateToTab } = useHashTabs(AVAILABLE_TABS);
   const gen = useGenerator();
   const { state } = gen;
 
   return (
     <div className="max-w-[1100px] mx-auto px-4 lg:px-8 py-4 lg:py-6 min-h-screen flex flex-col">
-      <Topbar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Topbar activeTab={activeTab} />
 
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_260px] gap-4 flex-1 lg:items-start">
         <div className="flex flex-col gap-3">
@@ -44,13 +48,17 @@ export function HomeClient({ services }: HomeClientProps) {
             {/* Generator card */}
             <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[17px] font-medium">Настройки конфигурации</h2>
+                <h2 className="text-[17px] font-medium flex items-center gap-2">
+                  <SlidersHorizontal size={18} weight="duotone" className="text-[var(--text-muted)]" />
+                  Настройки конфигурации
+                </h2>
               </div>
 
               <div className={state.isGenerated ? 'opacity-50 pointer-events-none' : ''}>
                 <ConfigSelectors
                   configFormat={state.configFormat}
                   deviceType={state.deviceType}
+                  clashProtocol={state.clashProtocol}
                   siteMode={state.siteMode}
                   endpointId={state.endpointId}
                   customEndpoint={state.customEndpoint}
@@ -59,6 +67,7 @@ export function HomeClient({ services }: HomeClientProps) {
                   excludeLan={state.excludeLan}
                   onFormatChange={(v) => gen.set('configFormat', v)}
                   onDeviceChange={(v) => gen.set('deviceType', v)}
+                  onClashProtocolChange={gen.setClashProtocol}
                   onSiteModeChange={gen.setSiteMode}
                   onEndpointChange={gen.setEndpoint}
                   onCustomEndpointChange={(v) => gen.set('customEndpoint', v)}
@@ -71,6 +80,7 @@ export function HomeClient({ services }: HomeClientProps) {
                 )}
 
                 <AdvancedSettings
+                  wireGuardOptions={state.configFormat !== 'clash' || state.clashProtocol !== 'masque'}
                   ipv6={state.ipv6}
                   onIpv6Change={(v) => gen.set('ipv6', v)}
                   keepaliveEnabled={state.keepaliveEnabled}
@@ -96,7 +106,7 @@ export function HomeClient({ services }: HomeClientProps) {
                     </>
                   ) : (
                     <>
-                      <FaCircleCheck />
+                      <CheckCircle size={17} weight="fill" />
                       Сгенерировать конфигурацию
                     </>
                   )}
@@ -104,10 +114,7 @@ export function HomeClient({ services }: HomeClientProps) {
               ) : (
                 <button onClick={gen.reset}
                   className="w-full h-12 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] active:scale-[0.985] rounded-[var(--radius-md)] text-[14px] text-[var(--text-muted)] flex items-center justify-center gap-2 transition-all">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
+                  <ArrowClockwise size={15} />
                   Сгенерировать заново
                 </button>
               )}
@@ -133,11 +140,12 @@ export function HomeClient({ services }: HomeClientProps) {
 
           {activeTab === 'formats' && <FormatsTab />}
           {activeTab === 'about'  && <AboutTab />}
-          {activeTab === 'applications' && <AboutTab />}
+          {activeTab === 'applications' && <ApplicationsTab />}
+          {activeTab === 'ultimate' && <UltimateGuideTab />}
           {activeTab === 'support' && <SupportTab />}
         </div>
 
-        <Sidebar onTabChange={setActiveTab} />
+        <Sidebar onTabChange={navigateToTab} />
       </div>
 
       {/* Captcha modal overlay */}

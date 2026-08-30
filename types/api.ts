@@ -1,11 +1,13 @@
-import type { ConfigFormat, DeviceType, SiteMode } from './config';
+import type { ClashProtocol, ConfigFormat, DeviceType, SiteMode } from './config';
 
 export interface GenerateRequest {
   selectedServices: string[];
   siteMode: SiteMode;
   deviceType: DeviceType;
   endpoint: string;
+  endpointRandom?: boolean;
   configFormat: ConfigFormat;
+  clashProtocol?: ClashProtocol;
   captchaPayload?: string;
   /** DNS provider id (see config/dns.ts). Defaults to 'cf'. */
   dnsId?: string;

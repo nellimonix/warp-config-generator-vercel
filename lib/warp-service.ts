@@ -1,7 +1,7 @@
-import type { ConfigFormat, DeviceType, BuildParams } from '@/types';
+import type { ClashProtocol, ConfigFormat, BuildParams } from '@/types';
 import type { GenerateRequest, GenerateResult, CloudflareWarpResponse } from '@/types';
-import { generateKeyPair, toBase64 } from './crypto';
-import { registerClient, enableWarp } from './cloudflare-client';
+import { generateKeyPair, generateMasqueKeyPair, toBase64 } from './crypto';
+import { registerClient, enableWarp, registerMasqueClient } from './cloudflare-client';
 import { resolveAllowedIPs } from '@/config/services-loader';
 import { buildDnsLine, isCommunityDns, DEFAULT_DNS_ID } from '@/config/dns';
 import { buildConfig, buildConfigForQR } from './builders';
@@ -9,6 +9,10 @@ import { pickI1 } from './builders/shared';
 import { generateI1Line } from './quic';
 import { generateQR, unsupportedQR } from './qr-generator';
 import { getFileName, getFormatInfo, supportsQR } from '@/config/formats';
+import { generateRandomMasqueEndpoint, generateRandomWireGuardEndpoint } from './endpoint-pool';
+
+const MASQUE_DEFAULT_ENDPOINT = { server: '162.159.198.2', port: 443 };
+const MASQUE_DEFAULT_SNI = '4pda.to';
 
 export class WarpGenerationError extends Error {
   constructor(message: string) {
@@ -27,23 +31,34 @@ export async function generateWarpConfig(req: GenerateRequest): Promise<Generate
       : req;
 
     const format = effectiveReq.configFormat;
+    const clashProtocol = resolveClashProtocol(effectiveReq);
+    const requestWithEndpoint: GenerateRequest = {
+      ...effectiveReq,
+      endpoint: effectiveReq.endpointRandom
+        ? generateRandomWireGuardEndpoint()
+        : effectiveReq.endpoint,
+    };
+    const params = await createBuildParams(requestWithEndpoint, clashProtocol);
 
-    // 1. Generate keys
-    const keyPair = generateKeyPair();
+    if (format === 'clash' && (clashProtocol === 'masque' || clashProtocol === 'awg_masque')) {
+      const keys = await generateMasqueKeyPair();
+      const registration = await registerMasqueClient(keys.publicKey);
+      const endpoint = effectiveReq.endpointRandom
+        ? generateRandomMasqueEndpoint()
+        : MASQUE_DEFAULT_ENDPOINT;
+      params.masque = {
+        privateKey: keys.privateKey,
+        publicKey: registration.publicKey,
+        clientIPv4: registration.clientIPv4,
+        clientIPv6: registration.clientIPv6,
+        server: endpoint.server,
+        port: endpoint.port,
+        sni: MASQUE_DEFAULT_SNI,
+      };
+    }
 
-    // 2. Register with Cloudflare
-    const { id: clientId, token } = await registerClient(keyPair.publicKey);
-
-    // 3. Enable WARP
-    const warpResponse = await enableWarp(clientId, token);
-
-    // 4. Extract params
-    const params = await extractBuildParams(warpResponse, keyPair, effectiveReq);
-
-    // 5. Build config text
     const configText = buildConfig(format, params);
 
-    // 6. Generate QR
     let qrCodeBase64: string;
     if (supportsQR(format)) {
       const qrText = buildConfigForQR(format, params);
@@ -53,7 +68,6 @@ export async function generateWarpConfig(req: GenerateRequest): Promise<Generate
       qrCodeBase64 = unsupportedQR(info.name);
     }
 
-    // 7. File name
     const fileName = getFileName(format);
 
     return {
@@ -83,37 +97,62 @@ function validate(req: GenerateRequest): void {
   if (!validFormats.includes(req.configFormat)) {
     throw new WarpGenerationError(`Unsupported format: ${req.configFormat}`);
   }
+  if (req.clashProtocol && !['awg', 'masque', 'awg_masque'].includes(req.clashProtocol)) {
+    throw new WarpGenerationError(`Unsupported Clash protocol: ${req.clashProtocol}`);
+  }
 }
 
-async function extractBuildParams(
-  warpRes: CloudflareWarpResponse,
-  keyPair: { privateKey: string; publicKey: string },
-  req: GenerateRequest
-): Promise<BuildParams> {
-  const peer = warpRes.result.config.peers[0];
-  const iface = warpRes.result.config.interface;
-
+async function createBuildParams(req: GenerateRequest, clashProtocol: ClashProtocol): Promise<BuildParams> {
   const ipv6 = req.ipv6 ?? true;
   const dnsId = req.dnsId ?? DEFAULT_DNS_ID;
   const domain = sanitizeDomain(req.customI1Domain);
   const i1 = domain ? await generateI1Line(domain) : pickI1();
   const keepalive = normalizeKeepalive(req.persistentKeepalive);
-
-  return {
-    privateKey: keyPair.privateKey,
-    publicKey: peer.public_key,
-    clientIPv4: iface.addresses.v4,
-    clientIPv6: iface.addresses.v6,
+  const base: BuildParams = {
+    privateKey: '',
+    publicKey: '',
+    clientIPv4: '',
+    clientIPv6: '',
     allowedIPs: resolveAllowedIPs(req.selectedServices, req.siteMode, { excludeLan: req.excludeLan, ipv6 }),
     endpoint: req.endpoint,
     deviceType: req.deviceType,
-    reserved: warpRes.result.config.client_id || '',
+    reserved: '',
     dns: buildDnsLine(dnsId, ipv6),
     includeIPv6: ipv6,
     persistentKeepalive: keepalive,
     i1,
     maskDomain: domain,
+    clashProtocol,
   };
+
+  const needsWireGuard = req.configFormat !== 'clash' || clashProtocol !== 'masque';
+  if (!needsWireGuard) return base;
+
+  const keyPair = generateKeyPair();
+  const { id: clientId, token } = await registerClient(keyPair.publicKey);
+  const warpResponse = await enableWarp(clientId, token);
+  return applyWireGuardResponse(base, warpResponse, keyPair);
+}
+
+function applyWireGuardResponse(
+  params: BuildParams,
+  warpRes: CloudflareWarpResponse,
+  keyPair: { privateKey: string; publicKey: string },
+): BuildParams {
+  const peer = warpRes.result.config.peers[0];
+  const iface = warpRes.result.config.interface;
+  return {
+    ...params,
+    privateKey: keyPair.privateKey,
+    publicKey: peer.public_key,
+    clientIPv4: iface.addresses.v4,
+    clientIPv6: iface.addresses.v6,
+    reserved: warpRes.result.config.client_id || '',
+  };
+}
+
+function resolveClashProtocol(req: GenerateRequest): ClashProtocol {
+  return req.configFormat === 'clash' ? (req.clashProtocol || 'awg') : 'awg';
 }
 
 /** Returns a clean SNI domain, or undefined when empty/invalid. */

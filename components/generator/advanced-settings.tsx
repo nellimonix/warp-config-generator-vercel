@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Toggle } from './toggle';
 
 interface AdvancedSettingsProps {
+  wireGuardOptions?: boolean;
   ipv6: boolean;
   onIpv6Change: (v: boolean) => void;
   keepaliveEnabled: boolean;
@@ -17,6 +18,7 @@ interface AdvancedSettingsProps {
 }
 
 export function AdvancedSettings({
+  wireGuardOptions = true,
   ipv6, onIpv6Change,
   keepaliveEnabled, onKeepaliveEnabledChange, keepaliveValue, onKeepaliveValueChange,
   customI1Enabled, onCustomI1EnabledChange, customI1Domain, onCustomI1DomainChange,
@@ -41,7 +43,7 @@ export function AdvancedSettings({
         <div className="mt-2.5 flex flex-col gap-3 bg-[var(--surface-2)] rounded-[var(--radius-md)] px-3.5 py-3">
           <Toggle checked={ipv6} onChange={onIpv6Change} label="IPv6" />
 
-          <div className="flex items-center gap-3 flex-wrap">
+          {wireGuardOptions && <div className="flex items-center gap-3 flex-wrap">
             <Toggle
               checked={keepaliveEnabled}
               onChange={onKeepaliveEnabledChange}
@@ -61,9 +63,9 @@ export function AdvancedSettings({
                 />
               </span>
             )}
-          </div>
+          </div>}
 
-          <div className="flex flex-col gap-2">
+          {wireGuardOptions && <div className="flex flex-col gap-2">
             <Toggle
               checked={customI1Enabled}
               onChange={onCustomI1EnabledChange}
@@ -79,7 +81,7 @@ export function AdvancedSettings({
                 className="w-full h-9 bg-[var(--surface-3)] rounded-[var(--radius-md)] px-3 text-[13px] text-[var(--text)] placeholder:text-[var(--text-dim)] outline-none focus:ring-1 focus:ring-[var(--amber-700)]"
               />
             )}
-          </div>
+          </div>}
         </div>
       )}
     </div>
