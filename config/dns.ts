@@ -54,8 +54,8 @@ export const DNS_PROVIDERS: DnsProvider[] = [
   },
   {
     id: 'geohide',
-    label: 'dns.geohide.ru',
-    ipv4: ['45.155.204.190', '37.230.192.51'],
+    label: 'geohide.ru',
+    ipv4: ['45.155.204.190', '37.230.192.51', '159.194.200.33', '193.233.112.88'],
     ipv6: [],
     isCommunity: true,
   },
