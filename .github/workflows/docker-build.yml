@@ -5,6 +5,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  BUILDKIT_IMAGE: moby/buildkit:buildx-stable-1
 
 jobs:
   build:
@@ -43,8 +44,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pull BuildKit image
+        run: |
+          for attempt in 1 2 3; do
+            if docker pull "$BUILDKIT_IMAGE"; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep "$((attempt * 10))"
+            fi
+          done
+          exit 1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=${{ env.BUILDKIT_IMAGE }}
 
       - name: Build & push by digest
         id: build
@@ -103,8 +118,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pull BuildKit image
+        run: |
+          for attempt in 1 2 3; do
+            if docker pull "$BUILDKIT_IMAGE"; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep "$((attempt * 10))"
+            fi
+          done
+          exit 1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=${{ env.BUILDKIT_IMAGE }}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
