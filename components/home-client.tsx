@@ -56,6 +56,8 @@ export function HomeClient({ services }: HomeClientProps) {
 
               <div className={state.isGenerated ? 'opacity-50 pointer-events-none' : ''}>
                 <ConfigSelectors
+                  awgProtocols={state.awg.protocols}
+                  onAwgToggle={gen.toggleAwg}
                   configFormat={state.configFormat}
                   deviceType={state.deviceType}
                   clashProtocol={state.clashProtocol}
@@ -75,11 +77,16 @@ export function HomeClient({ services }: HomeClientProps) {
                   onExcludeLanChange={(v) => gen.set('excludeLan', v)}
                 />
 
-                {state.siteMode === 'specific' && !isCommunityDns(state.dnsId) && (
+                {state.configFormat !== 'xray' && state.siteMode === 'specific' && !isCommunityDns(state.dnsId) && (
                   <ServicePicker services={services} selected={state.selectedServices} onToggle={gen.toggleService} />
                 )}
 
                 <AdvancedSettings
+                  awg={state.awg}
+                  onAwgChange={gen.setAwg}
+                  configFormat={state.configFormat}
+                  mtu={state.mtu}
+                  onMtuChange={(v) => gen.set('mtu', v)}
                   wireGuardOptions={state.configFormat !== 'clash' || state.clashProtocol !== 'masque'}
                   ipv6={state.ipv6}
                   onIpv6Change={(v) => gen.set('ipv6', v)}

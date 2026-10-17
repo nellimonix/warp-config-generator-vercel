@@ -1,4 +1,22 @@
-export type ConfigFormat = 'wireguard' | 'throne' | 'clash' | 'nekoray' | 'husi' | 'karing' | 'wiresock';
+export type ConfigFormat = 'wireguard' | 'throne' | 'clash' | 'nekoray' | 'husi' | 'karing' | 'wiresock' | 'xray';
+
+export type AwgProtocol = 'awg10' | 'awg20' | 'awg30' | 'awg31';
+export type AwgJunkKey = 'jc' | 'jmin' | 'jmax';
+export type Awg30Key = 'contentPaddingAddition' | 'rekeyAfterTime' | 'rekeyTimeout' | 'rejectAfterTime' | 'keepaliveTimeout' | 'maxHandshakeAttempts';
+
+export interface AwgOptions {
+  protocols: AwgProtocol[];
+  junkPreset: 'default' | '30_10_30';
+  junk: Partial<Record<AwgJunkKey, string | number>>;
+  ranges: Partial<Record<Awg30Key, string>>;
+  randomTrailers: boolean;
+  disableCookies: boolean;
+}
+
+export interface ResolvedAwgOptions extends Omit<AwgOptions, 'junk' | 'ranges'> {
+  junk: Record<AwgJunkKey, number>;
+  ranges: Record<Awg30Key, string>;
+}
 
 export type DeviceType = 'awg15' | 'phone';
 
@@ -15,6 +33,7 @@ export interface DeviceProfile {
 export interface ConfigFormatInfo {
   id: ConfigFormat;
   name: string;
+  image?: string;
   description: string;
   extension: string;
   supportsQR: boolean;
@@ -26,6 +45,8 @@ export interface KeyPair {
 }
 
 export interface BuildParams {
+  mtu?: number;
+  awg?: ResolvedAwgOptions;
   privateKey: string;
   publicKey: string;
   clientIPv4: string;

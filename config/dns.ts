@@ -41,15 +41,8 @@ export const DNS_PROVIDERS: DnsProvider[] = [
   {
     id: 'malw',
     label: 'dns.malw.link',
-    ipv4: ['84.21.189.133', '193.23.209.189'],
-    ipv6: ['2a12:bec4:1460:294::2', '2a01:ecc0:680:120::2'],
-    isCommunity: true,
-  },
-  {
-    id: 'xbox',
-    label: 'xbox-dns.ru',
-    ipv4: ['111.88.96.50', '111.88.96.51'],
-    ipv6: ['2a00:ab00:1233:26::50', '2a00:ab00:1233:26::51'],
+    ipv4: ['95.216.204.218', '80.253.249.40'],
+    ipv6: ['2a01:4f9:c014:6dac::1', '2a12:bec4:1460:5b7::2'],
     isCommunity: true,
   },
   {

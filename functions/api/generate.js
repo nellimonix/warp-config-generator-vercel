@@ -1,3 +1,8 @@
+import { buildWireguard } from '../../lib/builders/wireguard';
+import { buildWiresock } from '../../lib/builders/wiresock';
+import { buildClash } from '../../lib/builders/clash';
+import { buildXray } from '../../lib/builders/xray';
+import { normalizeAwgOptions, normalizeMtu } from '../../lib/awg';
 import nacl from 'tweetnacl';
 import { Buffer } from 'buffer';
 import { getCaptchaSecret, verifyCaptchaPayload } from '../../lib/altcha.js';
@@ -99,9 +104,8 @@ function resolveAllowedIPs(keys, siteMode, opts = {}) {
 const DNS_PROVIDERS = [
   { id: 'cf', label: '1.1.1.1', ipv4: ['1.1.1.1', '1.0.0.1'], ipv6: ['2606:4700:4700::1111', '2606:4700:4700::1001'], isCommunity: false },
   { id: 'google', label: '8.8.8.8', ipv4: ['8.8.8.8', '8.8.4.4'], ipv6: ['2001:4860:4860::8888', '2001:4860:4860::8844'], isCommunity: false },
-  { id: 'malw', label: 'dns.malw.link', ipv4: ['84.21.189.133', '193.23.209.189'], ipv6: ['2a12:bec4:1460:294::2', '2a01:ecc0:680:120::2'], isCommunity: true },
-  { id: 'xbox', label: 'xbox-dns.ru', ipv4: ['111.88.96.50', '111.88.96.51'], ipv6: ['2a00:ab00:1233:26::50', '2a00:ab00:1233:26::51'], isCommunity: true },
-  { id: 'geohide', label: 'dns.geohide.ru', ipv4: ['45.155.204.190', '37.230.192.51'], ipv6: [], isCommunity: true },
+  { id: 'malw', label: 'dns.malw.link', ipv4: ['95.216.204.218', '80.253.249.40'], ipv6: ['2a01:4f9:c014:6dac::1', '2a12:bec4:1460:5b7::2'], isCommunity: true },
+  { id: 'geohide', label: 'geohide.ru', ipv4: ['45.155.204.190', '37.230.192.51', '159.194.200.33', '193.233.112.67', '193.233.112.88'], ipv6: [], isCommunity: true },
   { id: 'comss', label: 'dns.comss.one', ipv4: ['83.220.169.155', '212.109.195.93', '195.133.25.16'], ipv6: ['2a01:230:4:915::2', '2a01:230:4:306::2'], isCommunity: true },
 ];
 
@@ -274,7 +278,7 @@ async function generateI1Line(domain) {
 }
 
 // ---- Endpoint pools ----
-const WG_ENDPOINT_HOSTS = ['engage.cloudflareclient.com', '162.159.192', '162.159.195', '8.6.112', '8.34.70', '8.34.146', '8.35.211', '8.39.125', '8.39.204', '8.39.214', '8.47.69', '188.114.96', '188.114.97', '188.114.98'];
+const WG_ENDPOINT_HOSTS = ['engage.cloudflareclient.com', '162.159.192', '162.159.195', '8.6.112', '8.34.70', '8.34.146', '8.35.211', '8.39.125', '8.39.204', '8.39.214', '8.47.69', '188.114.96', '188.114.97', '188.114.98', '188.114.99'];
 const WG_ENDPOINT_PORTS = [500, 854, 859, 864, 878, 880, 890, 891, 894, 903, 908, 928, 934, 939, 942, 943, 945, 946, 955, 968, 987, 988, 1002, 1010, 1014, 1018, 1070, 1074, 1180, 1387, 1701, 1843, 2371, 2408, 2506, 3138, 3476, 3581, 3854, 4177, 4198, 4233, 4500, 5279, 5956, 7103, 7152, 7156, 7281, 7559, 8319, 8742, 8854, 8886];
 const MASQUE_ENDPOINT_PREFIXES = ['162.159.198', '162.159.199'];
 const MASQUE_ENDPOINT_PORTS = [443, 500, 1701, 4500, 4443, 8443, 8095];
@@ -371,14 +375,6 @@ const I1_MASKS = [
 function pickI1() { return I1_MASKS[Math.floor(Math.random() * I1_MASKS.length)]; }
 // I1_MASKS:END
 
-function buildWireguard(p) {
-  const address = p.includeIPv6 ? `${p.v4}, ${p.v6}` : p.v4;
-  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 4', 'Jmin = 40', 'Jmax = 70', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4'];
-  if (p.deviceType === 'awg15') lines.push(p.i1);
-  lines.push('', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`);
-  if (p.keepalive !== undefined) lines.push(`PersistentKeepalive = ${p.keepalive}`);
-  return lines.join('\n');
-}
 
 function buildThrone(p) {
   const key = p.privateKey.replace(/=$/, '');
@@ -386,23 +382,6 @@ function buildThrone(p) {
   return `wg://${p.endpoint}?private_key=${key}%3D&peer_public_key=${encodeURIComponent(WARP_PUB)}&pre_shared_key=&reserved=${reserved}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${p.v4}/32-${p.v6}/128&workers=0&enable_amnezia=true&junk_packet_count=4&junk_packet_min_size=40&junk_packet_max_size=70&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
 }
 
-function buildClash(p) {
-  const [server, port] = p.endpoint.split(':');
-  const includeAwg = !p.clashProtocol || p.clashProtocol === 'awg' || p.clashProtocol === 'awg_masque';
-  const includeMasque = (p.clashProtocol === 'masque' || p.clashProtocol === 'awg_masque') && p.masque;
-  const proxies = [], names = [];
-  if (includeAwg) {
-    names.push('[WARP-AWG] Default');
-    proxies.push(`- name: "[WARP-AWG] Default"\n  type: wireguard\n  private-key: ${p.privateKey}\n  server: ${server}\n  port: ${port}\n  ip: ${p.v4}\n${p.includeIPv6 ? `  ipv6: ${p.v6}\n` : ''}  public-key: ${p.publicKey}\n  allowed-ips: ${p.includeIPv6 ? "['0.0.0.0/0', '::/0']" : "['0.0.0.0/0']"}\n  reserved: [${reservedToCSV(p.reserved)}]\n  udp: true\n  mtu: 1280\n  remote-dns-resolve: true\n  dns: [${p.dns}]\n  amnezia-wg-option:\n   jc: 4\n   jmin: 40\n   jmax: 70\n   s1: 0\n   s2: 0\n   h1: 1\n   h2: 2\n   h3: 3\n   h4: 4`);
-  }
-  if (includeMasque) {
-    names.push('[WARP-MASQUE] QUIC', '[WARP-MASQUE] H2');
-    const m = p.masque;
-    const common = `  type: masque\n  sni: ${m.sni}\n  private-key: ${m.privateKey}\n  public-key: ${m.publicKey}\n  ip: ${m.clientIPv4}\n${p.includeIPv6 && m.clientIPv6 ? `  ipv6: ${m.clientIPv6}\n` : ''}  server: ${m.server}\n  port: ${m.port}\n  udp: true\n  remote-dns-resolve: true\n  dns: [${p.dns}]`;
-    proxies.push(`- name: "[WARP-MASQUE] QUIC"\n${common}\n- name: "[WARP-MASQUE] H2"\n${common}\n  network: h2`);
-  }
-  return `proxies:\n${proxies.join('\n')}\n\nproxy-groups:\n- name: Cloudflare\n  type: select\n  icon: https://developers.cloudflare.com/_astro/logo.p_ySeMR1.svg\n  proxies:\n${names.map((name) => `    - "${name}"`).join('\n')}\n  url: 'http://speed.cloudflare.com/'\n  interval: 300`;
-}
 
 function buildNekoray(p) {
   const [server, port] = p.endpoint.split(':');
@@ -420,16 +399,9 @@ function buildKaring(p) {
 }
 
 const MASKING_DOMAINS = ['ozon.ru', 'apteka.ru', 'mail.ru', 'psbank.ru', 'lenta.ru', 'www.pochta.ru', 'rzd.ru', 'rutube.ru', 'gosuslugi.ru'];
-function buildWiresock(p) {
-  const domain = (p.maskDomain && p.maskDomain.trim()) || MASKING_DOMAINS[Math.floor(Math.random() * MASKING_DOMAINS.length)];
-  const address = p.includeIPv6 ? `${p.v4}, ${p.v6}` : p.v4;
-  const lines = ['[Interface]', `PrivateKey = ${p.privateKey}`, `Address = ${address}`, `DNS = ${p.dns}`, 'MTU = 1280', 'S1 = 0', 'S2 = 0', 'Jc = 4', 'Jmin = 40', 'Jmax = 70', 'H1 = 1', 'H2 = 2', 'H3 = 3', 'H4 = 4', '# Protocol masking', `Id = ${domain}`, 'Ip = quic', 'Ib = firefox', '', '[Peer]', `PublicKey = ${p.publicKey}`, `AllowedIPs = ${p.allowedIPs}`, `Endpoint = ${p.endpoint}`];
-  if (p.keepalive !== undefined) lines.push(`PersistentKeepalive = ${p.keepalive}`);
-  return lines.join('\n');
-}
 
-const BUILDERS = { wireguard: buildWireguard, throne: buildThrone, clash: buildClash, nekoray: buildNekoray, husi: buildHusi, karing: buildKaring, wiresock: buildWiresock };
-const EXTENSIONS = { wireguard: 'conf', throne: 'txt', clash: 'yaml', nekoray: 'json', husi: 'json', karing: 'json', wiresock: 'conf' };
+const BUILDERS = { wireguard: buildWireguard, throne: buildThrone, clash: buildClash, nekoray: buildNekoray, husi: buildHusi, karing: buildKaring, wiresock: buildWiresock, xray: buildXray };
+const EXTENSIONS = { wireguard: 'conf', throne: 'txt', clash: 'yaml', nekoray: 'json', husi: 'json', karing: 'json', wiresock: 'conf', xray: 'json' };
 const QR_FORMATS = ['wireguard', 'throne', 'wiresock'];
 
 // ---- CORS ----
@@ -465,6 +437,14 @@ export async function onRequestPost({ request, env }) {
       if (!await verifyCaptchaPayload(captchaPayload, secret)) return json({ success: false, message: 'Неверная капча.' }, 400);
     }
 
+    if (!Object.hasOwn(BUILDERS, configFormat)) return json({ success: false, message: 'Неизвестный формат конфигурации.' }, 400);
+    let awg, mtu;
+    try {
+      awg = normalizeAwgOptions(configFormat === 'xray' || (configFormat === 'clash' && clashProtocol === 'masque') ? undefined : body.awg);
+      mtu = normalizeMtu(body.mtu, ipv6);
+    } catch (error) {
+      return json({ success: false, message: error.message }, 400);
+    }
     const resolvedEndpoint = endpointRandom ? generateRandomWireGuardEndpoint() : endpoint;
     const needsWireGuard = configFormat !== 'clash' || clashProtocol !== 'masque';
     let privateKey = '', publicKey = '', v4 = '', v6 = '', reserved = '';
@@ -486,8 +466,12 @@ export async function onRequestPost({ request, env }) {
     if (isCommunityDns(dnsId)) { mode = 'all'; services = []; }
 
     const allowedIPs = resolveAllowedIPs(services, mode, { excludeLan, ipv6 });
-    const domain = (customI1Domain || '').trim();
-    const i1 = domain ? await generateI1Line(domain) : pickI1();
+    const usesMask = !(configFormat === 'clash' && clashProtocol === 'masque') && (configFormat === 'xray' || awg.protocols.includes('awg20'));
+    const domain = usesMask && typeof customI1Domain === 'string' ? customI1Domain.trim() : '';
+    if (domain && (domain.length > 253 || !/^(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?$/i.test(domain))) {
+      return json({ success: false, message: 'Введите домен без протокола, пути и пробелов.' }, 400);
+    }
+    const i1 = domain && configFormat !== 'wiresock' ? await generateI1Line(domain) : pickI1();
     const keepalive = (typeof persistentKeepalive === 'number' && persistentKeepalive > 0 && persistentKeepalive <= 65535)
       ? Math.floor(persistentKeepalive) : undefined;
 
@@ -499,9 +483,9 @@ export async function onRequestPost({ request, env }) {
       masque = { privateKey: keys.privateKey, publicKey: registration.publicKey, clientIPv4: registration.clientIPv4, clientIPv6: registration.clientIPv6, server: masqueEndpoint.server, port: masqueEndpoint.port, sni: '4pda.to' };
     }
 
-    const p = { privateKey, publicKey, v4, v6, allowedIPs, endpoint: resolvedEndpoint, deviceType, reserved, dns: buildDnsLine(dnsId, ipv6), includeIPv6: ipv6, i1, keepalive, maskDomain: domain, clashProtocol, masque };
+    const p = { awg, mtu, clientIPv4: v4, clientIPv6: v6, persistentKeepalive: keepalive, privateKey, publicKey, v4, v6, allowedIPs, endpoint: resolvedEndpoint, deviceType, reserved, dns: buildDnsLine(dnsId, ipv6), includeIPv6: ipv6, i1, keepalive, maskDomain: domain, clashProtocol, masque };
 
-    const builder = BUILDERS[configFormat];
+    const builder = Object.hasOwn(BUILDERS, configFormat) ? BUILDERS[configFormat] : undefined;
     if (!builder) return json({ success: false, message: `Unknown format: ${configFormat}` }, 400);
 
     const configText = builder(p);

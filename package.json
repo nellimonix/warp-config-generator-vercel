@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
+    "test": "node --conditions=react-server --test tests/generators.test.cjs",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

@@ -1,6 +1,8 @@
-import type { ClashProtocol, ConfigFormat, DeviceType, SiteMode } from './config';
+import type { AwgOptions, ClashProtocol, ConfigFormat, DeviceType, SiteMode } from './config';
 
 export interface GenerateRequest {
+  mtu?: number;
+  awg?: AwgOptions;
   selectedServices: string[];
   siteMode: SiteMode;
   deviceType: DeviceType;

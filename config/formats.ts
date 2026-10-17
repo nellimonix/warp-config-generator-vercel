@@ -4,6 +4,7 @@ export const CONFIG_FORMATS: ConfigFormatInfo[] = [
   {
     id: 'wireguard',
     name: 'AmneziaWG',
+    image: '/formats/amneziawg.png',
     description: 'Стандартный формат WireGuard (.conf)',
     extension: 'conf',
     supportsQR: false,
@@ -11,13 +12,23 @@ export const CONFIG_FORMATS: ConfigFormatInfo[] = [
   {
     id: 'clash',
     name: 'Clash',
+    image: '/formats/clash.png',
     description: 'Конфигурация для Clash Meta (.yaml)',
     extension: 'yaml',
     supportsQR: false,
   },
   {
+    id: 'xray',
+    name: 'Xray',
+    image: '/formats/xray.png',
+    description: 'WireGuard с QUIC-маской и шумовыми пакетами (.json)',
+    extension: 'json',
+    supportsQR: false,
+  },
+  {
     id: 'wiresock',
     name: 'WireSock',
+    image: '/formats/wiresock.png',
     description: 'WireGuard с маскировкой протокола (.conf)',
     extension: 'conf',
     supportsQR: false,

@@ -10,6 +10,7 @@ import { generateI1Line } from './quic';
 import { generateQR, unsupportedQR } from './qr-generator';
 import { getFileName, getFormatInfo, supportsQR } from '@/config/formats';
 import { generateRandomMasqueEndpoint, generateRandomWireGuardEndpoint } from './endpoint-pool';
+import { normalizeAwgOptions, normalizeMtu } from './awg';
 
 const MASQUE_DEFAULT_ENDPOINT = { server: '162.159.198.2', port: 443 };
 const MASQUE_DEFAULT_SNI = '4pda.to';
@@ -93,7 +94,7 @@ function validate(req: GenerateRequest): void {
   if (!req.endpoint?.trim()) {
     throw new WarpGenerationError('Endpoint is required');
   }
-  const validFormats: ConfigFormat[] = ['wireguard', 'throne', 'clash', 'nekoray', 'husi', 'karing', 'wiresock'];
+  const validFormats: ConfigFormat[] = ['wireguard', 'throne', 'clash', 'nekoray', 'husi', 'karing', 'wiresock', 'xray'];
   if (!validFormats.includes(req.configFormat)) {
     throw new WarpGenerationError(`Unsupported format: ${req.configFormat}`);
   }
@@ -105,10 +106,14 @@ function validate(req: GenerateRequest): void {
 async function createBuildParams(req: GenerateRequest, clashProtocol: ClashProtocol): Promise<BuildParams> {
   const ipv6 = req.ipv6 ?? true;
   const dnsId = req.dnsId ?? DEFAULT_DNS_ID;
-  const domain = sanitizeDomain(req.customI1Domain);
-  const i1 = domain ? await generateI1Line(domain) : pickI1();
+  const awg = normalizeAwgOptions(req.configFormat === 'xray' || clashProtocol === 'masque' ? undefined : req.awg);
+  const usesMask = clashProtocol !== 'masque' && (req.configFormat === 'xray' || awg.protocols.includes('awg20'));
+  const domain = usesMask ? sanitizeDomain(req.customI1Domain) : undefined;
+  const i1 = domain && req.configFormat !== 'wiresock' ? await generateI1Line(domain) : pickI1();
   const keepalive = normalizeKeepalive(req.persistentKeepalive);
   const base: BuildParams = {
+    mtu: normalizeMtu(req.mtu, ipv6),
+    awg,
     privateKey: '',
     publicKey: '',
     clientIPv4: '',
@@ -157,9 +162,12 @@ function resolveClashProtocol(req: GenerateRequest): ClashProtocol {
 
 /** Returns a clean SNI domain, or undefined when empty/invalid. */
 function sanitizeDomain(raw?: string): string | undefined {
+  if (raw !== undefined && typeof raw !== 'string') throw new WarpGenerationError('Неверный домен маскировки.');
   const d = raw?.trim();
   if (!d) return undefined;
-  if (d.length > 253 || /\s/.test(d)) return undefined;
+  if (d.length > 253 || !/^(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?$/i.test(d)) {
+    throw new WarpGenerationError('Введите домен без протокола, пути и пробелов.');
+  }
   return d;
 }
 

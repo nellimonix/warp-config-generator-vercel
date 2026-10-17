@@ -1,6 +1,7 @@
 import type { BuildParams } from '@/types';
 import { parseEndpoint } from './shared';
 import { reservedToCommaSeparated } from '../crypto';
+import { awgClashLines, normalizeAwgOptions } from '../awg';
 
 export function buildClash(p: BuildParams): string {
   const { server, port } = parseEndpoint(p.endpoint);
@@ -17,6 +18,7 @@ export function buildClash(p: BuildParams): string {
   const names: string[] = [];
 
   if (includeAwg) {
+    const options = awgClashLines(p.awg ?? normalizeAwgOptions(), p.i1);
     names.push('[WARP-AWG] Default');
     proxies.push(`- name: "[WARP-AWG] Default"
   type: wireguard
@@ -28,19 +30,10 @@ ${p.includeIPv6 ? `  ipv6: ${p.clientIPv6}\n` : ''}  public-key: ${p.publicKey}
   allowed-ips: ${p.includeIPv6 ? "['0.0.0.0/0', '::/0']" : "['0.0.0.0/0']"}
   reserved: [${reserved}]
   udp: true
-  mtu: 1280
+  mtu: ${p.mtu ?? 1280}
   remote-dns-resolve: true
   dns: [${dnsList}]
-  amnezia-wg-option:
-   jc: 4
-   jmin: 40
-   jmax: 70
-   s1: 0
-   s2: 0
-   h1: 1
-   h2: 2
-   h3: 3
-   h4: 4`);
+${p.persistentKeepalive !== undefined ? `  persistent-keepalive: ${p.persistentKeepalive}\n` : ''}${options.length ? `  amnezia-wg-option:\n${options.join('\n')}` : ''}`);
   }
 
   if (includeMasque && p.masque) {
@@ -54,6 +47,7 @@ ${p.includeIPv6 ? `  ipv6: ${p.clientIPv6}\n` : ''}  public-key: ${p.publicKey}
 ${p.includeIPv6 && masque.clientIPv6 ? `  ipv6: ${masque.clientIPv6}\n` : ''}  server: ${masque.server}
   port: ${masque.port}
   udp: true
+  mtu: ${p.mtu ?? 1280}
   remote-dns-resolve: true
   dns: [${dnsList}]`;
     proxies.push(`- name: "[WARP-MASQUE] QUIC"
@@ -63,7 +57,8 @@ ${common}
   network: h2`);
   }
 
-  return `proxies:
+  return `mode: rule
+proxies:
 ${proxies.join('\n')}
 
 proxy-groups:
@@ -73,5 +68,9 @@ proxy-groups:
   proxies:
 ${names.map((name) => `    - "${name}"`).join('\n')}
   url: 'http://speed.cloudflare.com/'
-  interval: 300`;
+  interval: 300
+
+rules:
+${p.allowedIPs.split(',').map((ip) => `- ${ip.includes(':') ? 'IP-CIDR6' : 'IP-CIDR'},${ip.trim()},Cloudflare,no-resolve`).join('\n')}
+- MATCH,DIRECT`;
 }
