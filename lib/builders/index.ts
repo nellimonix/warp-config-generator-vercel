@@ -6,6 +6,7 @@ import { buildNekoray } from './nekoray';
 import { buildHusi } from './husi';
 import { buildKaring } from './karing';
 import { buildWiresock } from './wiresock';
+import { buildXray } from './xray';
 
 const BUILDERS: Record<ConfigFormat, (p: BuildParams) => string> = {
   wireguard: buildWireguard,
@@ -15,6 +16,7 @@ const BUILDERS: Record<ConfigFormat, (p: BuildParams) => string> = {
   husi: buildHusi,
   karing: buildKaring,
   wiresock: buildWiresock,
+  xray: buildXray,
 };
 
 export function buildConfig(format: ConfigFormat, params: BuildParams): string {

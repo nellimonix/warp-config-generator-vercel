@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { ClashProtocol, ConfigFormat, DeviceType, SiteMode } from '@/types';
+import type { AwgOptions, AwgProtocol, ClashProtocol, ConfigFormat, DeviceType, SiteMode } from '@/types';
 import type { GenerateResult, ApiResponse } from '@/types';
 import { getEndpointValue, isExternalEndpoint } from '@/config/endpoints';
 import { DEFAULT_DNS_ID, isCommunityDns } from '@/config/dns';
+import { defaultAwgOptions, normalizeAwgOptions, normalizeMtu } from '@/lib/awg';
 
 export interface GeneratorState {
+  awg: AwgOptions;
+  mtu: string;
   configFormat: ConfigFormat;
   deviceType: DeviceType;
   clashProtocol: ClashProtocol;
@@ -29,6 +32,8 @@ export interface GeneratorState {
 
 export function useGenerator() {
   const [state, setState] = useState<GeneratorState>({
+    awg: defaultAwgOptions(),
+    mtu: '',
     configFormat: 'wireguard',
     deviceType: 'awg15',
     clashProtocol: 'awg',
@@ -108,22 +113,62 @@ export function useGenerator() {
     }));
   }, []);
 
+  const setAwg = useCallback((awg: AwgOptions) => {
+    setState((prev) => ({ ...prev, awg: {
+      ...awg, protocols: awg.protocols.filter((id) => id !== 'awg31' || awg.randomTrailers || awg.disableCookies),
+    } }));
+  }, []);
+
+  const toggleAwg = useCallback((protocol: AwgProtocol | 'wireguard') => {
+    setState((prev) => {
+      const enabled = prev.awg.protocols.includes(protocol as AwgProtocol);
+      const protocols = protocol === 'wireguard' ? [] : enabled
+        ? prev.awg.protocols.filter((id) => id !== protocol)
+        : [...prev.awg.protocols, protocol];
+      const update31 = protocol === 'wireguard' || protocol === 'awg31';
+      return { ...prev, awg: {
+        ...prev.awg, protocols,
+        randomTrailers: update31 ? protocol !== 'wireguard' && !enabled : prev.awg.randomTrailers,
+        disableCookies: update31 ? protocol !== 'wireguard' && !enabled : prev.awg.disableCookies,
+      } };
+    });
+  }, []);
+
   const handleGenerate = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true, error: '' }));
+    try {
+      normalizeMtu(state.mtu === '' ? undefined : Number(state.mtu), state.ipv6);
+      const wireGuardOptions = state.configFormat !== 'clash' || state.clashProtocol !== 'masque';
+      if (wireGuardOptions && state.keepaliveEnabled && state.keepaliveValue !== ''
+        && (Number(state.keepaliveValue) < 1 || Number(state.keepaliveValue) > 65535)) {
+        throw new Error('PersistentKeepalive: введите число от 1 до 65535 секунд.');
+      }
+      if (state.configFormat !== 'xray' && wireGuardOptions) normalizeAwgOptions(state.awg);
+      const usesMask = wireGuardOptions && (state.configFormat === 'xray' || state.awg.protocols.includes('awg20'));
+      if (usesMask && state.customI1Enabled && !state.customI1Domain.trim()) throw new Error('Введите домен для собственной маски I1.');
+    } catch (error) {
+      setState((prev) => ({ ...prev, error: error instanceof Error ? error.message : 'Проверьте дополнительные настройки.' }));
+      return;
+    }
+    setState((prev) => ({
+      ...prev,
+      isLoading: true,
+      error: '',
+    }));
 
     try {
       const endpoint = getEndpointValue(state.endpointId, state.customEndpoint);
       const persistentKeepalive = state.keepaliveEnabled
         ? (parseInt(state.keepaliveValue, 10) || 25)
         : null;
-      const customI1Domain = state.customI1Enabled ? state.customI1Domain.trim() : '';
+      const usesMask = state.configFormat === 'xray' || state.awg.protocols.includes('awg20');
+      const customI1Domain = state.customI1Enabled && usesMask ? state.customI1Domain.trim() : '';
 
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          selectedServices: state.selectedServices,
-          siteMode: state.siteMode,
+          selectedServices: state.configFormat === 'xray' ? [] : state.selectedServices,
+          siteMode: state.configFormat === 'xray' ? 'all' : state.siteMode,
           deviceType: state.deviceType,
           endpoint,
           endpointRandom: state.endpointId === 'random',
@@ -131,9 +176,11 @@ export function useGenerator() {
           clashProtocol: state.clashProtocol,
           dnsId: state.dnsId,
           ipv6: state.ipv6,
-          excludeLan: state.excludeLan,
+          excludeLan: state.configFormat === 'xray' ? false : state.excludeLan,
           persistentKeepalive,
           customI1Domain,
+          awg: state.configFormat === 'xray' || (state.configFormat === 'clash' && state.clashProtocol === 'masque') ? undefined : state.awg,
+          mtu: state.mtu === '' ? undefined : Number(state.mtu),
         }),
       });
 
@@ -164,6 +211,7 @@ export function useGenerator() {
     state.endpointId, state.customEndpoint, state.selectedServices, state.siteMode,
     state.deviceType, state.clashProtocol, state.configFormat, state.dnsId, state.ipv6, state.excludeLan,
     state.keepaliveEnabled, state.keepaliveValue, state.customI1Enabled, state.customI1Domain,
+    state.awg, state.mtu,
   ]);
 
   const reset = useCallback(() => {
@@ -194,7 +242,7 @@ export function useGenerator() {
   }, [state.result]);
 
   return {
-    state, set, toggleService, setEndpoint, setClashProtocol, setDnsId, setSiteMode,
+    state, set, setAwg, toggleAwg, toggleService, setEndpoint, setClashProtocol, setDnsId, setSiteMode,
     handleGenerate, reset, copyConfig, downloadConfig,
   };
 }

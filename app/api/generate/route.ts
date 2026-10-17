@@ -31,6 +31,8 @@ export async function POST(req: Request) {
       excludeLan: body.excludeLan,
       persistentKeepalive: body.persistentKeepalive,
       customI1Domain: body.customI1Domain,
+      awg: body.awg,
+      mtu: body.mtu,
     });
 
     return json<ApiResponse<GenerateResult>>({ success: true, content: result }, 200, headers);
