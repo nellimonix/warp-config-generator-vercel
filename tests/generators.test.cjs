@@ -1,24 +1,6 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const fs = require('node:fs');
-const path = require('node:path');
-const Module = require('node:module');
-const ts = require('typescript');
-
-const root = path.resolve(__dirname, '..');
-const resolve = Module._resolveFilename;
-Module._resolveFilename = function (name, ...args) {
-  return resolve.call(this, name.startsWith('@/') ? path.join(root, name.slice(2)) : name, ...args);
-};
-const compile = (module, filename) => module._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
-}).outputText, filename);
-require.extensions['.ts'] = compile;
-const javascript = require.extensions['.js'];
-require.extensions['.js'] = (module, filename) => {
-  if (filename.startsWith(root + path.sep) && !filename.includes(`${path.sep}node_modules${path.sep}`)) compile(module, filename);
-  else javascript(module, filename);
-};
+require('./register-typescript.cjs');
 
 const { defaultAwgOptions, normalizeAwgOptions, normalizeMtu } = require('../lib/awg.ts');
 const { buildConfig } = require('../lib/builders/index.ts');
@@ -80,13 +62,25 @@ test('Xray JSON carries addresses, DNS, routing, keepalive, reserved and noise',
   const config = JSON.parse(buildConfig('xray', fixture));
   const warp = config.outbounds.find((item) => item.tag === 'warp');
   const noise = config.outbounds.find((item) => item.tag === 'noise-out');
+  assert.equal(warp.settings.secretKey, fixture.privateKey);
+  assert.equal(warp.settings.peers[0].publicKey, fixture.publicKey);
+  assert.equal(warp.settings.peers[0].endpoint, fixture.endpoint);
+  assert.equal(warp.settings.mtu, fixture.mtu);
   assert.deepEqual(warp.settings.address, ['172.16.0.2/32', '2606:4700:110:8a7e::2/128']);
   assert.deepEqual(warp.settings.reserved, [1, 2, 3]);
   assert.equal(warp.settings.peers[0].keepAlive, 25);
   assert.deepEqual(warp.settings.peers[0].allowedIPs, ['0.0.0.0/0', '::/0']);
   assert.deepEqual(warp.settings.remoteDNS, config.dns.servers);
-  assert.deepEqual(config.routing.rules[1].ip, ['0.0.0.0/0', '::/0']);
-  assert.equal(config.routing.rules.at(-1).outboundTag, 'direct');
+  assert.deepEqual(config.routing.rules, [
+    { type: 'field', port: '53', outboundTag: 'direct' },
+    { type: 'field', network: 'tcp,udp', outboundTag: 'warp' },
+  ]);
+  const tags = new Set(config.outbounds.map((outbound) => outbound.tag));
+  for (const rule of config.routing.rules) assert.ok(tags.has(rule.outboundTag));
+  for (const outbound of config.outbounds) {
+    const dialer = outbound.streamSettings?.sockopt?.dialerProxy;
+    if (dialer) assert.ok(tags.has(dialer));
+  }
   assert.equal(noise.settings.noises.length, 9);
   assert.equal(noise.settings.noises[0].packet, 'c400000001');
   const ipv4 = JSON.parse(buildConfig('xray', { ...fixture, includeIPv6: false, dns: '1.1.1.1', persistentKeepalive: undefined }));
@@ -122,7 +116,8 @@ test('three API implementations export the selected settings with controlled Clo
           if (format === 'xray') {
             assert.match(result.fileName, /^XRAY\d+\.json$/);
             assert.equal(JSON.parse(text).outbounds[0].settings.mtu, 1400);
-            assert.deepEqual(JSON.parse(text).routing.rules[1].ip, ['0.0.0.0/0']);
+            assert.deepEqual(JSON.parse(text).routing.rules[0], { type: 'field', port: '53', outboundTag: 'direct' });
+            assert.deepEqual(JSON.parse(text).routing.rules[1], { type: 'field', network: 'tcp,udp', outboundTag: 'warp' });
           } else {
             assert.equal(text.includes(format === 'clash' ? '    jc:' : 'Jc ='), selected.includes('awg10'));
             assert.equal(text.includes(format === 'clash' ? '    i1:' : format === 'wiresock' ? 'Id =' : 'I1 ='), selected.includes('awg20'));

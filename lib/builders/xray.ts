@@ -30,8 +30,7 @@ export function buildXray(p: BuildParams): string {
     ],
     routing: { domainStrategy: 'IPIfNonMatch', rules: [
       { type: 'field', port: '53', outboundTag: 'direct' },
-      { type: 'field', ip: allowedIPs, outboundTag: 'warp' },
-      { type: 'field', network: 'tcp,udp', outboundTag: 'direct' },
+      { type: 'field', network: 'tcp,udp', outboundTag: 'warp' },
     ] },
   }, null, 2);
 }

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "node --conditions=react-server --test tests/generators.test.cjs",
+    "test:xray": "node --test tests/xray-runtime.test.cjs",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
