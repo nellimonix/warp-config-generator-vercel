@@ -9,6 +9,7 @@ import { TokenIcon } from '@token-icons/react';
 import {
   CloudTipsIcon,
   DonationAlertsIcon,
+  GramIcon,
   TributeIcon,
 } from '@/components/icons/custom-icons';
 
@@ -51,8 +52,12 @@ function CryptoRow({ crypto }: { crypto: CryptoAddress }) {
   return (
     <div className="bg-[var(--surface-2)] rounded-[var(--radius-md)] p-3 group">
       <div className="flex items-center gap-2 mb-1.5">
-        <TokenIcon symbol={crypto.symbol} variant="branded" size={20} className="shrink-0" />
-        <span className="text-[13px] font-medium text-[var(--text)]">{crypto.name}</span>
+        {crypto.symbol === 'gram' ? (
+          <GramIcon width={20} height={20} className="shrink-0" />
+        ) : (
+          <TokenIcon symbol={crypto.symbol} variant="branded" size={20} className="shrink-0" />
+        )}
+        <strong className="text-[13px] font-bold text-[var(--text)]">{crypto.name}</strong>
         {crypto.network && (
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-3)] text-[var(--text-dim)]">
             {crypto.network}
