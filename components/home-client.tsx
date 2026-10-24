@@ -19,6 +19,7 @@ import { Captcha } from '@/components/generator/captcha';
 import { useGenerator } from '@/hooks/use-generator';
 import { useHashTabs } from '@/hooks/use-hash-tabs';
 import { isCommunityDns } from '@/config/dns';
+import { HOME_SEO } from '@/config/seo';
 import type { ServiceEntry } from '@/types';
 import { ArrowClockwise, CheckCircle, SlidersHorizontal } from '@phosphor-icons/react';
 
@@ -37,11 +38,19 @@ export function HomeClient({ services }: HomeClientProps) {
     <div className="max-w-[1100px] mx-auto px-4 lg:px-8 py-4 lg:py-6 min-h-screen flex flex-col">
       <Topbar activeTab={activeTab} />
 
-      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_260px] gap-4 flex-1 lg:items-start">
+      <main className="flex flex-col lg:grid lg:grid-cols-[1fr_260px] gap-4 flex-1 lg:items-start">
         <div className="flex flex-col gap-3">
 
           {/* Generator tab — always mounted */}
           <div className={activeTab === 'generator' ? '' : 'hidden'}>
+            <section className="mb-3 bg-[var(--surface)] rounded-[var(--radius-lg)] p-5" aria-labelledby="generator-heading">
+              <h1 id="generator-heading" className="text-[17px] font-medium mb-2">
+                {HOME_SEO.heading}
+              </h1>
+              <p className="max-w-[70ch] text-[12px] leading-relaxed text-[var(--text-muted)]">
+                {HOME_SEO.introduction}
+              </p>
+            </section>
             <Notice />
             <Banner />
 
@@ -153,7 +162,7 @@ export function HomeClient({ services }: HomeClientProps) {
         </div>
 
         <Sidebar onTabChange={navigateToTab} />
-      </div>
+      </main>
 
       {/* Captcha modal overlay */}
       {state.showCaptcha && (

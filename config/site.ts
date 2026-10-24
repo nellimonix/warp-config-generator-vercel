@@ -1,5 +1,6 @@
 export const SITE = {
   name: 'WARP Generator by llimonix',
+  url: 'https://warp3.llimonix.pw',
   description: 'Генератор конфигураций Cloudflare WARP',
   locale: 'ru_RU',
   email: 'llimonix@protonmail.com',
