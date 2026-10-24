@@ -4,10 +4,13 @@
  */
 
 import { onCaptchaChallenge, onRequestPost, onRequestOptions, onRequestGet } from './api-handler.js';
+import { replaceStaticOrigin, seoResponse } from '../lib/seo-response';
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const seo = seoResponse(request);
+    if (seo) return seo;
 
     // API routes
     if (url.pathname === '/api/generate' || url.pathname === '/api/generate/') {
@@ -32,6 +35,6 @@ export default {
     }
 
     // Static assets
-    return env.ASSETS.fetch(request);
+    return replaceStaticOrigin(await env.ASSETS.fetch(request), url.origin);
   },
 };

@@ -4,21 +4,24 @@ import { GeistMono } from 'geist/font/mono';
 import '@/styles/globals.css';
 import { SITE } from '@/config/site';
 import AnalyticsLoader from '@/components/rybbit-analytics';
+import { siteOrigin } from '@/lib/site-origin';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: SITE.name,
-  description: SITE.description,
-  keywords: 'WARP, Cloudflare, конфигуратор, генератор, VPN, WireGuard, AmneziaWG',
-  authors: [{ name: 'llimonix' }],
-  applicationName: SITE.name,
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    metadataBase: new URL(await siteOrigin()),
     title: SITE.name,
     description: SITE.description,
-    type: 'website',
-    locale: SITE.locale,
-  },
-};
+    keywords: 'WARP, Cloudflare, конфигуратор, генератор, VPN, WireGuard, AmneziaWG',
+    authors: [{ name: 'llimonix' }],
+    applicationName: SITE.name,
+    openGraph: {
+      title: SITE.name,
+      description: SITE.description,
+      type: 'website',
+      locale: SITE.locale,
+    },
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { SITE } from '@/config/site';
+import { STATIC_SITE_ORIGIN } from '@/lib/seo-response';
+
+export const dynamic = 'force-static';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -8,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/api/',
     },
-    sitemap: `${SITE.url}/sitemap.xml`,
+    sitemap: `${STATIC_SITE_ORIGIN}/sitemap.xml`,
   };
 }
