@@ -19,6 +19,7 @@ import { Captcha } from '@/components/generator/captcha';
 import { useGenerator } from '@/hooks/use-generator';
 import { useHashTabs } from '@/hooks/use-hash-tabs';
 import { isCommunityDns } from '@/config/dns';
+import { BANNER } from '@/config/banner';
 import { HOME_SEO } from '@/config/seo';
 import type { ServiceEntry } from '@/types';
 import { ArrowClockwise, CheckCircle, SlidersHorizontal } from '@phosphor-icons/react';
@@ -43,14 +44,16 @@ export function HomeClient({ services }: HomeClientProps) {
 
           {/* Generator tab — always mounted */}
           <div className={activeTab === 'generator' ? '' : 'hidden'}>
-            <section className="mb-3 bg-[var(--surface)] rounded-[var(--radius-lg)] p-5" aria-labelledby="generator-heading">
-              <h1 id="generator-heading" className="text-[17px] font-medium mb-2">
-                {HOME_SEO.heading}
-              </h1>
-              <p className="max-w-[70ch] text-[12px] leading-relaxed text-[var(--text-muted)]">
-                {HOME_SEO.introduction}
-              </p>
-            </section>
+            {!BANNER.enabled && (
+              <section className="mb-3 bg-[var(--surface)] rounded-[var(--radius-lg)] p-5" aria-labelledby="generator-heading">
+                <h1 id="generator-heading" className="text-[17px] font-medium mb-2">
+                  {HOME_SEO.heading}
+                </h1>
+                <p className="max-w-[70ch] text-[12px] leading-relaxed text-[var(--text-muted)]">
+                  {HOME_SEO.introduction}
+                </p>
+              </section>
+            )}
             <Notice />
             <Banner />
 
