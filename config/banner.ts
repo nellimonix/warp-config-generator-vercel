@@ -10,10 +10,10 @@ export interface BannerConfig {
 }
 
 export const BANNER: BannerConfig = {
-  enabled: false,
-  href: 'tg://resolve?domain=ContinentalVPN_bot&start=limban',
-  imageUrl: '/continental.png',
-  alt: 'Баннер с полезной информацией',
+  enabled: true,
+  href: 'tg://resolve?domain=findllimonix&direct',
+  imageUrl: '/ads.png',
+  alt: 'Рекламный баннер',
 };
 
 /**
