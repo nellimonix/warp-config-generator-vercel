@@ -1,161 +1,161 @@
 # WARP Configuration Generator
 
-[Русский](README_ru.md) | **English**
+**Русский** | [English](README.md)
 
-Configuration generator for WARP with support for various deployment platforms.
+Генератор конфигураций для WARP с поддержкой различных платформ развертывания.
 
-## 🚀 Quick Deployment
+## 🚀 Быстрое развертывание
 
 ### 1. Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nellimonix/warp-config-generator-vercel&repository-name=warp)
-- Alternatively, can be deployed via [cli](https://vercel.com/docs/cli):
+- В качестве альтернативы может быть развернут с [cli](https://vercel.com/docs/cli):
   `vercel deploy`
-- Run locally: `vercel dev`
-- Vercel _Functions_ [limitations](https://vercel.com/docs/functions/limitations) (with _Edge_ runtime)
+- Запустить локально: `vercel dev`
+- Vercel _Functions_ [ограничения](https://vercel.com/docs/functions/limitations) (с средой выполнения _Edge_)
 
 ### 2. Netlify
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](
 https://app.netlify.com/start/deploy?repository=https://github.com/nellimonix/warp-config-generator-vercel&siteName=warp
 )
-- Alternatively, can be deployed via [cli](https://docs.netlify.com/cli/get-started/):
+- В качестве альтернативы может быть развернут с [cli](https://docs.netlify.com/cli/get-started/):
   `netlify deploy`
-- Run locally: `netlify dev`
-- _Functions_ [limitations](https://docs.netlify.com/functions/get-started/?fn-language=js#synchronous-function-2)
-- _Edge functions_ [limitations](https://docs.netlify.com/edge-functions/limits/)
+- Запустить локально: `netlify dev`
+- _Functions_ [ограничения](https://docs.netlify.com/functions/get-started/?fn-language=js#synchronous-function-2)
+- _Edge functions_ [ограничения](https://docs.netlify.com/edge-functions/limits/)
 
-### Deploy to Cloudflare
+### 3. Cloudflare Workers
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nellimonix/warp-config-generator-vercel)
-- Alternatively can be deployed with [cli](https://developers.cloudflare.com/workers/wrangler/):
+- В качестве альтернативы может быть развернут с [cli](https://developers.cloudflare.com/workers/wrangler/):
   `wrangler deploy`
-- Serve locally: `wrangler dev`
-- _Worker_ [limits](https://developers.cloudflare.com/workers/platform/limits/#worker-limits)
+- Запустить локально: `wrangler dev`
+- _Worker_ [ограничения](https://developers.cloudflare.com/workers/platform/limits/#worker-limits)
 
-## 🛠️ Local Development
+## 🛠️ Локальная разработка
 
 ```bash
-# Install dependencies
+# Установка зависимостей
 npm install
 
-# Run in development mode
+# Запуск в режиме разработки
 npm run dev
 
-# Build for production
+# Сборка для production
 npm run build
 
-# Run production build
+# Запуск production сборки
 npm run start
 
-# Linting
+# Линтинг
 npm run lint
 ```
 
-## 📁 Project Structure
+## 📁 Структура проекта
 
 ```
 ├── app/
-│   ├── layout.tsx                 Root layout (Geist font, meta)
-│   ├── page.tsx                   Server component — loads services
-│   └── api/                       ALTCHA challenge + config generation
+│   ├── layout.tsx                 Корневой layout (шрифт Geist, мета)
+│   ├── page.tsx                   Серверный компонент — загрузка сервисов
+│   └── api/                       ALTCHA challenge + генерация конфигураций
 │
 ├── components/
-│   ├── home-client.tsx            Client shell (tabs, state, captcha modal)
+│   ├── home-client.tsx            Клиентская оболочка (табы, состояние, капча)
 │   ├── layout/
-│   │   ├── topbar.tsx             Logo + tab navigation
-│   │   ├── sidebar.tsx            Links, servers, donate (sticky)
+│   │   ├── topbar.tsx             Логотип + навигация по табам
+│   │   ├── sidebar.tsx            Ссылки, серверы, донат (sticky)
 │   │   └── footer.tsx
 │   ├── generator/
-│   │   ├── config-selectors.tsx   Custom dropdowns (format, device, etc.)
-│   │   ├── service-picker.tsx     Service selection grid
-│   │   ├── result-panel.tsx       Download / copy / QR result block
-│   │   ├── formats-tab.tsx        Supported formats list
-│   │   └── about-tab.tsx          About + compatible clients
+│   │   ├── config-selectors.tsx   Кастомные дропдауны (формат, тип и пр.)
+│   │   ├── service-picker.tsx     Сетка выбора сервисов
+│   │   ├── result-panel.tsx       Блок результата (скачать / копировать / QR)
+│   │   ├── formats-tab.tsx        Список поддерживаемых форматов
+│   │   └── about-tab.tsx          О проекте + совместимые клиенты
 │   └── promo/
-│       ├── promo-cards.tsx        Promotional cards (SkyTunnel, etc.)
-│       └── banner.tsx             Optional ad banner
+│       ├── promo-cards.tsx        Промо-карточки (SkyTunnel и др.)
+│       └── banner.tsx             Опциональный рекламный баннер
 │
 ├── config/
-│   ├── services/                  27 JSON files — one per service
+│   ├── services/                  27 JSON-файлов — по одному на сервис
 │   │   ├── discord.json
 │   │   ├── telegram.json
 │   │   └── ...
-│   ├── services-loader.ts         Auto-loads all JSONs at startup
-│   ├── endpoints.ts               Real + fake server endpoints
-│   ├── formats.ts                 6 config format definitions
-│   ├── banner.ts                  Banner on/off + image URL
-│   └── site.ts                    Site metadata + external links
+│   ├── services-loader.ts         Автозагрузка всех JSON при старте
+│   ├── endpoints.ts               Реальные + фейковые endpoint-ы серверов
+│   ├── formats.ts                 6 определений форматов конфигов
+│   ├── banner.ts                  Вкл/выкл баннера + URL картинки
+│   └── site.ts                    Метаданные сайта + внешние ссылки
 │
 ├── lib/
-│   ├── builders/                  One file per config format
+│   ├── builders/                  По одному файлу на формат конфига
 │   │   ├── wireguard.ts
 │   │   ├── throne.ts
 │   │   ├── clash.ts
 │   │   ├── nekoray.ts
 │   │   ├── husi.ts
 │   │   ├── karing.ts
-│   │   ├── shared.ts              Device profiles, DNS, constants
-│   │   └── index.ts               Dispatcher — buildConfig(format, params)
-│   ├── warp-service.ts            Orchestrator (keys → CF → build → QR)
-│   ├── cloudflare-client.ts       Cloudflare WARP API registration
-│   ├── crypto.ts                  Key generation (tweetnacl)
-│   ├── qr-generator.ts            QR via external API + SVG fallback
-│   └── ip-ranges.ts               Re-exports from services-loader
+│   │   ├── shared.ts              Профили устройств, DNS, константы
+│   │   └── index.ts               Диспетчер — buildConfig(format, params)
+│   ├── warp-service.ts            Оркестратор (ключи → CF → сборка → QR)
+│   ├── cloudflare-client.ts       Регистрация через Cloudflare WARP API
+│   ├── crypto.ts                  Генерация ключей (tweetnacl)
+│   ├── qr-generator.ts            QR через внешний API + SVG-заглушка
+│   └── ip-ranges.ts               Реэкспорт из services-loader
 │
 ├── hooks/
-│   ├── use-generator.ts           All client-side generation logic
-│   └── use-mobile.ts              Responsive breakpoint hook
+│   ├── use-generator.ts           Вся клиентская логика генерации
+│   └── use-mobile.ts              Хук для адаптивности
 │
-├── types/                         TypeScript type definitions
-├── styles/globals.css             Design tokens + dark theme
-├── Dockerfile                     Standalone production build
+├── types/                         TypeScript типы
+├── styles/globals.css             Дизайн-токены + тёмная тема
+├── Dockerfile                     Standalone production-сборка
 └── package.json
 ```
 
-## 🔧 Configuration
+## 🔧 Конфигурация
 
 ### Next.js
 
-The project uses Next.js 14 with App Router and the following setup:
+Проект использует Next.js 14 с App Router и следующими настройками:
 
 - TypeScript
 - Tailwind CSS
 - ESLint
-- Radix UI components
-- Automatic image optimization
+- Radix UI компоненты
+- Автоматическая оптимизация изображений
 
-### Build
+### Сборка
 
-The project is configured for static generation with server-side rendering capability for API routes.
+Проект настроен для статической генерации с возможностью серверного рендеринга API маршрутов.
 
-## 🌐 Supported Platforms
+## 🌐 Поддерживаемые платформы
 
-| Platform | Support | Complexity | Deployment Time |
-|----------|---------|------------|----------------|
-| Vercel | ✅ Full | 🟢 Low | ~3 minutes |
-| Netlify | ✅ Full | 🟡 Medium | ~5 minutes |
-| Cloudflare Workers | ✅ Full | 🟡 Medium | ~5 minutes |
+| Платформа | Поддержка | Сложность | Время развертывания |
+|-----------|-----------|-----------|-------------------|
+| Vercel | ✅ Полная | 🟢 Низкая | ~3 минуты |
+| Netlify | ✅ Полная | 🟡 Средняя | ~5 минут |
+| Cloudflare Workers | ✅ Полная | 🟡 Средняя | ~5 минут |
 
-## 📄 License
+## 📄 Лицензия
 
 MIT License
 
-## 🤝 Contributing
+## 🤝 Вклад в развитие
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Create a Pull Request
+1. Форкните репозиторий
+2. Создайте ветку для новой функции
+3. Внесите изменения
+4. Создайте Pull Request
 
-## Mirrors / Alternative Links
+## Зеркала / Альтернативные ссылки
 
 - Telegram Bot: [t.me/warp_generator_bot](https://t.me/warp_generator_bot)  
-- Main Site: [warp3.llimonix.pw](https://warp3.llimonix.pw)  
-- Vercel Mirror: [warply3.vercel.app](https://warply3.vercel.app)
+- Основной сайт: [warp4.llimonix.pw](https://warp3.llimonix.pw)  
+- Vercel Mirror: [warply4.vercel.app](https://warply3.vercel.app)  
 - Netlify Mirror: [getwarp3.netlify.app](https://getwarp3.netlify.app)
 - Cloudflare Mirror: [warp.llimonix.workers.dev](https://warp.llimonix.workers.dev)
-- Telegram Channel: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
+- Telegram канал: [ллимоникс </>](https://t.me/+PWiSh2qvtmphMjcy)
 
 ## Star History
 
