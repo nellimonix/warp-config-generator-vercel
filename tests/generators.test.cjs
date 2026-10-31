@@ -94,8 +94,9 @@ test('three API implementations export the selected settings with controlled Clo
   let requests = 0;
   global.fetch = async (url, options = {}) => {
     requests++;
-    if (String(url).includes('qrserver.com')) return new Response(new Uint8Array([137, 80, 78, 71]));
-    assert.ok(String(url).startsWith('https://api.cloudflareclient.com/'));
+    const { origin } = new URL(url);
+    if (origin === 'https://api.qrserver.com') return new Response(new Uint8Array([137, 80, 78, 71]));
+    assert.equal(origin, 'https://api.cloudflareclient.com');
     return Response.json(options.method === 'POST' ? { result: { id: 'fixture', token: 'fixture-token' } } : {
       result: { config: { peers: [{ public_key: fixture.publicKey }], interface: { addresses: { v4: fixture.clientIPv4, v6: fixture.clientIPv6 } }, client_id: 'AQID' } },
     });
