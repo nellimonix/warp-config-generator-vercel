@@ -1,4 +1,18 @@
+import { NO_INDEX_HEADER, SEO_ENABLED } from '../config/seo';
+
 export const STATIC_SITE_ORIGIN = 'https://request-origin.invalid';
+
+export function withIndexingPolicy(response: Response): Response {
+  if (SEO_ENABLED) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set('X-Robots-Tag', NO_INDEX_HEADER);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
 
 export function requestOrigin(headers: Pick<Headers, 'get'>): string {
   const host = (headers.get('x-forwarded-host') || headers.get('host') || '').split(',')[0].trim();
@@ -18,6 +32,22 @@ export function seoResponse(request: Request, origin = new URL(request.url).orig
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
 
   const pathname = new URL(request.url).pathname;
+  if (!SEO_ENABLED) {
+    if (pathname === '/sitemap.xml' || pathname === '/sitemap.xml/' ||
+        pathname === '/opengraph-image' || pathname.startsWith('/opengraph-image/')) {
+      return withIndexingPolicy(new Response(null, { status: 404 }));
+    }
+    if (pathname === '/robots.txt' || pathname === '/robots.txt/') {
+      return withIndexingPolicy(new Response(request.method === 'HEAD' ? null : 'User-agent: *\nAllow: /\n', {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+        },
+      }));
+    }
+    return null;
+  }
+
   let body: string;
   let contentType: string;
 

@@ -4,37 +4,43 @@
  */
 
 import { onCaptchaChallenge, onRequestPost, onRequestOptions, onRequestGet } from './api-handler.js';
-import { replaceStaticOrigin, seoResponse } from '../lib/seo-response';
+import { replaceStaticOrigin, seoResponse, withIndexingPolicy } from '../lib/seo-response';
+import { SEO_ENABLED } from '../config/seo';
 
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const seo = seoResponse(request);
-    if (seo) return seo;
-
-    // API routes
-    if (url.pathname === '/api/generate' || url.pathname === '/api/generate/') {
-      if (request.method === 'OPTIONS') return onRequestOptions();
-      if (request.method === 'POST') return onRequestPost({ request, env, ctx });
-      if (request.method === 'GET') return onRequestGet();
-
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-        status: 405,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
-    }
-
-    if (url.pathname === '/api/captcha/challenge' || url.pathname === '/api/captcha/challenge/') {
-      if (request.method === 'OPTIONS') return onRequestOptions();
-      if (request.method === 'POST') return onCaptchaChallenge({ request, env, ctx });
-
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-        status: 405,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
-    }
-
-    // Static assets
-    return replaceStaticOrigin(await env.ASSETS.fetch(request), url.origin);
+    return withIndexingPolicy(await handleRequest(request, env, ctx));
   },
 };
+
+async function handleRequest(request, env, ctx) {
+  const url = new URL(request.url);
+  const seo = seoResponse(request);
+  if (seo) return seo;
+
+  // API routes
+  if (url.pathname === '/api/generate' || url.pathname === '/api/generate/') {
+    if (request.method === 'OPTIONS') return onRequestOptions();
+    if (request.method === 'POST') return onRequestPost({ request, env, ctx });
+    if (request.method === 'GET') return onRequestGet();
+
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  if (url.pathname === '/api/captcha/challenge' || url.pathname === '/api/captcha/challenge/') {
+    if (request.method === 'OPTIONS') return onRequestOptions();
+    if (request.method === 'POST') return onCaptchaChallenge({ request, env, ctx });
+
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  // Static assets
+  const response = await env.ASSETS.fetch(request);
+  return SEO_ENABLED ? replaceStaticOrigin(response, url.origin) : response;
+}

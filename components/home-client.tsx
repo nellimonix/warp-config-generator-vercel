@@ -20,7 +20,7 @@ import { useGenerator } from '@/hooks/use-generator';
 import { useHashTabs } from '@/hooks/use-hash-tabs';
 import { isCommunityDns } from '@/config/dns';
 import { BANNER } from '@/config/banner';
-import { HOME_SEO } from '@/config/seo';
+import { HOME_SEO, SEO_ENABLED } from '@/config/seo';
 import type { ServiceEntry } from '@/types';
 import { ArrowClockwise, CheckCircle, SlidersHorizontal } from '@phosphor-icons/react';
 
@@ -44,7 +44,7 @@ export function HomeClient({ services }: HomeClientProps) {
 
           {/* Generator tab — always mounted */}
           <div className={activeTab === 'generator' ? '' : 'hidden'}>
-            {!BANNER.enabled && (
+            {SEO_ENABLED && !BANNER.enabled && (
               <section className="mb-3 bg-[var(--surface)] rounded-[var(--radius-lg)] p-5" aria-labelledby="generator-heading">
                 <h1 id="generator-heading" className="text-[17px] font-medium mb-2">
                   {HOME_SEO.heading}

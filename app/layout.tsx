@@ -5,8 +5,11 @@ import '@/styles/globals.css';
 import { SITE } from '@/config/site';
 import AnalyticsLoader from '@/components/rybbit-analytics';
 import { siteOrigin } from '@/lib/site-origin';
+import { NO_INDEX_ROBOTS, SEO_ENABLED } from '@/config/seo';
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (!SEO_ENABLED) return { title: SITE.name, robots: NO_INDEX_ROBOTS };
+
   return {
     metadataBase: new URL(await siteOrigin()),
     title: SITE.name,

@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { SERVICES } from '@/config/services-loader';
 import { HomeClient } from '@/components/home-client';
-import { HOME_SEO } from '@/config/seo';
+import { HOME_SEO, NO_INDEX_ROBOTS, SEO_ENABLED } from '@/config/seo';
 import { LINKS, SITE } from '@/config/site';
 import { siteOrigin } from '@/lib/site-origin';
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (!SEO_ENABLED) return { robots: NO_INDEX_ROBOTS };
+
   const canonicalUrl = `${await siteOrigin()}/`;
   return {
     title: HOME_SEO.title,
@@ -29,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: SITE.name,
       type: 'website',
       locale: SITE.locale,
+      images: [{ url: `${canonicalUrl}opengraph-image`, width: 1200, height: 630, alt: SITE.name }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -39,6 +42,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+  if (!SEO_ENABLED) return <HomeClient services={SERVICES} />;
+
   const canonicalUrl = `${await siteOrigin()}/`;
   const structuredData = {
     '@context': 'https://schema.org',
