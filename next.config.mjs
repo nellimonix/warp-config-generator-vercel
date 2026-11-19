@@ -8,6 +8,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  outputFileTracingExcludes: {
+    '/api/captcha/challenge': ['.next/server/app/api/captcha/challenge/route_client-reference-manifest.js'],
+    '/api/generate': ['.next/server/app/api/generate/route_client-reference-manifest.js'],
+  },
 };
 
 const isCloudflare = process.env.CLOUDFLARE_WORKERS || process.env.CF_PAGES;
@@ -31,9 +35,6 @@ if (isApiOnly) {
   nextConfig.pageExtensions = ['api.ts'];
   nextConfig.output = 'standalone';
   nextConfig.outputFileTracingRoot = fileURLToPath(new URL('.', import.meta.url));
-  nextConfig.outputFileTracingExcludes = {
-    '/api/**': ['.next/server/app/api/**/*_client-reference-manifest.js'],
-  };
 } else if (isStatic || isCloudflare) {
   nextConfig.pageExtensions = siteExtensions;
   nextConfig.output = 'export';
