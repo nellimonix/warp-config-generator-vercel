@@ -10,7 +10,7 @@ export interface BannerConfig {
 }
 
 export const BANNER: BannerConfig = {
-  enabled: true,
+  enabled: false,
   href: 'tg://resolve?domain=findllimonix&direct',
   imageUrl: '/ads.png',
   alt: 'Рекламный баннер',
