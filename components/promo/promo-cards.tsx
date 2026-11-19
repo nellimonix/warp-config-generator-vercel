@@ -29,7 +29,7 @@ const PROMOS: PromoItem[] = [
     subColor: 'text-gray-800',
     fallbackIcon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="1.5" /></svg>,
   },*/
-  {
+  /*{
     href: LINKS.skyTunnel,
     trackId: 'skytunnel',
     title: 'Oбxoд бeлыx cпискoв',
@@ -40,19 +40,19 @@ const PROMOS: PromoItem[] = [
     textColor: 'text-white',
     subColor: 'text-purple-200',
     fallbackIcon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="1.5" /></svg>,
-  },
-  /*{
-    href: LINKS.triBukvy,
-    trackId: 'triBukvy',
+  },*/
+  {
+    href: LINKS.triBukvy_site,
+    trackId: 'triBukvy_site',
     title: 'Oбxoд бeлыx cпискoв',
     subtitle: 'Доступ к зaблoкиpoвaнным ресурсам',
-    image: 'https://i.imgur.com/dsSXozM.png',
+    image: 'https://imgdb.io/i/98gvDPg.png',
     bg: 'bg-red-800',
     hoverBg: 'hover:bg-red-700',
     textColor: 'text-white',
     subColor: 'text-red-200',
     fallbackIcon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="1.5" /></svg>,
-  },*/
+  },
   {
     href: LINKS.telegramMedia,
     trackId: 'tg_media',
