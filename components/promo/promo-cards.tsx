@@ -47,6 +47,7 @@ const PROMOS: PromoItem[] = [
     title: 'Oбxoд бeлыx cпискoв',
     subtitle: 'Доступ к зaблoкиpoвaнным ресурсам',
     image: 'https://imgdb.io/i/98gvDPg.png',
+    fullImg: true,
     bg: 'bg-red-800',
     hoverBg: 'hover:bg-red-700',
     textColor: 'text-white',
