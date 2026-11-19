@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AltchaWidgetElement } from 'altcha';
 import type {} from 'altcha/types/react';
+import { apiUrl } from '@/lib/api-url';
 
 interface CaptchaProps {
   onVerify: (token: string) => void;
@@ -25,7 +26,7 @@ export function Captcha({ onVerify }: CaptchaProps) {
     Promise.all([
       import('altcha'),
       import('altcha/i18n/ru'),
-      fetch('/api/captcha/challenge', { method: 'POST', cache: 'no-store' }),
+      fetch(apiUrl('/api/captcha/challenge'), { method: 'POST', cache: 'no-store' }),
     ])
       .then(async ([, , response]) => {
         if (!active) return;

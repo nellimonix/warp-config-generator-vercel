@@ -6,6 +6,7 @@ import type { GenerateResult, ApiResponse } from '@/types';
 import { getEndpointValue, isExternalEndpoint } from '@/config/endpoints';
 import { DEFAULT_DNS_ID, isCommunityDns } from '@/config/dns';
 import { trackEvent } from '@/lib/analytics';
+import { apiUrl } from '@/lib/api-url';
 import { defaultAwgOptions, normalizeAwgOptions, normalizeMtu } from '@/lib/awg';
 
 export interface GeneratorState {
@@ -174,7 +175,7 @@ export function useGenerator() {
       const usesMask = state.configFormat === 'xray' || state.awg.protocols.includes('awg20');
       const customI1Domain = state.customI1Enabled && usesMask ? state.customI1Domain.trim() : '';
 
-      const res = await fetch('/api/generate', {
+      const res = await fetch(apiUrl('/api/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

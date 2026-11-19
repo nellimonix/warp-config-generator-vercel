@@ -4,7 +4,7 @@ require('./register-typescript.cjs');
 
 const { requestOrigin, seoResponse, replaceStaticOrigin, STATIC_SITE_ORIGIN } = require('../lib/seo-response.ts');
 const { default: worker } = require('../worker/index.js');
-const { middleware } = require('../middleware.ts');
+const { middleware } = require('../middleware.server.ts');
 const { onRequest: pages } = require('../functions/_middleware.js');
 const seoConfig = require('../config/seo.ts');
 

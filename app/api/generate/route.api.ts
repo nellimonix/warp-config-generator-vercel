@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server';
 import { generateWarpConfig, WarpGenerationError } from '@/lib/warp-service';
 import { getCaptchaSecret, verifyCaptchaPayload } from '@/lib/altcha';
+import { withApiHeaders } from '@/lib/api-headers';
 import type { GenerateRequest, ApiResponse, GenerateResult } from '@/types';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+export { apiOptions as OPTIONS } from '@/lib/api-headers';
 
-export async function OPTIONS() {
-  return new Response(null, { headers: CORS });
-}
-
-export async function POST(req: Request) {
-  const headers = { ...CORS, 'Content-Type': 'application/json' };
-
+export const POST = withApiHeaders(async (req, headers) => {
   try {
     const body = await req.json() as GenerateRequest;
 
@@ -64,7 +55,7 @@ export async function POST(req: Request) {
 
     return json<ApiResponse>({ success: false, message }, status, headers);
   }
-}
+});
 
 // --- Helpers ---
 
@@ -75,6 +66,6 @@ function normalizeServices(body: GenerateRequest): string[] {
   return body.selectedServices || [];
 }
 
-function json<T>(data: T, status: number, headers: Record<string, string>) {
+function json<T>(data: T, status: number, headers: Headers) {
   return NextResponse.json(data, { status, headers });
 }

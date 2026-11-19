@@ -4,7 +4,7 @@ require('./register-typescript.cjs');
 
 const { defaultAwgOptions, normalizeAwgOptions, normalizeMtu } = require('../lib/awg.ts');
 const { buildConfig } = require('../lib/builders/index.ts');
-const next = require('../app/api/generate/route.ts');
+const next = require('../app/api/generate/route.api.ts');
 const worker = require('../worker/api-handler.js');
 const pages = require('../functions/api/generate.js');
 const protocols = ['awg10', 'awg20', 'awg30', 'awg31'];
