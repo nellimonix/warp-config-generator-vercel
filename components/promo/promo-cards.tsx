@@ -73,9 +73,12 @@ export function PromoCards() {
   return (
     <div className="grid grid-cols-2 gap-2 max-[500px]:grid-cols-1">
       {PROMOS.map((p) => (
-        <a key={p.href} href={p.href} target="_blank" rel="noopener noreferrer"
-          onClick={() => trackEvent('ads_click', p.trackId)}
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-[var(--radius-md)] ${p.bg} ${p.hoverBg} transition-all`}>
+        <button key={p.href} type="button"
+          onClick={() => {
+            trackEvent('ads_click', p.trackId);
+            window.open(p.href, '_blank', 'noopener,noreferrer');
+          }}
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-[var(--radius-md)] ${p.bg} ${p.hoverBg} transition-all text-left cursor-pointer`}>
           <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden ${p.fullImg ? '' : 'bg-white/15'}`}>
             {p.image ? (
               <img src={p.image} alt="" className={p.fullImg ? 'w-full h-full object-cover rounded-lg' : 'w-6 h-6 object-contain'}
@@ -87,7 +90,7 @@ export function PromoCards() {
             <p className={`text-[13px] font-medium ${p.textColor}`}>{p.title}</p>
             <p className={`text-[11px] font-light ${p.subColor}`}>{p.subtitle}</p>
           </div>
-        </a>
+        </button>
       ))}
     </div>
   );
