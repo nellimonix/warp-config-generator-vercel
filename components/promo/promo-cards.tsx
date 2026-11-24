@@ -42,8 +42,8 @@ const PROMOS: PromoItem[] = [
     fallbackIcon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="1.5" /></svg>,
   },*/
   {
-    href: LINKS.triBukvy_site,
-    trackId: 'triBukvy_site',
+    href: LINKS.triBukvy,
+    trackId: 'triBukvy',
     title: 'Oбxoд бeлыx cпискoв',
     subtitle: 'Доступ к зaблoкиpoвaнным ресурсам',
     image: 'https://imgdb.io/i/98gvDPg.png',
